@@ -24,7 +24,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # 鎖定檔在 Windows 產生，少了 Linux 才需要的選用套件，npm ci 會拒絕；改用 npm install 補齊
+      - run: npm install --no-audit --no-fund
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
