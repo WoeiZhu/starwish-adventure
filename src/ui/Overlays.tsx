@@ -1,6 +1,7 @@
 // 疊加介面：對話框、暫停選單、操作說明、提示訊息。
 import { useEffect } from 'react'
 import { useGame } from '../game/store'
+import { isTouch } from '../systems/mobile'
 
 const CONTROLS: [string, string][] = [
   ['W / A / S / D', '自由移動（會取消點擊自動移動）'],
@@ -22,10 +23,25 @@ const CONTROLS: [string, string][] = [
   ['H', '開關操作說明'],
 ]
 
+const TOUCH_CONTROLS: [string, string][] = [
+  ['左下搖桿', '按住拖曳移動，推到底就跑步'],
+  ['點地面', '沿路徑自動走過去'],
+  ['點怪物', '鎖定目標並自動接近，普通攻擊自動進行'],
+  ['技能按鈕', '左起 1、2 技能，3 職業強化，4 必殺技'],
+  ['閃避', '翻滾（短暫無敵）'],
+  ['藥水', '回復 45% 生命'],
+  ['換目標', '切換鎖定的怪物'],
+  ['互動按鈕', '靠近人物、寶箱、祭壇時出現在技能上方'],
+  ['單指拖曳畫面', '旋轉鏡頭、調整俯仰角'],
+  ['雙指開合', '鏡頭拉近拉遠'],
+  ['右上 ☰', '背包、技能樹、隊伍、畫質、暫停'],
+  ['右上 ⛶', '離開全螢幕後按這裡切回來'],
+]
+
 function ControlList() {
   return (
     <dl className="controls">
-      {CONTROLS.map(([k, v]) => (
+      {(isTouch ? TOUCH_CONTROLS : CONTROLS).map(([k, v]) => (
         <div key={k}>
           <dt>{k}</dt>
           <dd>{v}</dd>
@@ -92,7 +108,8 @@ export function DialogBox() {
         </div>
       ) : (
         <div className="dialog-next">
-          {dialog.index + 1}/{dialog.lines.length}　{last ? '結束' : '繼續'} <kbd>F</kbd>
+          {dialog.index + 1}/{dialog.lines.length}　{isTouch ? '點一下' : ''}
+          {last ? '結束' : '繼續'} <kbd>F</kbd>
         </div>
       )}
     </div>

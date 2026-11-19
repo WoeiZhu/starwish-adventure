@@ -7,11 +7,28 @@ import { REGION_NAME } from '../data/world'
 import { skillCooldown } from '../game/combat/actions'
 import { usePotion } from '../game/combat/rewards'
 import { combat, unitById } from '../game/combat/state'
-import { heroCast } from '../game/combat/sim'
+import { cycleTarget, heroCast } from '../game/combat/sim'
 import { expToNext, pointsLeft, progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
-import { questInfo } from '../game/story'
+import { interactNearest, questInfo } from '../game/story'
+import { canFullscreen, enterAppMode, isFullscreen, isStandalone, isTouch } from '../systems/mobile'
+import { Joystick } from './TouchControls'
+
+/** 手機上離開全螢幕（例如滑了返回手勢）後，顯示「全螢幕」按鈕讓玩家切回來 */
+function useFullscreen() {
+  const [fs, setFs] = useState(isFullscreen)
+  useEffect(() => {
+    const on = () => setFs(isFullscreen())
+    document.addEventListener('fullscreenchange', on)
+    document.addEventListener('webkitfullscreenchange', on)
+    return () => {
+      document.removeEventListener('fullscreenchange', on)
+      document.removeEventListener('webkitfullscreenchange', on)
+    }
+  }, [])
+  return fs
+}
 
 const BUFF_TEXT = { atkSpeed: '攻速↑', atk: '攻擊↑', def: '防禦↑', maxHp: '生命↑', guard: '壁壘' } as const
 const FEED_SECONDS = 7
@@ -30,8 +47,12 @@ export function Hud() {
   const toggleHelp = useGame((s) => s.toggleHelp)
   const openMenu = useGame((s) => s.openMenu)
   const showToast = useGame((s) => s.showToast)
+  const quality = useGame((s) => s.quality)
+  const setQuality = useGame((s) => s.setQuality)
   const [menuOpen, setMenuOpen] = useState(false)
   const [questOpen, setQuestOpen] = useState(true)
+  const fullscreen = useFullscreen()
+  const showFsButton = isTouch && !isStandalone && !fullscreen && canFullscreen()
 
   const cls = CLASSES[heroProfile.classId]
   const party = combat.units.filter((u) => u.team === 'party')
@@ -143,9 +164,16 @@ export function Hud() {
 
       {/* 右上：單一選單按鈕，按下才展開全部功能；下方是可收合的任務 */}
       <div className="hud-tr">
-        <button className={'menu-btn' + (menuOpen ? ' on' : '')} onClick={() => setMenuOpen((v) => !v)} aria-label="選單">
-          ☰{points > 0 && <i className="badge">{points}</i>}
-        </button>
+        <div className="tr-row">
+          {showFsButton && (
+            <button className="menu-btn" onClick={() => void enterAppMode()} aria-label="全螢幕">
+              ⛶
+            </button>
+          )}
+          <button className={'menu-btn' + (menuOpen ? ' on' : '')} onClick={() => setMenuOpen((v) => !v)} aria-label="選單">
+            ☰{points > 0 && <i className="badge">{points}</i>}
+          </button>
+        </div>
         {menuOpen && (
           <div className="menu-pop">
             <button onClick={pick(() => openMenu('bag'))}>
@@ -163,6 +191,9 @@ export function Hud() {
             </button>
             <button onClick={pick(toggleHelp)}>
               操作說明 <kbd>H</kbd>
+            </button>
+            <button onClick={() => setQuality(quality === 'high' ? 'saver' : 'high')}>
+              畫質 <span className="menu-val">{quality === 'high' ? '高畫質' : '省電'}</span>
             </button>
             <button onClick={pick(togglePause)}>
               {paused ? '繼續' : '暫停'} <kbd>Esc</kbd>
@@ -190,8 +221,17 @@ export function Hud() {
         </div>
       </div>
 
+      {isTouch && <Joystick />}
+
       <div className="hud-bc">
-        {hint && <div className="hint">{hint}</div>}
+        {hint &&
+          (isTouch ? (
+            <button className="hint hint-btn" onClick={() => interactNearest()}>
+              {hint}
+            </button>
+          ) : (
+            <div className="hint">{hint}</div>
+          ))}
         <div className="skillbar">
           {cls.skills.map((sk, i) => {
             const cd = h.cooldowns[i]
@@ -230,6 +270,11 @@ export function Hud() {
             <kbd>Z</kbd>
             <span>藥水{progress.potions}</span>
           </button>
+          {isTouch && (
+            <button className="skill target ready" title="切換鎖定目標" onClick={() => cycleTarget()}>
+              <span>換目標</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

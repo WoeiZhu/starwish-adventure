@@ -2,6 +2,9 @@ import { useEffect } from 'react'
 import { useGame } from './game/store'
 import { GameScene } from './scene/GameScene'
 import { installInput } from './systems/input'
+import { installTouchGuards } from './systems/mobile'
+import { unlockAudio } from './systems/sfx'
+import { RotateHint } from './ui/RotateHint'
 import { Hud } from './ui/Hud'
 import { MenuPanel } from './ui/MenuPanel'
 import { ChapterComplete, DialogBox, HelpPanel, PauseOverlay, Toast } from './ui/Overlays'
@@ -16,6 +19,13 @@ export function App() {
   const chapterDone = useGame((s) => s.chapterDone)
 
   useEffect(() => installInput(), [])
+  useEffect(() => installTouchGuards(), [])
+  // 第一次點擊畫面時喚醒聲音（iPhone 規定）
+  useEffect(() => {
+    const once = () => unlockAudio()
+    window.addEventListener('pointerdown', once, { once: true })
+    return () => window.removeEventListener('pointerdown', once)
+  }, [])
   // 關閉或重新整理頁面前存檔
   useEffect(() => {
     const save = () => useGame.getState().saveGame()
@@ -39,6 +49,7 @@ export function App() {
           {chapterDone && !dialog && <ChapterComplete />}
         </>
       )}
+      <RotateHint />
     </div>
   )
 }

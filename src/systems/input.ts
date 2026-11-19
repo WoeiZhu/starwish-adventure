@@ -74,9 +74,13 @@ export function installInput() {
   }
 }
 
+/** 手機虛擬搖桿的輸入（由 TouchControls 寫入）：x、y 為 -1～1 */
+export const stick = { x: 0, y: 0, run: false }
+
 const any = (...codes: string[]) => codes.some((c) => keys.has(c))
 /** 回傳移動輸入：x = 右(+)/左(-)，y = 前(+)/後(-) */
 export function moveAxis() {
+  if (stick.x !== 0 || stick.y !== 0) return { x: stick.x, y: stick.y, run: stick.run }
   return {
     x: (any('KeyD', 'ArrowRight') ? 1 : 0) - (any('KeyA', 'ArrowLeft') ? 1 : 0),
     y: (any('KeyW', 'ArrowUp') ? 1 : 0) - (any('KeyS', 'ArrowDown') ? 1 : 0),

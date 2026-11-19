@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ENEMY_SLOTS } from '../game/combat/state'
 import { runtime } from '../game/runtime'
+import { useGame } from '../game/store'
 import { CameraRig } from './CameraRig'
 import { CombatLayer } from './CombatLayer'
 import { Interactables } from './Interactables'
@@ -16,6 +17,16 @@ const SKY = '#bfe8ff'
 /** 陽光與陰影範圍跟著主角移動，讓大地圖也有清楚的影子 */
 function Lighting() {
   const sun = useRef<THREE.DirectionalLight>(null!)
+  const quality = useGame((s) => s.quality)
+  // 省電模式用較小的陰影貼圖；換尺寸要丟掉舊貼圖讓它重建
+  useEffect(() => {
+    const size = quality === 'high' ? 2048 : 1024
+    const shadow = sun.current.shadow
+    if (shadow.mapSize.x === size) return
+    shadow.mapSize.set(size, size)
+    shadow.map?.dispose()
+    shadow.map = null
+  }, [quality])
   useEffect(() => {
     const cam = sun.current.shadow.camera
     cam.left = -34
@@ -40,7 +51,6 @@ function Lighting() {
         color="#fff1d6"
         intensity={1.7}
         castShadow
-        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0006}
         shadow-normalBias={0.03}
       />
@@ -49,11 +59,13 @@ function Lighting() {
 }
 
 export function GameScene() {
+  const quality = useGame((s) => s.quality)
   return (
     <Canvas
       shadows
       flat
-      dpr={[1, 2]}
+      // 省電模式不放大解析度（手機像素密度 3 倍時差很多）
+      dpr={quality === 'high' ? [1, 2] : 1}
       camera={{ fov: 40, near: 0.1, far: 400, position: [0, 6, 16] }}
       gl={{ antialias: true }}
     >

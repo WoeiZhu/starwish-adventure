@@ -21,6 +21,8 @@ export const runtime = {
   queuedSkill: null as number | null,
   /** 閃避翻滾：request 由輸入設定，time > 0 表示翻滾中 */
   dodge: { request: false, time: 0, cd: 0, dx: 0, dz: 0 },
+  /** 手機上最後一次拖曳 / 雙指縮放鏡頭的時間（ms）；剛做完手勢時不把放開手指當成點地面 */
+  gestureAt: -1e9,
 }
 
 export function resetRuntime() {

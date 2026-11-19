@@ -26,6 +26,11 @@ function audio() {
   }
 }
 
+/** 在點擊當下先建立並喚醒 AudioContext（iPhone 只允許在使用者操作中啟動聲音） */
+export function unlockAudio() {
+  audio()
+}
+
 /** 同一種音效在 gap 秒內不重複播放，避免多段傷害疊成噪音 */
 function ready(name: string, gap: number) {
   const now = performance.now() / 1000

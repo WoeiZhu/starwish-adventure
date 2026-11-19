@@ -1,6 +1,7 @@
 // 開局角色創建：名字、男孩 / 女孩外觀、四職業。左側 3D 人物即時預覽。
 import { CLASSES, CLASS_ORDER } from '../data/classes'
 import { useGame } from '../game/store'
+import { enterAppMode } from '../systems/mobile'
 
 export function TitleScreen() {
   const hero = useGame((s) => s.hero)
@@ -22,12 +23,16 @@ export function TitleScreen() {
         className="panel create"
         onSubmit={(e) => {
           e.preventDefault()
+          void enterAppMode()
           startGame()
         }}
       >
         {save && (
           <div className="continue">
-            <button type="button" className="btn-primary" onClick={continueGame}>
+            <button type="button" className="btn-primary" onClick={() => {
+                void enterAppMode()
+                continueGame()
+              }}>
               繼續冒險
             </button>
             <div className="continue-info">

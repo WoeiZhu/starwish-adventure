@@ -1,0 +1,217 @@
+/* 手機模式（html.touch）：橫向全螢幕、搖桿、右下大按鈕、避開瀏海。載入順序在 hud.css 之後。 */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html.touch,
+html.touch body {
+  /* 擋掉雙擊放大；畫布另外完全交給遊戲處理 */
+  touch-action: manipulation;
+}
+.app canvas {
+  touch-action: none;
+}
+
+/* 整個 HUD 往內縮，避開瀏海與圓角 */
+.touch .hud {
+  left: env(safe-area-inset-left);
+  right: env(safe-area-inset-right);
+  bottom: env(safe-area-inset-bottom);
+}
+/* 手機沒有鍵盤，隱藏按鍵提示 */
+.touch .hud kbd,
+.touch .dialog kbd,
+.touch .choice kbd {
+  display: none;
+}
+
+.tr-row {
+  display: flex;
+  gap: 6px;
+}
+.menu-val {
+  color: var(--pink-deep);
+  font-size: 12px;
+}
+
+/* ── 左下浮動搖桿 ── */
+.stick-zone {
+  left: 0;
+  bottom: 0;
+  width: 42%;
+  height: 62%;
+  pointer-events: auto;
+  touch-action: none;
+}
+.stick-base {
+  position: fixed;
+  width: 104px;
+  height: 104px;
+  margin: -52px 0 0 -52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 10px rgba(60, 40, 80, 0.2);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.stick-base.idle {
+  position: absolute;
+  left: 86px;
+  top: auto;
+  bottom: 34px;
+  margin: 0 0 0 -52px;
+  opacity: 0.5;
+}
+.stick-knob {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(60, 40, 80, 0.35);
+}
+
+/* ── 右下：技能 2 排，閃避放在最右下（大拇指最順的位置） ── */
+.touch .hud-bc {
+  left: auto;
+  right: 12px;
+  bottom: 10px;
+  transform: none;
+  align-items: flex-end;
+}
+.touch .hud .skillbar {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 6px;
+}
+.touch .hud button.skill {
+  width: 54px;
+  height: 46px;
+  font-size: 11px;
+}
+.touch .hud button.skill.dodge {
+  grid-row: 2;
+  grid-column: 4;
+}
+.touch .hud button.skill.potion {
+  grid-row: 2;
+  grid-column: 3;
+}
+.touch .hud button.skill.target {
+  grid-row: 2;
+  grid-column: 2;
+  border-color: #c9a6ff;
+}
+.touch .hud .hint-btn {
+  pointer-events: auto;
+  padding: 9px 16px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--pink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 3px 10px rgba(60, 40, 80, 0.3);
+}
+/* 戰鬥訊息往上移，不要被搖桿蓋住 */
+.touch .hud-bl {
+  bottom: 150px;
+}
+/* 選單在矮螢幕排成兩欄，並蓋在技能按鈕上面 */
+.touch .hud-tr {
+  z-index: 2;
+}
+.touch .menu-pop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.touch .menu-pop button {
+  min-width: 112px;
+  padding: 9px 12px;
+}
+.touch .menu-info {
+  grid-column: 1 / -1;
+}
+
+/* ── 直拿時的「請轉橫向」畫面 ── */
+.rotate-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: linear-gradient(160deg, #bfe8ff, #ffe3ef);
+  color: var(--ink);
+}
+.rotate-hint h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.rotate-hint p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.rotate-hint .muted {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.rotate-phone {
+  font-size: 56px;
+  animation: rotate-phone 2s ease-in-out infinite;
+}
+@keyframes rotate-phone {
+  0%,
+  25% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* ── 矮螢幕（手機橫拿）：標題、說明、暫停面板塞得進去 ── */
+@media (max-height: 460px) {
+  .title-logo {
+    left: max(20px, env(safe-area-inset-left));
+    top: 14px;
+  }
+  .title-logo h1 {
+    font-size: 34px;
+  }
+  .title-logo p {
+    font-size: 12px;
+  }
+  .create {
+    right: max(14px, env(safe-area-inset-right));
+    width: min(360px, 50vw);
+    max-height: calc(100vh - 16px);
+    padding: 12px 16px 14px;
+  }
+  .create h2 {
+    font-size: 16px;
+  }
+  .create .field-label {
+    margin: 8px 0 4px;
+  }
+  .help {
+    top: 52px;
+    max-height: calc(100vh - 64px);
+    overflow: auto;
+  }
+  .pause {
+    max-height: calc(100vh - 20px);
+    overflow: auto;
+    padding: 14px 18px;
+  }
+}

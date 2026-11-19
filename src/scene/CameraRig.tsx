@@ -105,17 +105,74 @@ export function CameraRig() {
       if (e.button === 2) dragging = false
     }
     const noMenu = (e: Event) => e.preventDefault()
+
+    // 手機：單指拖曳轉鏡頭（移動超過門檻才算，短按仍是點地面 / 點怪物）、雙指開合縮放
+    const touches = new Map<number, { x: number; y: number; sx: number; sy: number }>()
+    let touchDrag = false
+    let pinchDist = 0
+    const pinchSpan = () => {
+      const [a, b] = [...touches.values()]
+      return Math.hypot(a.x - b.x, a.y - b.y)
+    }
+    const onTouchDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY })
+      if (touches.size === 2) {
+        pinchDist = pinchSpan()
+        runtime.gestureAt = performance.now()
+      }
+    }
+    const onTouchMove = (e: PointerEvent) => {
+      const t = touches.get(e.pointerId)
+      if (!t) return
+      const dx = e.clientX - t.x
+      const dy = e.clientY - t.y
+      t.x = e.clientX
+      t.y = e.clientY
+      if (!active()) return
+      const c = st.current
+      if (touches.size >= 2) {
+        const span = pinchSpan()
+        if (pinchDist > 0 && span > 0) {
+          c.distT = THREE.MathUtils.clamp(c.distT * (pinchDist / span), CAM.minDist, CAM.maxDist)
+        }
+        pinchDist = span
+        runtime.gestureAt = performance.now()
+        return
+      }
+      if (!touchDrag && Math.hypot(e.clientX - t.sx, e.clientY - t.sy) > 10) touchDrag = true
+      if (touchDrag) {
+        c.yawT -= dx * 0.008
+        c.tiltT = THREE.MathUtils.clamp(c.tiltT + dy * 0.006, -CAM.maxTilt, CAM.maxTilt)
+        runtime.gestureAt = performance.now()
+      }
+    }
+    const onTouchUp = (e: PointerEvent) => {
+      if (!touches.delete(e.pointerId)) return
+      if (touchDrag) runtime.gestureAt = performance.now()
+      if (touches.size === 0) touchDrag = false
+      pinchDist = touches.size === 2 ? pinchSpan() : 0
+    }
+
     dom.addEventListener('wheel', onWheel, { passive: false })
     dom.addEventListener('pointerdown', onDown)
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     dom.addEventListener('contextmenu', noMenu)
+    dom.addEventListener('pointerdown', onTouchDown)
+    window.addEventListener('pointermove', onTouchMove)
+    window.addEventListener('pointerup', onTouchUp)
+    window.addEventListener('pointercancel', onTouchUp)
     return () => {
       dom.removeEventListener('wheel', onWheel)
       dom.removeEventListener('pointerdown', onDown)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       dom.removeEventListener('contextmenu', noMenu)
+      dom.removeEventListener('pointerdown', onTouchDown)
+      window.removeEventListener('pointermove', onTouchMove)
+      window.removeEventListener('pointerup', onTouchUp)
+      window.removeEventListener('pointercancel', onTouchUp)
     }
   }, [dom])
 

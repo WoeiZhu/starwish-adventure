@@ -7,6 +7,7 @@ import { regionAt } from '../data/world'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { interactWith, interactables, type Interactable } from '../game/story'
+import { isTouch } from '../systems/mobile'
 import { findPath } from '../systems/pathfinding'
 import { CharacterModel } from './characters/CharacterModel'
 
@@ -166,7 +167,8 @@ export function Interactables() {
       }
     }
     runtime.nearId = best ? best.id : null
-    g.setHint(best && !g.dialog ? `按 F ${best.verb}「${best.name}」` : null)
+    // 手機上提示會變成可以點的互動按鈕，所以不寫「按 F」
+    g.setHint(best && !g.dialog ? `${isTouch ? '' : '按 F '}${best.verb}「${best.name}」` : null)
   })
 
   return (

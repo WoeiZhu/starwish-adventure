@@ -10,6 +10,7 @@ import * as story from './game/story'
 import './styles.css'
 import './menu.css'
 import './hud.css'
+import './mobile.css'
 
 // 開發模式下把遊戲狀態掛到 window，方便在主控台檢查與自動化測試
 if (import.meta.env.DEV) {

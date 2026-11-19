@@ -7,6 +7,7 @@ import { initCombat } from './combat/state'
 import { progress, resetProgress } from './progress'
 import { resetRuntime, runtime } from './runtime'
 import { applySave, readSave, writeSave, type SaveData } from './save'
+import { isTouch } from '../systems/mobile'
 
 const PROFILE_KEY = 'starwish.profile.v1'
 
@@ -37,6 +38,18 @@ function saveProfile(p: Profile) {
   } catch {
     /* 無痕模式等情況下略過存檔 */
   }
+}
+
+const QUALITY_KEY = 'starwish.quality'
+export type Quality = 'high' | 'saver'
+function loadQuality(): Quality {
+  try {
+    const q = localStorage.getItem(QUALITY_KEY)
+    if (q === 'high' || q === 'saver') return q
+  } catch {
+    /* 略過 */
+  }
+  return isTouch ? 'saver' : 'high'
 }
 
 export type ZoomLabel = 'far' | 'mid' | 'near'
@@ -86,7 +99,10 @@ interface GameState {
   partyVersion: number
   chapterDone: boolean
   region: RegionId
+  /** 畫質：高畫質 / 省電（手機預設省電） */
+  quality: Quality
 
+  setQuality: (q: Quality) => void
   setProfile: (p: Partial<Profile>) => void
   startGame: () => void
   continueGame: () => void
@@ -140,7 +156,16 @@ export const useGame = create<GameState>()((set, get) => ({
   partyVersion: 0,
   chapterDone: false,
   region: 'village',
+  quality: loadQuality(),
 
+  setQuality: (quality) => {
+    try {
+      localStorage.setItem(QUALITY_KEY, quality)
+    } catch {
+      /* 略過 */
+    }
+    set({ quality })
+  },
   setProfile: (p) => {
     const h = get().hero
     const next: Profile = {

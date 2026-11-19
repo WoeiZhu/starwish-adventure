@@ -27,6 +27,8 @@ const ROAD_COLOR = '#ecd9a8'
 
 function handleGroundClick(e: ThreeEvent<MouseEvent>) {
   if (e.nativeEvent.button !== 0 || e.delta > 6) return
+  // 手機剛拖曳或雙指縮放鏡頭：放開手指不算點地面
+  if (performance.now() - runtime.gestureAt < 250) return
   const s = useGame.getState()
   if (s.phase !== 'playing' || s.paused || s.dialog) return
   const path = findPath(runtime.player, { x: e.point.x, z: e.point.z })
