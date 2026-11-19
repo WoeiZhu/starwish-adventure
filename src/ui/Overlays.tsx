@@ -1,0 +1,138 @@
+// 疊加介面：對話框、暫停選單、操作說明、提示訊息。
+import { useEffect } from 'react'
+import { useGame } from '../game/store'
+
+const CONTROLS: [string, string][] = [
+  ['W / A / S / D', '自由移動（會取消點擊自動移動）'],
+  ['Shift', '按住跑步'],
+  ['滑鼠左鍵點地面', '沿路徑自動移動、自動避開障礙'],
+  ['滑鼠左鍵點怪物', '鎖定目標並自動接近，普通攻擊自動進行'],
+  ['1 / 2 / 3', '技能（3 為職業強化）'],
+  ['4', '必殺技'],
+  ['Space', '閃避翻滾（短暫無敵）'],
+  ['Tab', '切換鎖定目標'],
+  ['Z', '喝藥水（回復 45% 生命）'],
+  ['I / K / P', '背包 / 技能樹 / 隊伍'],
+  ['滾輪', '鏡頭遠近：遠景看地圖、近景看人物'],
+  ['滑鼠右鍵拖曳', '左右旋轉鏡頭、上下調整俯仰角'],
+  ['Q / E', '旋轉鏡頭'],
+  ['R', '鏡頭回正（方向、俯角、距離）'],
+  ['F', '交談、開寶箱、調查；對話中的選項按 1 / 2 / 3'],
+  ['Esc', '暫停 / 繼續'],
+  ['H', '開關操作說明'],
+]
+
+function ControlList() {
+  return (
+    <dl className="controls">
+      {CONTROLS.map(([k, v]) => (
+        <div key={k}>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+export function HelpPanel() {
+  const toggleHelp = useGame((s) => s.toggleHelp)
+  return (
+    <div className="panel help">
+      <div className="panel-title">操作說明</div>
+      <ControlList />
+      <button className="btn" onClick={toggleHelp}>
+        關閉
+      </button>
+    </div>
+  )
+}
+
+export function PauseOverlay() {
+  const togglePause = useGame((s) => s.togglePause)
+  const backToTitle = useGame((s) => s.backToTitle)
+  return (
+    <div className="overlay">
+      <div className="panel pause">
+        <h2>遊戲暫停</h2>
+        <ControlList />
+        <div className="pause-actions">
+          <button className="btn-primary" onClick={togglePause}>
+            繼續冒險
+          </button>
+          <button className="btn" onClick={backToTitle}>
+            回到角色創建
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function DialogBox() {
+  const dialog = useGame((s) => s.dialog)
+  const advance = useGame((s) => s.advanceDialog)
+  const choose = useGame((s) => s.choose)
+  if (!dialog) return null
+  const last = dialog.index + 1 >= dialog.lines.length
+  const choices = last ? dialog.choices : undefined
+  return (
+    <div className={'panel dialog' + (choices ? ' has-choices' : '')} onClick={choices ? undefined : advance}>
+      <div className="dialog-speaker">{dialog.speaker}</div>
+      <p>{dialog.lines[dialog.index]}</p>
+      {choices ? (
+        <div className="choices">
+          {choices.map((c, i) => (
+            <button key={c.label} className="choice" disabled={!!c.disabled} onClick={() => choose(i)}>
+              <kbd>{i + 1}</kbd>
+              <span className="choice-label">{c.label}</span>
+              <span className="choice-desc">{c.disabled ?? c.desc}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="dialog-next">
+          {dialog.index + 1}/{dialog.lines.length}　{last ? '結束' : '繼續'} <kbd>F</kbd>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Boss 擊敗後的章節完成畫面 */
+export function ChapterComplete() {
+  const close = useGame((s) => s.setChapterDone)
+  return (
+    <div className="overlay">
+      <div className="panel chapter">
+        <div className="chapter-en">✦ CHAPTER 1 CLEAR</div>
+        <h2>第一章　星願的起點</h2>
+        <p>
+          你從孤身一人出發，在草原、迷霧森林與古代石環遇見了三位夥伴，
+          <br />
+          並一起擊敗了史萊姆王。星願冒險團正式成立！
+        </p>
+        <p className="muted">地上的戰利品別忘了撿。之後可以繼續自由探索、升級與收集裝備。</p>
+        <button className="btn-primary" onClick={() => close(false)}>
+          繼續冒險
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function Toast() {
+  const toast = useGame((s) => s.toast)
+  useEffect(() => {
+    if (!toast) return
+    const id = setTimeout(() => {
+      if (useGame.getState().toast?.id === toast.id) useGame.setState({ toast: null })
+    }, 2400)
+    return () => clearTimeout(id)
+  }, [toast])
+  return toast ? (
+    <div className="toast" key={toast.id}>
+      {toast.text}
+    </div>
+  ) : null
+}

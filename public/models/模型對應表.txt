@@ -1,0 +1,29 @@
+星願冒險團 人物模型對應表
+================================
+
+程式讀取的檔名（本資料夾）   職業          你的原始檔名（Character/）   遊戲內名稱
+--------------------------------------------------------------------------------
+archer.glb                   弓箭手 ARCHER  弓手.glb                     隊友「艾琳」（主角選弓箭手時為主角）
+mage.glb                     法師   MAGE    法師.glb                     隊友「諾娃」
+knight.glb                   戰士   KNIGHT  戰士.glb                     隊友「雷恩」
+cleric.glb                   聖者   CLERIC  聖者.glb                     隊友「米婭」
+
+說明
+----
+1. 程式只認左邊的英文檔名。更新模型時，把新檔案改成對應的英文檔名後覆蓋進來即可。
+2. 對應表寫在程式碼：src/data/appearance.ts 的 CLASS_MODELS。
+3. 打包（npm run build）會把這個資料夾一起放進 dist/models/，網頁版不用手動補。
+   缺少模型檔時，遊戲會自動改用程序化人物，不會當機，但外觀會不同。
+4. 另有五個內含動畫片段的模型（來源：Starwish_Adventure_9_Characters）：
+   slime.glb（普通怪）、elite-goblin.glb（精英怪）、guardian-boss.glb（Boss）、
+   guide-npc.glb（村長）、merchant-npc.glb（商人）。
+   怪物對應寫在 src/scene/Enemy.tsx 的 CONFIG，NPC 對應寫在 appearance.ts 的 clipModelUrl。
+
+模型規格（新模型請照這個做，程式才能直接套用動作）
+--------------------------------------------------
+- 骨頭名稱：Hips、Spine02、Spine、Head、LeftArm、RightArm、LeftForeArm、
+  RightForeArm、LeftUpLeg、RightUpLeg、LeftLeg、RightLeg、LeftHand、RightHand
+- 正面朝 +Z、腳底在原點、高度約 1.25
+- 站姿為 A 字（手臂張開約 45 度），程式會把手臂放下
+- 模型不含武器，武器由程式依職業掛在 LeftHand / RightHand 骨頭上
+- 目前每個檔案約 5 MB（含內嵌貼圖），四個合計約 21 MB

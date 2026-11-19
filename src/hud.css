@@ -1,0 +1,373 @@
+/* 精簡 HUD：以手機橫向為基準，元件小、半透明、不擋畫面。載入順序在 styles.css 與 menu.css 之後。 */
+.hud {
+  --glass: rgba(255, 252, 246, 0.55);
+  --glass-line: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+
+/* ── 共用細血條 ── */
+.slim {
+  position: relative;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(74, 59, 82, 0.35);
+  overflow: hidden;
+}
+.slim > div {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}
+.slim.hp > div {
+  background: linear-gradient(90deg, #ff6f8f, #ff9db0);
+}
+.slim.mp > div {
+  background: linear-gradient(90deg, #5aa9f0, #8fcaff);
+}
+.slim.exp > div {
+  background: #c9a6ff;
+}
+.slim.enemy > div {
+  background: linear-gradient(90deg, #ff4f5e, #ff8585);
+}
+.slim > span {
+  position: absolute;
+  inset: 0;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 11px;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(40, 30, 50, 0.8);
+}
+
+/* ── 左上：主角與隊友 ── */
+.hud-tl {
+  left: 10px;
+  top: 10px;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.me {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px 4px 4px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(4px);
+}
+.me-avatar {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  border: 3px solid;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.me-avatar i {
+  position: absolute;
+  right: -6px;
+  bottom: -5px;
+  min-width: 17px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--ink);
+  font: 800 10px/15px inherit;
+  font-style: normal;
+  text-align: center;
+  text-shadow: none;
+}
+.me-bars {
+  width: 118px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.me-bars .hp {
+  height: 11px;
+}
+.me-bars .mp {
+  height: 5px;
+}
+.me-bars .exp {
+  height: 3px;
+}
+.mates {
+  display: flex;
+  gap: 5px;
+  padding-left: 4px;
+}
+.mate {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px 2px 3px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+}
+.mate .class-dot {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+}
+.mate .slim {
+  width: 34px;
+  height: 5px;
+}
+.mate.down {
+  opacity: 0.4;
+}
+.hud .buffs {
+  margin: 0 0 0 4px;
+}
+
+/* ── 上方中央：目標與 Boss ── */
+.hud-tc,
+.hud-boss {
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  width: 190px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.hud-boss {
+  width: min(380px, 44vw);
+  min-width: 0;
+}
+/* Boss 戰時鎖定別的怪物：目標血條放到 Boss 血條下方，避免重疊 */
+.hud-tc.under-boss {
+  top: 54px;
+}
+.foe-name {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(40, 30, 50, 0.9), 0 0 4px rgba(40, 30, 50, 0.6);
+}
+.slim.big {
+  height: 13px;
+}
+.slim.big > span {
+  line-height: 13px;
+  font-size: 10px;
+}
+
+/* ── 右上：選單按鈕與任務 ── */
+.hud-tr {
+  right: 10px;
+  top: 10px;
+  gap: 6px;
+}
+.menu-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  backdrop-filter: blur(4px);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+.menu-btn.on,
+.menu-btn:hover {
+  background: #fff;
+}
+.menu-btn .badge {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  margin: 0;
+}
+.menu-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.94);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow);
+}
+.menu-pop button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 132px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+.menu-pop button:hover {
+  background: #fff0f5;
+}
+.menu-pop .badge {
+  margin-left: auto;
+}
+.menu-info {
+  padding: 5px 10px 3px;
+  border-top: 1px dashed #e6dcec;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.quest-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  max-width: 210px;
+  padding: 3px 9px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(40, 30, 50, 0.3);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: right;
+  pointer-events: auto;
+}
+.quest-chip.open {
+  background: rgba(40, 30, 50, 0.5);
+}
+.quest-chip b {
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffe9a8;
+}
+
+/* ── 左下訊息、下方技能列 ── */
+.hud-bl {
+  left: 10px;
+  bottom: 10px;
+}
+.hud-bc {
+  bottom: 8px;
+  gap: 6px;
+}
+.hud .hint {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: rgba(40, 30, 50, 0.7);
+}
+.hud .skillbar {
+  gap: 5px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.hud .skill,
+.hud button.skill {
+  width: 50px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  backdrop-filter: blur(4px);
+  gap: 1px;
+  font-size: 10px;
+  color: var(--ink);
+  opacity: 0.55;
+}
+.hud button.skill.ready {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.82);
+  border: 2px solid var(--pink);
+}
+.hud button.skill.ult.ready {
+  border-color: var(--gold);
+  background: rgba(255, 246, 220, 0.88);
+}
+.hud button.skill.dodge.ready {
+  border-color: #9bd3ff;
+  background: rgba(238, 248, 255, 0.85);
+}
+.hud button.skill.potion.ready {
+  border-color: #ff9eb5;
+  background: rgba(255, 240, 244, 0.85);
+}
+.hud .skill kbd {
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.8);
+  border-width: 1px;
+}
+.hud .skill span {
+  max-width: 46px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── 提示訊息與對話框也縮小 ── */
+.toast {
+  top: 44px;
+  padding: 4px 14px;
+  font-size: 12px;
+  background: rgba(40, 30, 50, 0.6);
+}
+.dialog {
+  bottom: 70px;
+  padding: 10px 16px;
+}
+.dialog p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+/* ── 手機橫向（高度很小）：再縮一級 ── */
+@media (max-height: 460px) {
+  .me-bars {
+    width: 96px;
+  }
+  .me-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .mate .slim {
+    width: 26px;
+  }
+  .hud .skill,
+  .hud button.skill {
+    width: 44px;
+    height: 40px;
+  }
+  .menu-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .quest-chip {
+    max-width: 170px;
+  }
+  .dialog {
+    bottom: 56px;
+  }
+}

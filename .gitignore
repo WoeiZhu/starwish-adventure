@@ -1,0 +1,4 @@
+node_modules
+dist
+# 企劃書不公開
+*.pdf

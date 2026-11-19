@@ -1,0 +1,444 @@
+/* 階段 C：成長、背包、技能樹的介面樣式 */
+.bar.exp {
+  background: #efe6f5;
+}
+.bar.exp .bar-fill {
+  background: linear-gradient(90deg, #b58cff, #d6baff);
+}
+.gold {
+  float: right;
+  color: #b8860b;
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--pink-deep);
+  color: #fff;
+  font: 800 11px/1 inherit;
+  font-style: normal;
+}
+.btn.attention {
+  border-color: var(--pink);
+  background: #fff0f5;
+}
+.hud-bl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 800;
+  text-shadow: 0 1px 0 #fff, 0 0 6px #fff, 0 0 6px #fff;
+}
+.skill.potion {
+  width: 70px;
+}
+button.skill.potion.ready {
+  border-color: #ff9eb5;
+  background: #fff0f4;
+}
+.continue {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom: 2px dashed #eadff0;
+}
+.continue-info {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.create .btn {
+  box-shadow: none;
+  border-color: #eadff0;
+  padding: 10px;
+}
+.menu {
+  width: min(880px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 20px;
+}
+.menu-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tabs,
+.members {
+  display: flex;
+  gap: 8px;
+}
+.tabs button,
+.members button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 2px solid #eadff0;
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 800;
+}
+.tabs button.on,
+.members button.on {
+  border-color: var(--pink);
+  background: #fff0f5;
+}
+.members {
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.members small {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.menu-body {
+  display: flex;
+  gap: 20px;
+  overflow: auto;
+  min-height: 300px;
+}
+.menu-body.tree {
+  flex-direction: column;
+  gap: 10px;
+}
+.menu-col {
+  flex: 1;
+  min-width: 0;
+}
+.menu-col.wide {
+  flex: 1.4;
+}
+.menu h3 {
+  margin: 4px 0 8px;
+  font-size: 15px;
+}
+.menu h3 small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.muted {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+.exp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.exp-row .bar {
+  flex: 1;
+  margin: 0;
+  height: 10px;
+}
+.stats {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+.stats div {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px dashed #e6dcec;
+}
+.stats dt {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.stats dd {
+  margin: 0;
+  font-weight: 900;
+}
+.equip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #e6dcec;
+  min-height: 44px;
+}
+.equip-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.slot-tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1eaf5;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+.item-name {
+  font-size: 13px;
+  font-weight: 900;
+}
+.item-stats {
+  font-size: 12px;
+  font-weight: 700;
+}
+.skill-row {
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+.mini {
+  padding: 3px 9px;
+  border: 2px solid #eadff0;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.bag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.bag-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 7px 9px;
+  border: 2px solid;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+.bag-item.on {
+  box-shadow: 0 0 0 3px rgba(255, 143, 177, 0.35);
+  background: #fff7fa;
+}
+.bag-item.dim {
+  opacity: 0.5;
+}
+.worn {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--pink-deep);
+}
+.item-detail {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 2px solid;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.item-detail .up {
+  color: #2f9e52;
+  font-size: 12px;
+  font-weight: 800;
+}
+.item-detail .down {
+  color: #e0525a;
+  font-size: 12px;
+  font-weight: 800;
+}
+.detail-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.detail-actions .btn {
+  box-shadow: none;
+  border-color: #eadff0;
+}
+.btn-primary.small {
+  padding: 7px 14px;
+  font-size: 13px;
+  letter-spacing: 0;
+  box-shadow: 0 3px 0 #d14e78;
+}
+.tree-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.tree-head .btn {
+  box-shadow: none;
+  border-color: #eadff0;
+}
+.tree-head b {
+  font-size: 18px;
+}
+.tree-head b.pts {
+  color: var(--pink-deep);
+}
+.tree-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.branch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.branch h3 {
+  text-align: center;
+}
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 2px solid #eadff0;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+.node.open {
+  border-color: var(--pink);
+}
+.node.open:hover {
+  background: #fff0f5;
+}
+.node.learned {
+  background: #fff9e6;
+  border-color: var(--gold);
+}
+.node.blocked {
+  cursor: default;
+}
+.node.blocked:not(.learned) {
+  opacity: 0.55;
+}
+.node-name {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 900;
+}
+.node-desc {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.node-block {
+  font-size: 11px;
+  font-weight: 800;
+  color: #e0525a;
+}
+
+/* 階段 D：選項對話、任務欄、Boss 血條、章節完成 */
+.dialog.has-choices {
+  cursor: default;
+}
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 2px solid #eadff0;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+.choice:not(:disabled):hover {
+  border-color: var(--pink);
+  background: #fff0f5;
+}
+.choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.choice-label {
+  font-size: 14px;
+  font-weight: 900;
+}
+.choice-desc {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.quest {
+  width: 240px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.quest-title {
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 3px;
+}
+.quest-line {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.quest-line::before {
+  content: '◆ ';
+  color: var(--gold);
+}
+.hud-boss {
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  width: min(460px, calc(100vw - 560px));
+  min-width: 260px;
+  padding: 8px 14px 10px;
+  border-color: #c9a6ff;
+}
+.hud-boss .bar {
+  height: 18px;
+}
+.hud-boss .bar span {
+  line-height: 18px;
+  font-size: 11px;
+}
+.chapter {
+  width: min(520px, calc(100vw - 32px));
+  padding: 28px 30px;
+  text-align: center;
+}
+.chapter-en {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--pink-deep);
+}
+.chapter h2 {
+  margin: 6px 0 12px;
+  font-size: 28px;
+}
+.chapter p {
+  margin: 0 0 12px;
+  font-weight: 700;
+  line-height: 1.8;
+}
