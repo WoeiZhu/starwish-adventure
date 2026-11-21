@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { modelUrl } from '../data/appearance'
 import { enemyAt, hero } from '../game/combat/state'
-import type { EnemyTier, Unit } from '../game/combat/types'
+import type { Unit } from '../game/combat/types'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { ModelBoundary } from './characters/CharacterModel'
@@ -56,14 +56,22 @@ const CONFIG: Record<Kind, KindConfig> = {
   },
 }
 
-const KIND_OF: Record<EnemyTier, Kind> = { normal: 'slime', elite: 'goblin', boss: 'guardian' }
+/** 外觀模型：Boss 是石像、精英是大哥布林，普通怪依種族（史萊姆或小哥布林） */
+function kindOf(u: Unit): Kind {
+  if (u.tier === 'boss') return 'guardian'
+  if (u.tier === 'elite') return 'goblin'
+  return u.species === 'goblin' ? 'goblin' : 'slime'
+}
 
-/** 等級越高怪物越大（與 state.ts 的 setEnemyLevel 同一公式） */
-const levelFactor = (u: Unit) => 1 + (u.baseLevel - 1) * 0.12
+/** 普通哥布林比精英小一圈 */
+const GOBLIN_NORMAL_SCALE = 0.72
+
+/** 等級越高怪物越大（與 state.ts 的 setEnemyLevel 同一公式）；再乘上種族與階級的體型 */
+const levelFactor = (u: Unit) => (1 + (u.baseLevel - 1) * 0.12) * (u.tier === 'normal' && u.species === 'goblin' ? GOBLIN_NORMAL_SCALE : 1)
 
 /** 血條位置：頭頂上方 */
 export function enemyBarTop(u: Unit) {
-  const c = CONFIG[KIND_OF[u.tier]]
+  const c = CONFIG[kindOf(u)]
   return c.height * levelFactor(u) + c.barGap
 }
 
@@ -262,7 +270,7 @@ export function Enemy({ slot }: { slot: number }) {
   useFrame(() => {
     const u = enemyAt(slot)
     if (!u) return
-    const want = KIND_OF[u.tier]
+    const want = kindOf(u)
     if (want !== kind) setKind(want)
   })
 

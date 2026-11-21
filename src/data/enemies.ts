@@ -11,14 +11,26 @@ export interface EnemyStats {
   gold: number
 }
 
+/** 怪物種族：決定外觀與能力傾向（階級另外計算） */
+export type Species = 'slime' | 'goblin'
+export const SPECIES: Record<Species, { hp: number; atk: number; speed: number }> = {
+  slime: { hp: 1, atk: 1, speed: 1 },
+  // 哥布林：血少、攻高、跑得快
+  goblin: { hp: 0.85, atk: 1.15, speed: 1.12 },
+}
+
 export const ENEMY = {
-  /** 發現隊伍並開始追擊的距離 */
-  aggro: 6.5,
+  /** 普通怪發現隊伍並開始追擊的距離（營地裡的怪靠這個一隻一隻拉） */
+  aggro: 5,
   /** 離出生點超過此距離就放棄追擊回家 */
   leash: 20,
+  /** 普通怪被擊敗後重生的秒數 */
   respawn: 20,
   maxLevel: 50,
 }
+
+/** 階級越高越警覺：精英與 Boss 比較遠就會發現隊伍 */
+export const aggroRange = (tier: 'normal' | 'elite' | 'boss') => (tier === 'boss' ? 9 : tier === 'elite' ? 7 : ENEMY.aggro)
 
 export function slimeStats(level: number): EnemyStats {
   const k = level - 1

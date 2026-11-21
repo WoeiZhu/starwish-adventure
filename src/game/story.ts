@@ -70,6 +70,16 @@ export function interactables(): Interactable[] {
 
 const bossAlive = () => combat.units.some((u) => u.tag === 'boss' && u.alive)
 
+/** 區域首領何時開始定期重生：森林精英在救出森林夥伴之後，石環 Boss 在第一章完成之後 */
+export function areaBossUnlocked(id: string) {
+  if (id === 'ab_ruins') return story().step === 'done'
+  if (id === 'ab_forest') {
+    const forestMate = companions()[1]
+    return progress.recruited.includes(forestMate) && !combat.units.some((u) => u.tag === 'ev_forest')
+  }
+  return false
+}
+
 function say(speaker: string, lines: string[], choices?: Choice[], onEnd?: () => void) {
   runtime.path = null
   runtime.approach = false
@@ -123,8 +133,8 @@ function talkElder() {
       name,
       [
         '歡迎來到星光村！你就是新來的冒險者吧？',
-        '用 W/A/S/D 走動，或用滑鼠左鍵點地面。點擊怪物可以鎖定，普通攻擊會自動進行，按 1、2、3 用技能，4 是必殺技。',
-        '最近草原上的史萊姆變多了。先去南邊打倒 3 隻，讓我看看你的本事。',
+        '用 W/A/S/D 走動，或用滑鼠左鍵點地面。點擊怪物可以鎖定，站定不動時普通攻擊會自動進行（邊跑邊打是不行的喔），按 1、2、3 用技能，4 是必殺技。',
+        '最近草原上的史萊姆變多了，牠們成群住在村子外面的營地，村子附近是安全的。先去南邊打倒 3 隻，記得從遠處一隻一隻引過來。',
         '危險時按空白鍵閃避、按 Z 喝藥水。一個人的時候別逞強，打不過就回村子休息。',
       ],
       undefined,
@@ -259,7 +269,15 @@ function openChest(id: string) {
 function useAltar() {
   const s = story()
   if (bossAlive()) return
-  if (s.step === 'done') return say('石環祭壇', ['封印已經解除，祭壇靜靜地散發著溫暖的光。'])
+  if (s.step === 'done') {
+    const b = combat.units.find((u) => u.area === 'ab_ruins')
+    const state = !b
+      ? '祭壇的光芒正在慢慢凝聚……'
+      : b.alive
+        ? '石像已經甦醒，守在祭壇中央。'
+        : `石像正在沉睡，約 ${Math.max(1, Math.ceil(b.respawnTime - b.deadTime))} 秒後會再次甦醒。`
+    return say('石環祭壇', ['封印已經解除，祭壇靜靜地散發著溫暖的光。', `${state}史萊姆王每隔一段時間就會重生，可以反覆挑戰來收集裝備。`])
+  }
   if (partySize() < 4 || s.step !== 'boss') {
     return say('石環祭壇', ['祭壇上刻著四個職業的徽記：弓、杖、劍、聖印。', `看來需要四人到齊才能啟動。（目前 ${partySize()}/4）`])
   }
@@ -310,7 +328,8 @@ export function interactNearest() {
 /** 怪物被擊敗時呼叫：推進教學任務、檢查事件怪物是否全滅 */
 export function storyOnKill(e: Unit) {
   const s = story()
-  if (s.step === 'hunt') {
+  // 只算草原上的普通史萊姆（哥布林、事件怪物、首領都不算）
+  if (s.step === 'hunt' && e.species === 'slime' && e.tier === 'normal' && !e.tag) {
     s.huntKills++
     if (s.huntKills >= HUNT_GOAL) setStep('recruit', '尋找夥伴——草原東側傳來求救聲')
   }
@@ -351,6 +370,6 @@ export function questInfo(): QuestInfo {
         lines: [bossAlive() ? '擊敗史萊姆王！看到紅圈立刻離開' : '前往東北方的古代石環，調查中央的祭壇'],
       }
     default:
-      return { title: '第一章 完成', lines: ['自由探索，繼續升級與收集裝備'] }
+      return { title: '第一章 完成', lines: ['自由探索，繼續升級與收集裝備', '區域首領會定期重生，可以反覆挑戰刷裝備'] }
   }
 }

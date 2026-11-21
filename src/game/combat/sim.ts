@@ -1,16 +1,31 @@
 // 戰鬥模擬：每幀更新計時器、怪物 AI、隊友 AI、主角自動普攻、投射物與範圍效果。
 import { CLASSES } from '../../data/classes'
-import { ENEMY, scaledEnemyLevel } from '../../data/enemies'
-import { SPAWN } from '../../data/world'
+import { ENEMY, aggroRange, scaledEnemyLevel } from '../../data/enemies'
+import { AREA_BOSSES, SPAWN, inSafeZone } from '../../data/world'
 import { resolveCollisions } from '../../systems/collision'
 import { findPath } from '../../systems/pathfinding'
 import { RUN_SPEED, WALK_SPEED, runtime } from '../runtime'
 import { useGame } from '../store'
+import { moveAxis } from '../../systems/input'
 import { sfx } from '../../systems/sfx'
 import { BUFF_COLOR, basicAttack, castSkill, damage, faceTarget, hasBuff, heal } from './actions'
-import { burst, emit, flash, ring, shake, updateFx } from './fx'
+import { burst, emit, flash, pillar, ring, shake, updateFx } from './fx'
 import { updateDrops } from './rewards'
-import { FORMATION, addFeed, addFloater, combat, dist, expireBuff, hero, setEnemyLevel, spawnEnemy, unitById } from './state'
+import { areaBossUnlocked } from '../story'
+import {
+  FORMATION,
+  addFeed,
+  addFloater,
+  combat,
+  dist,
+  expireBuff,
+  hero,
+  setEnemyLevel,
+  spawnAreaBoss,
+  spawnEnemy,
+  unitById,
+  updateEnemySlots,
+} from './state'
 import type { Unit, Zone } from './types'
 
 function dampAngle(a: number, b: number, k: number, dt: number) {
@@ -84,18 +99,39 @@ function tickTimers(u: Unit, dt: number) {
   }
 }
 
+/** 怪物重生：一般怪依主角等級調整，區域首領固定比主角高一級，並廣播出現的訊息 */
+function reviveEnemy(e: Unit) {
+  const def = e.area ? AREA_BOSSES.find((d) => d.id === e.area) : undefined
+  e.alive = true
+  setEnemyLevel(e, def ? hero().level + def.levelBonus : scaledEnemyLevel(e.baseLevel, hero().level))
+  e.x = e.homeX
+  e.z = e.homeZ
+  e.ai.returning = false
+  e.targetId = null
+  e.atkTimer = 0
+  e.special = 4
+  if (def) {
+    addFeed(`${e.name}在${def.place}再度現身了！`, '#a96bf0')
+    pillar(e.x, e.z, def.color, 1.2, 7, 1)
+    ring(e.x, e.z, def.color, 0.5, 5, 0.8)
+    if (dist(e, hero()) < 30) sfx.taunt()
+  }
+}
+
+/** 每秒檢查一次：解鎖條件達成的區域首領還沒建立就建立（以沉睡狀態開始倒數） */
+function syncAreaBosses() {
+  for (const d of AREA_BOSSES) {
+    if (combat.units.some((u) => u.area === d.id)) continue
+    if (areaBossUnlocked(d.id)) spawnAreaBoss(d, hero().level)
+  }
+}
+let bossSync = 0
+
 // ── 怪物 AI：待機遊走 → 發現隊伍追擊 → 近身攻擊 → 離家太遠就回去 ──
 function enemyAI(e: Unit, party: Unit[], dt: number) {
   if (!e.alive) {
     e.deadTime += dt
-    if (e.respawns && e.deadTime > ENEMY.respawn) {
-      e.alive = true
-      // 重生時依主角等級提高怪物等級
-      setEnemyLevel(e, scaledEnemyLevel(e.baseLevel, hero().level))
-      e.x = e.homeX
-      e.z = e.homeZ
-      e.ai.returning = false
-    }
+    if (e.respawns && e.deadTime > e.respawnTime) reviveEnemy(e)
     return
   }
   if (e.stun > 0) return
@@ -106,13 +142,21 @@ function enemyAI(e: Unit, party: Unit[], dt: number) {
     const taunter = unitById(e.tauntBy)
     if (taunter?.alive) t = taunter
   }
+  // 野怪不會追進安全區：目標躲進村子就放棄；事件怪物（不重生）不受影響
+  if (t && e.respawns && inSafeZone(t.x, t.z)) {
+    t = undefined
+    e.ai.returning = homeD > 2.6
+  }
   // 事件怪物（不重生）不會放棄追擊
   if (t && (!t.alive || (e.respawns && (homeD > ENEMY.leash || dist(e, t) > 16)))) {
     t = undefined
     e.ai.returning = homeD > 2.6
   }
   if (e.ai.returning && homeD < 1) e.ai.returning = false
-  if (!t && !e.ai.returning) t = nearest(party, e, e.respawns ? ENEMY.aggro : 30)
+  if (!t && !e.ai.returning) {
+    const prey = e.respawns ? party.filter((p) => !inSafeZone(p.x, p.z)) : party
+    t = nearest(prey, e, e.respawns ? aggroRange(e.tier) : 30)
+  }
   e.targetId = t ? t.id : null
 
   if (!t) {
@@ -130,7 +174,11 @@ function enemyAI(e: Unit, party: Unit[], dt: number) {
       if (Math.hypot(e.ai.wx - e.x, e.ai.wz - e.z) > 0.2) moveToward(e, e.ai.wx, e.ai.wz, 0.9, dt)
     }
     // 野怪脫戰回血；事件怪物不回血，主角倒下重來時已打掉的血量會保留
-    if (e.respawns) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.25 * dt)
+    if (e.respawns) {
+      e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.25 * dt)
+      // 首領回滿血後解除狂暴，下次交戰重新計算
+      if (e.enraged && e.hp >= e.maxHp * 0.98) setEnemyLevel(e, e.level)
+    }
     return
   }
 
@@ -294,7 +342,8 @@ function allyAI(u: Unit, slot: number, h: Unit, engaged: Unit[], party: Unit[], 
   else u.facing = dampAngle(u.facing, Math.atan2(t.x - u.x, t.z - u.z), 10, dt)
 
   if (u.gcd <= 0) allySkills(u, t, engaged, party)
-  if (d <= u.range && u.atkTimer <= 0 && u.gcd < 0.6) basicAttack(u, t)
+  // 移動中不出手（站定才射擊 / 揮擊）；安全區內也不攻擊
+  if (d <= u.range && u.atkTimer <= 0 && u.gcd < 0.6 && u.moved < 0.3 && !inSafeZone(u.x, u.z)) basicAttack(u, t)
 }
 
 // ── 主角：選目標與技能時機由玩家決定，普通攻擊自動執行 ──
@@ -348,7 +397,11 @@ function heroUpdate(h: Unit, engaged: Unit[], dt: number) {
       castSkill(h, idx)
     }
   }
-  if (dist(h, t) - t.radius <= h.range && h.atkTimer <= 0) basicAttack(h, t)
+  // 普通攻擊只在站定時進行：邊走邊跑不會出手（要拉怪就停下來射），安全區內也不能攻擊
+  // 按下移動鍵 / 搖桿或正在走路徑的那一幀也算移動，避免起步瞬間多打一發
+  const axis = moveAxis()
+  const standing = h.speed < 0.3 && axis.x === 0 && axis.y === 0 && !runtime.path
+  if (standing &&!inSafeZone(h.x, h.z) && dist(h, t) - t.radius <= h.range && h.atkTimer <= 0) basicAttack(h, t)
 }
 
 /** 玩家按 1–4：施放技能並用提示訊息回報失敗原因 */
@@ -585,10 +638,16 @@ export function updateCombat(dt: number) {
   updateFx(dt)
   updateDrops(dt)
   updateHazards(dt)
+  bossSync -= dt
+  if (bossSync <= 0) {
+    bossSync = 1
+    syncAreaBosses()
+  }
   // 事件怪物死亡後不重生：倒下動畫播完就移除
   if (c.units.some((u) => !u.alive && !u.respawns && u.team === 'enemy' && u.deadTime > 2.5)) {
     c.units = c.units.filter((u) => u.alive || u.respawns || u.team !== 'enemy' || u.deadTime <= 2.5)
   }
+  updateEnemySlots()
 
   for (const f of c.floaters) {
     if (f.life <= 0) continue

@@ -1,6 +1,7 @@
 // 戰鬥動作：傷害、治療、增益、普攻、技能施放。全部由資料表（classes.ts）驅動，
 // 並在每個動作上觸發對應的特效、音效與打擊回饋。
 import { CLASSES, type BuffStat, type SkillEffect } from '../../data/classes'
+import { inSafeZone } from '../../data/world'
 import { sfx } from '../../systems/sfx'
 import { runtime } from '../runtime'
 import { burst, emit, flash, pillar, ring, shake, slash } from './fx'
@@ -59,6 +60,8 @@ export function kill(u: Unit) {
 
 export function damage(src: Unit, dst: Unit, power: number, heavy = false) {
   if (!dst.alive) return
+  // 安全區內的隊伍打不到野怪（避免站在村裡隔空刷怪）；事件怪物不受限
+  if (src.team === 'party' && dst.team === 'enemy' && dst.respawns && inSafeZone(src.x, src.z)) return
   if (dst.invuln > 0) return addFloater(dst, '閃避', '#bfe9ff')
   let d = atkOf(src) * power - defOf(dst) * 0.5
   const crit = Math.random() < src.crit

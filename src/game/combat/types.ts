@@ -1,5 +1,6 @@
 // 戰鬥資料型別：隊伍成員與怪物共用 Unit，投射物 / 範圍 / 飄字為短暫物件。
 import type { BuffStat, ClassId, ZoneStyle } from '../../data/classes'
+import type { Species } from '../../data/enemies'
 import type { Item } from '../../data/items'
 import type { Vec2 } from '../../data/world'
 import type { SkillMods } from '../progress'
@@ -32,6 +33,12 @@ export interface Unit {
   tag: string | null
   /** 死亡後是否重生；事件怪物不重生，死後會被移除 */
   respawns: boolean
+  /** 怪物種族（外觀與能力傾向） */
+  species: Species
+  /** 被擊敗後多少秒重生（只對 respawns 的怪物有意義；區域首領比較久） */
+  respawnTime: number
+  /** 區域首領的編號（data/world.ts 的 AREA_BOSSES）；一般怪物為 null */
+  area: string | null
   /** 外觀縮放 */
   scale: number
   /** 範圍重擊的倒數計時 */

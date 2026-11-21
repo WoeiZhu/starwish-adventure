@@ -6,7 +6,7 @@ import { CLASSES, MAX_LEVEL } from '../data/classes'
 import { REGION_NAME } from '../data/world'
 import { skillCooldown } from '../game/combat/actions'
 import { usePotion } from '../game/combat/rewards'
-import { combat, unitById } from '../game/combat/state'
+import { combat, dist, unitById } from '../game/combat/state'
 import { cycleTarget, heroCast } from '../game/combat/sim'
 import { expToNext, pointsLeft, progress } from '../game/progress'
 import { runtime } from '../game/runtime'
@@ -59,7 +59,8 @@ export function Hud() {
   const h = party[0]
   const allies = party.slice(1)
   const target = unitById(h.targetId)
-  const boss = combat.units.find((u) => u.tier === 'boss' && u.alive)
+  // 區域首領平常守在自己的地盤：交戰中或在附近才顯示血條
+  const boss = combat.units.find((u) => u.tier === 'boss' && u.alive && (u.targetId !== null || dist(u, h) < 24))
   const me = progress.members[heroProfile.classId]
   const need = expToNext(me.level)
   const points = party.reduce((n, u) => n + pointsLeft(u.classId!), 0)

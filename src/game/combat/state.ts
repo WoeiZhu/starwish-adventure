@@ -1,7 +1,7 @@
 // 戰鬥狀態單例：每幀變動，不進 Zustand。units[0] 永遠是主角。
 import { CLASSES, CLASS_ORDER, type ClassId } from '../../data/classes'
-import { scaledEnemyLevel, slimeStats } from '../../data/enemies'
-import { SLIMES, SPAWN, type SlimeDef } from '../../data/world'
+import { ENEMY, SPECIES, scaledEnemyLevel, slimeStats } from '../../data/enemies'
+import { MONSTERS, SPAWN, type AreaBossDef, type MonsterDef } from '../../data/world'
 import { computeStats, progress } from '../progress'
 import { RUN_SPEED } from '../runtime'
 import { clearFx } from './fx'
@@ -53,6 +53,9 @@ function baseUnit(id: string, kind: UnitKind, name: string, x: number, z: number
     tier: 'normal',
     tag: null,
     respawns: true,
+    species: 'slime',
+    respawnTime: ENEMY.respawn,
+    area: null,
     scale: 1,
     special: 4,
     enraged: false,
@@ -166,12 +169,13 @@ export function setEnemyLevel(u: Unit, level: number) {
   const s = slimeStats(level)
   const p = PARTY_SCALE[Math.min(3, partySize() - 1)]
   const t = TIER[u.tier]
+  const sp = SPECIES[u.species]
   u.level = level
-  u.maxHp = u.hp = Math.round(s.hp * p.hp * t.hp)
-  u.atk = Math.round(s.atk * p.atk * t.atk)
+  u.maxHp = u.hp = Math.round(s.hp * p.hp * t.hp * sp.hp)
+  u.atk = Math.round(s.atk * p.atk * t.atk * sp.atk)
   u.def = s.def
   u.interval = s.interval
-  u.moveSpeed = s.moveSpeed
+  u.moveSpeed = s.moveSpeed * sp.speed
   u.scale = t.scale * (1 + (u.baseLevel - 1) * 0.12)
   u.radius = t.radius
   u.enraged = false
@@ -215,15 +219,37 @@ export function recruitAlly(classId: ClassId) {
   }
 }
 
-function slimeUnit(def: SlimeDef, heroLevel: number): Unit {
+function monsterUnit(def: MonsterDef, heroLevel: number): Unit {
   const u: Unit = {
     ...baseUnit(def.id, 'slime', def.name, def.x, def.z),
     color: def.color,
     baseLevel: def.level,
+    species: def.species,
     range: 0.45,
   }
   setEnemyLevel(u, scaledEnemyLevel(def.level, heroLevel))
   return u
+}
+
+/**
+ * 建立區域首領。一開始是「沉睡中」：還要等 firstDelay 秒才會現身，
+ * 之後每次被擊敗都會在 respawn 秒後在原地重生（由 sim.ts 的 enemyAI 處理）。
+ */
+export function spawnAreaBoss(def: AreaBossDef, heroLevel: number) {
+  const u: Unit = {
+    ...baseUnit(`ab-${def.id}`, 'slime', def.name, def.x, def.z),
+    color: def.color,
+    range: 0.45,
+    tier: def.tier,
+    tag: def.id,
+    area: def.id,
+    respawnTime: def.respawn,
+  }
+  setEnemyLevel(u, heroLevel + def.levelBonus)
+  u.alive = false
+  u.hp = 0
+  u.deadTime = def.respawn - def.firstDelay
+  combat.units.push(u)
 }
 
 /** 主角未選的三個職業：依序對應草原、森林、石環三個招募事件 */
@@ -237,8 +263,9 @@ export function initCombat(heroName: string, heroClass: ClassId, at = SPAWN) {
     ...progress.recruited.filter((c) => c !== heroClass).map((c, i) =>
       partyUnit(allyId(c), 'ally', CLASSES[c].companion, c, at.x + FORMATION[i % 3].x, at.z - FORMATION[i % 3].z),
     ),
-    ...SLIMES.map((s) => slimeUnit(s, heroLevel)),
+    ...MONSTERS.map((m) => monsterUnit(m, heroLevel)),
   ]
+  slotUnits.fill(undefined)
   combat.projectiles = []
   combat.zones = []
   combat.hazards = []
@@ -252,6 +279,7 @@ export function initCombat(heroName: string, heroClass: ClassId, at = SPAWN) {
   combat.hitStop = 0
   combat.potionCd = 0
   clearFx()
+  updateEnemySlots()
 }
 
 export function addFloater(u: { x: number; z: number }, text: string, color: string, big = false, y = 1.7) {
@@ -271,15 +299,45 @@ export function addFeed(text: string, color = '#4a3b52') {
   if (combat.feed.length > 6) combat.feed.shift()
 }
 
-/** 第 slot 隻怪物（畫面的顯示槽位用） */
-export function enemyAt(slot: number) {
-  let n = 0
-  for (const u of combat.units) {
-    if (u.team === 'enemy' && n++ === slot) return u
+// ── 怪物顯示槽位 ─────────────────────────────────────
+// 地圖上有幾十隻怪物，但畫面只需要顯示附近的：固定數量的槽位，每個槽位分配給一隻附近的怪物。
+// 怪物離開範圍就釋放槽位；槽位全滿時，較近的怪物會擠掉最遠的那隻。
+export const ENEMY_SLOTS = 28
+const SLOT_RANGE = 48
+const slotUnits: (Unit | undefined)[] = new Array(ENEMY_SLOTS).fill(undefined)
+
+/** 第 slot 個顯示槽位目前對應的怪物 */
+export const enemyAt = (slot: number) => slotUnits[slot]
+
+export function updateEnemySlots() {
+  const h = combat.units[0]
+  if (!h) return
+  const near = new Set<Unit>()
+  for (const u of combat.units) if (u.team === 'enemy' && dist(u, h) < SLOT_RANGE) near.add(u)
+  // 釋放：已被移除或離太遠的
+  for (let i = 0; i < ENEMY_SLOTS; i++) {
+    const u = slotUnits[i]
+    if (u && !near.has(u)) slotUnits[i] = undefined
   }
-  return undefined
+  const held = new Set(slotUnits)
+  const need = [...near].filter((u) => !held.has(u)).sort((a, b) => dist(a, h) - dist(b, h))
+  for (const u of need) {
+    let at = slotUnits.indexOf(undefined)
+    if (at < 0) {
+      // 槽位全滿：比較遠的讓位（多留 3 的緩衝，避免兩隻來回互換）
+      let far = dist(u, h) + 3
+      for (let i = 0; i < ENEMY_SLOTS; i++) {
+        const d = dist(slotUnits[i]!, h)
+        if (d > far) {
+          far = d
+          at = i
+        }
+      }
+      if (at < 0) break
+    }
+    slotUnits[at] = u
+  }
 }
-export const ENEMY_SLOTS = 14
 
 export const hero = () => combat.units[0]
 export const unitById = (id: string | null) => (id ? combat.units.find((u) => u.id === id) : undefined)

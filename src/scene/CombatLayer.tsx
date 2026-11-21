@@ -310,13 +310,16 @@ function Drops() {
   )
 }
 
+/** 飄字畫布寬度：夠放下 7～8 個字的裝備名稱（原本 256 會切掉長名稱） */
+const FLOATER_W = 512
+
 /** 傷害數字與技能名稱：每個飄字一張小畫布貼圖，循環重用 */
 function Floaters() {
   const slots = useMemo(
     () =>
       Array.from({ length: FLOATER_POOL }, () => {
         const canvas = document.createElement('canvas')
-        canvas.width = 256
+        canvas.width = FLOATER_W
         canvas.height = 64
         const texture = new THREE.CanvasTexture(canvas)
         const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false })
@@ -345,21 +348,27 @@ function Floaters() {
       if (s.seq !== f.seq) {
         s.seq = f.seq
         const ctx = s.canvas.getContext('2d')!
-        ctx.clearRect(0, 0, 256, 64)
-        ctx.font = `900 ${f.big ? 46 : 38}px "Microsoft JhengHei", "PingFang TC", sans-serif`
+        ctx.clearRect(0, 0, FLOATER_W, 64)
+        const face = '"Microsoft JhengHei", "PingFang TC", sans-serif'
+        const base = f.big ? 46 : 38
+        ctx.font = `900 ${base}px ${face}`
+        // 名稱太長（例如「傳說的星輝聖劍」）就縮小字體，保證整行放得進畫布，不會被切掉
+        const w = ctx.measureText(f.text).width
+        const fit = FLOATER_W - 24
+        if (w > fit) ctx.font = `900 ${Math.floor((base * fit) / w)}px ${face}`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.lineJoin = 'round'
         ctx.lineWidth = 8
         ctx.strokeStyle = 'rgba(60,40,70,0.9)'
-        ctx.strokeText(f.text, 128, 34)
+        ctx.strokeText(f.text, FLOATER_W / 2, 34)
         ctx.fillStyle = f.color
-        ctx.fillText(f.text, 128, 34)
+        ctx.fillText(f.text, FLOATER_W / 2, 34)
         s.texture.needsUpdate = true
       }
       const pop = 1 + Math.max(0, f.life - 0.85) * 2
       s.sprite.position.set(f.x, f.y + (k - 1) * 0.4, f.z)
-      s.sprite.scale.set(1.5 * k * pop, 0.375 * k * pop, 1)
+      s.sprite.scale.set((FLOATER_W / 256) * 1.5 * k * pop, 0.375 * k * pop, 1)
       s.material.opacity = Math.min(1, f.life * 3)
     })
   })

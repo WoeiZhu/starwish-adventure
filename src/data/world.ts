@@ -1,5 +1,6 @@
 // MVP 地圖「星光村外草原」：以固定亂數種子產生，確保每次載入佈局一致。
 import * as THREE from 'three'
+import type { Species } from './enemies'
 
 export interface Vec2 {
   x: number
@@ -109,6 +110,99 @@ export const CHESTS: ChestDef[] = [
   { id: 'c_forest', x: -31, z: -9, rot: 1.2 },
   { id: 'c_ruins', x: 34, z: -24, rot: -0.8 },
 ]
+// ── 怪物營地（只在村外；村子與出生點一帶是安全區） ──
+export interface CampDef {
+  id: string
+  x: number
+  z: number
+  species: Species
+  /** 營地裡怪物的名稱與顏色，依序輪流使用 */
+  kinds: { name: string; color: string }[]
+  /** 營地的基礎等級（重生時會隨主角成長提高） */
+  level: number
+  /** 營地裡的怪物數量（2～4 隻，擠在一起，要一隻一隻拉） */
+  count: number
+}
+const SLIME_KINDS = [
+  { name: '草原史萊姆', color: '#7ed957' },
+  { name: '水藍史萊姆', color: '#6ec3f4' },
+  { name: '蜜桃史萊姆', color: '#ff9ec4' },
+]
+const FOREST_GOBLIN = [{ name: '森林哥布林', color: '#7a9a4a' }]
+const RUINS_GOBLIN = [{ name: '石環哥布林', color: '#9a8a6a' }]
+/** 翠綠草原是史萊姆，離村子越遠等級越高；迷霧森林與石環外圍是哥布林 */
+export const CAMPS: CampDef[] = [
+  { id: 'm1', x: -9, z: 21, species: 'slime', kinds: SLIME_KINDS, level: 1, count: 3 },
+  { id: 'm2', x: 9, z: 20, species: 'slime', kinds: SLIME_KINDS, level: 1, count: 3 },
+  { id: 'm7', x: -13, z: 13, species: 'slime', kinds: SLIME_KINDS, level: 1, count: 2 },
+  { id: 'm3', x: -14, z: 31, species: 'slime', kinds: SLIME_KINDS, level: 2, count: 4 },
+  { id: 'm4', x: 8, z: 32, species: 'slime', kinds: SLIME_KINDS, level: 3, count: 4 },
+  { id: 'm5', x: 28, z: 9, species: 'slime', kinds: SLIME_KINDS, level: 3, count: 4 },
+  { id: 'm6', x: 27, z: 26, species: 'slime', kinds: SLIME_KINDS, level: 4, count: 4 },
+  { id: 'f1', x: -24, z: -18, species: 'goblin', kinds: FOREST_GOBLIN, level: 4, count: 3 },
+  { id: 'f2', x: -31, z: -28, species: 'goblin', kinds: FOREST_GOBLIN, level: 5, count: 3 },
+  { id: 'f3', x: -23, z: 21, species: 'goblin', kinds: FOREST_GOBLIN, level: 5, count: 4 },
+  { id: 'f4', x: -31, z: 29, species: 'goblin', kinds: FOREST_GOBLIN, level: 6, count: 3 },
+  { id: 'r1', x: 34, z: -6, species: 'goblin', kinds: RUINS_GOBLIN, level: 6, count: 3 },
+  { id: 'r2', x: 23, z: -33, species: 'goblin', kinds: RUINS_GOBLIN, level: 7, count: 3 },
+]
+
+export interface MonsterDef {
+  id: string
+  x: number
+  z: number
+  color: string
+  name: string
+  level: number
+  species: Species
+}
+/** 營地內每隻怪物的出生點：繞著營地中心排成一圈（用固定亂數種子，每次載入都一樣） */
+export const MONSTERS: MonsterDef[] = []
+{
+  const rnd = mulberry32(5150)
+  const RING = [0, 0, 1.3, 1.9, 2.4]
+  for (const c of CAMPS) {
+    const phase = rnd() * Math.PI * 2
+    for (let i = 0; i < c.count; i++) {
+      const a = phase + (i / c.count) * Math.PI * 2
+      const k = c.kinds[i % c.kinds.length]
+      MONSTERS.push({
+        id: `${c.id}-${i}`,
+        x: c.x + Math.cos(a) * RING[c.count] + (rnd() - 0.5) * 0.6,
+        z: c.z + Math.sin(a) * RING[c.count] + (rnd() - 0.5) * 0.6,
+        color: k.color,
+        name: k.name,
+        level: c.level + (i % 3 === 2 ? 1 : 0),
+        species: c.species,
+      })
+    }
+  }
+}
+
+// ── 區域首領：定期重生，可以反覆挑戰刷裝備 ──
+export interface AreaBossDef {
+  id: string
+  name: string
+  color: string
+  tier: 'elite' | 'boss'
+  x: number
+  z: number
+  /** 被擊敗後多少秒重生 */
+  respawn: number
+  /** 解鎖後第一次出現前的等待秒數 */
+  firstDelay: number
+  /** 等級 = 主角等級 + 這個數字（每次重生都重算） */
+  levelBonus: number
+  /** 訊息用的地點名稱 */
+  place: string
+}
+export const AREA_BOSSES: AreaBossDef[] = [
+  // 迷霧森林的精英：救出森林夥伴之後，會固定在森林深處徘徊
+  { id: 'ab_forest', name: '迷霧史萊姆王子', color: '#8a7bd8', tier: 'elite', x: -31, z: 14, respawn: 120, firstDelay: 30, levelBonus: 1, place: '迷霧森林' },
+  // 石環 Boss：第一章打倒之後，每隔一段時間再度甦醒
+  { id: 'ab_ruins', name: '史萊姆王', color: '#b06bff', tier: 'boss', x: RUINS.x, z: RUINS.z - 2.5, respawn: 240, firstDelay: 60, levelBonus: 1, place: '古代石環' },
+]
+
 /** 這些範圍內不長樹與石頭 */
 const CLEARINGS: { x: number; z: number; r: number }[] = [
   { ...RUINS, r: RUINS.r + 3 },
@@ -117,6 +211,8 @@ const CLEARINGS: { x: number; z: number; r: number }[] = [
   { ...EVENT_SPOTS.ruins, r: 3 },
   { ...MERCHANT, r: 2.5 },
   ...CHESTS.map((c) => ({ x: c.x, z: c.z, r: 2.6 })),
+  ...CAMPS.map((c) => ({ x: c.x, z: c.z, r: 4.2 })),
+  ...AREA_BOSSES.map((b) => ({ x: b.x, z: b.z, r: 3.5 })),
 ]
 const inClearing = (x: number, z: number) => CLEARINGS.some((c) => Math.hypot(x - c.x, z - c.z) < c.r)
 
@@ -127,22 +223,11 @@ export function regionAt(x: number, z: number): RegionId {
   return 'meadow'
 }
 
-// ── 史萊姆 ───────────────────────────────────────────
-export interface SlimeDef {
-  id: string
-  x: number
-  z: number
-  color: string
-  name: string
-  level: number
+/** 安全區：星光村與出生點周圍。怪物不會追進來，隊伍在裡面也不能攻擊野怪 */
+export const SAFE_SPAWN_R = 9
+export function inSafeZone(x: number, z: number) {
+  return regionAt(x, z) === 'village' || Math.hypot(x - SPAWN.x, z - SPAWN.z) < SAFE_SPAWN_R
 }
-export const SLIMES: SlimeDef[] = [
-  { id: 's1', x: 6.5, z: 12, color: '#7ed957', name: '草原史萊姆', level: 1 },
-  { id: 's2', x: -7.5, z: 16, color: '#6ec3f4', name: '水藍史萊姆', level: 2 },
-  { id: 's3', x: 10.5, z: 22, color: '#ff9ec4', name: '蜜桃史萊姆', level: 3 },
-  { id: 's4', x: -12.5, z: 8, color: '#7ed957', name: '草原史萊姆', level: 1 },
-  { id: 's5', x: 4.5, z: 28, color: '#6ec3f4', name: '水藍史萊姆', level: 2 },
-]
 
 function inHouseArea(x: number, z: number, pad: number) {
   return HOUSES.some((h) => Math.abs(x - h.x) < h.w / 2 + pad && Math.abs(z - h.z) < h.d / 2 + pad)
@@ -150,7 +235,7 @@ function inHouseArea(x: number, z: number, pad: number) {
 function nearPoints(x: number, z: number, pts: Vec2[], r: number) {
   return pts.some((p) => Math.hypot(x - p.x, z - p.z) < r)
 }
-const KEEP_CLEAR: Vec2[] = [SPAWN, WELL, SIGN, NPC_ELDER, ...SLIMES]
+const KEEP_CLEAR: Vec2[] = [SPAWN, WELL, SIGN, NPC_ELDER, ...MONSTERS]
 
 // ── 樹木 ─────────────────────────────────────────────
 export interface TreeDef {
