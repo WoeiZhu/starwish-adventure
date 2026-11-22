@@ -16,7 +16,7 @@ export function TitleScreen() {
       <div className="title-logo">
         <div className="title-en">✦ STARWISH ADVENTURE</div>
         <h1>星願冒險團</h1>
-        <p>可愛 3D 奇幻冒險 · 第一章 · 探索、戰鬥與成長</p>
+        <p>可愛 3D 奇幻冒險 · 第一～二章 · 探索、戰鬥與成長</p>
       </div>
 
       <form

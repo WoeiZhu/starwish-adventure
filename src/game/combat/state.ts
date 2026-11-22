@@ -1,6 +1,6 @@
 // 戰鬥狀態單例：每幀變動，不進 Zustand。units[0] 永遠是主角。
 import { CLASSES, CLASS_ORDER, type ClassId } from '../../data/classes'
-import { ENEMY, SPECIES, scaledEnemyLevel, slimeStats } from '../../data/enemies'
+import { ENEMY, SPECIES, scaledEnemyLevel, slimeStats, type Species } from '../../data/enemies'
 import { MONSTERS, SPAWN, type AreaBossDef, type MonsterDef } from '../../data/world'
 import { computeStats, progress } from '../progress'
 import { RUN_SPEED } from '../runtime'
@@ -58,7 +58,16 @@ function baseUnit(id: string, kind: UnitKind, name: string, x: number, z: number
     area: null,
     scale: 1,
     special: 4,
+    special2: 8,
     enraged: false,
+    actionClip: '',
+    actionSeq: 0,
+    dashT: 0,
+    dashX: x,
+    dashZ: z,
+    dashPower: 0,
+    castT: 0,
+    castKind: '',
     x,
     z,
     facing: 0,
@@ -174,20 +183,36 @@ export function setEnemyLevel(u: Unit, level: number) {
   u.maxHp = u.hp = Math.round(s.hp * p.hp * t.hp * sp.hp)
   u.atk = Math.round(s.atk * p.atk * t.atk * sp.atk)
   u.def = s.def
-  u.interval = s.interval
+  u.interval = s.interval * sp.interval
   u.moveSpeed = s.moveSpeed * sp.speed
   u.scale = t.scale * (1 + (u.baseLevel - 1) * 0.12)
   u.radius = t.radius
+  u.range = sp.range ?? 0.45
+  u.ranged = !!sp.range
   u.enraged = false
+  u.castT = 0
+  u.castKind = ''
+  u.dashT = 0
+  u.dashPower = 0
 }
 
 /** 事件生成的怪物（招募戰、精英、Boss、Boss 召喚）：不重生，生成時立刻鎖定主角 */
-export function spawnEnemy(o: { name: string; color: string; x: number; z: number; level: number; tier?: EnemyTier; tag: string }) {
+export function spawnEnemy(o: {
+  name: string
+  color: string
+  x: number
+  z: number
+  level: number
+  tier?: EnemyTier
+  tag: string
+  species?: Species
+}) {
   const u: Unit = {
     ...baseUnit(`e${++enemySeq}`, 'slime', o.name, o.x, o.z),
     color: o.color,
     range: 0.45,
     tier: o.tier ?? 'normal',
+    species: o.species ?? 'slime',
     tag: o.tag,
     respawns: false,
     targetId: 'hero',
@@ -225,6 +250,9 @@ function monsterUnit(def: MonsterDef, heroLevel: number): Unit {
     color: def.color,
     baseLevel: def.level,
     species: def.species,
+    tier: def.tier,
+    // 精英營地的怪物重生比較慢
+    respawnTime: def.tier === 'elite' ? ENEMY.respawn * 3 : ENEMY.respawn,
     range: 0.45,
   }
   setEnemyLevel(u, scaledEnemyLevel(def.level, heroLevel))
@@ -241,6 +269,7 @@ export function spawnAreaBoss(def: AreaBossDef, heroLevel: number) {
     color: def.color,
     range: 0.45,
     tier: def.tier,
+    species: def.species,
     tag: def.id,
     area: def.id,
     respawnTime: def.respawn,

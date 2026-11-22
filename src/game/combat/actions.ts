@@ -147,6 +147,32 @@ function addBuff(u: Unit, stat: BuffStat, amount: number, duration: number) {
   u.buffs.push({ stat, amount, time: duration, value })
 }
 
+/** 怪物的遠程攻擊（星晶魔靈）：追蹤目標的光彈，delay 秒後才出手（配合射擊動作） */
+export function enemyShot(u: Unit, t: Unit, power: number, color: string, delay = 0.3, big = false) {
+  const d = dist(u, t) || 1
+  u.atkTimer = u.interval
+  u.attackAnim = 1
+  faceTarget(u, t)
+  combat.projectiles.push({
+    owner: u,
+    targetId: t.id,
+    x: u.x,
+    z: u.z,
+    dirX: (t.x - u.x) / d,
+    dirZ: (t.z - u.z) / d,
+    speed: 11,
+    power,
+    delay,
+    pierce: false,
+    splash: 0,
+    travelled: 0,
+    hit: [],
+    color,
+    big,
+  })
+  if (audible(u)) sfx.shoot(true)
+}
+
 function spawnProjectile(u: Unit, t: Unit, power: number, delay: number, pierce: boolean, splash: number, big: boolean) {
   const d = dist(u, t) || 1
   combat.projectiles.push({

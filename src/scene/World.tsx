@@ -4,7 +4,13 @@ import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import {
   BORDER_TREES,
+  BOUNDS,
+  CRYSTALS,
   FOREST_EDGE,
+  GROVE,
+  SHROOMS,
+  SPRING,
+  VALLEY_EDGE,
   RUINS,
   RUIN_PILLARS,
   FLOWERS,
@@ -54,8 +60,8 @@ function Ground() {
   }, [])
   return (
     <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow onClick={handleGroundClick}>
-        <circleGeometry args={[90, 64]} />
+      <mesh position={[0, 0, -18]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow onClick={handleGroundClick}>
+        <circleGeometry args={[115, 64]} />
         <meshLambertMaterial color="#8fd36c" />
       </mesh>
       {patches.map((p, i) => (
@@ -381,20 +387,132 @@ function Ruins() {
   )
 }
 
-function Backdrop() {
-  const hills = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, i) => {
-        const a = (i / 12) * Math.PI * 2 + 0.2
-        return { x: Math.cos(a) * 78, z: Math.sin(a) * 78, r: 18 + (i % 3) * 6, c: i % 2 ? '#7fc98a' : '#93d59a' }
-      }),
-    [],
+/** 從 VALLEY_EDGE 往北漸層變深的山谷地面色（畫在一張漸層貼圖上，避免出現硬邊） */
+function valleyGroundTexture() {
+  const c = document.createElement('canvas')
+  c.width = 4
+  c.height = 256
+  const g = c.getContext('2d')!
+  // 貼圖的上緣（v=1）對應平面的北端
+  const grad = g.createLinearGradient(0, 256, 0, 0)
+  grad.addColorStop(0, 'rgba(70,140,140,0)')
+  grad.addColorStop(0.16, 'rgba(70,140,140,0.55)')
+  grad.addColorStop(1, 'rgba(60,120,140,0.7)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 4, 256)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+const GEM_GEO = new THREE.OctahedronGeometry(1, 0).scale(0.38, 1.25, 0.38)
+const STEM_GEO = new THREE.CylinderGeometry(0.16, 0.24, 1, 10)
+const CAP_GEO = new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.7, 1)
+
+/** 月光山谷：偏藍綠的地面、發光星晶、大蘑菇、星晶林地面、月泉 */
+function Valley() {
+  const tex = useMemo(valleyGroundTexture, [])
+  const spring = useRef<THREE.Mesh>(null!)
+  const orbs = useRef<THREE.Group>(null!)
+  const depth = 40
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    ;(spring.current.material as THREE.MeshLambertMaterial).emissiveIntensity = 0.55 + Math.sin(t * 1.6) * 0.12
+    // 月泉上方漂浮的光點
+    orbs.current.children.forEach((o, i) => {
+      const a = t * 0.35 + i * 1.7
+      o.position.set(Math.cos(a) * (2 + (i % 3)), 0.7 + Math.sin(t * 1.3 + i) * 0.35, Math.sin(a) * (2 + (i % 3)))
+    })
+  })
+  return (
+    <group>
+      <mesh position={[0, 0.016, VALLEY_EDGE + 6 - depth / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[120, depth]} />
+        <meshLambertMaterial map={tex} transparent depthWrite={false} />
+      </mesh>
+      {CRYSTALS.map((c, i) => (
+        <group key={i} position={[c.x, 0, c.z]} rotation={[0, c.rot, 0]} scale={c.s}>
+          <mesh geometry={GEM_GEO} position={[0, 1.1, 0]} castShadow>
+            <meshLambertMaterial color={c.color} emissive={c.color} emissiveIntensity={0.55} flatShading />
+          </mesh>
+          <mesh geometry={GEM_GEO} position={[0.45, 0.6, 0.1]} rotation={[0, 0, -0.5]} scale={0.55} castShadow>
+            <meshLambertMaterial color={c.color} emissive={c.color} emissiveIntensity={0.5} flatShading />
+          </mesh>
+          <mesh geometry={GEM_GEO} position={[-0.35, 0.5, -0.2]} rotation={[0.3, 0, 0.6]} scale={0.45}>
+            <meshLambertMaterial color={c.color} emissive={c.color} emissiveIntensity={0.5} flatShading />
+          </mesh>
+        </group>
+      ))}
+      {SHROOMS.map((m, i) => (
+        <group key={i} position={[m.x, 0, m.z]} rotation={[0, m.rot, 0]} scale={m.s}>
+          <mesh geometry={STEM_GEO} position={[0, 0.5, 0]} castShadow>
+            <meshLambertMaterial color="#f4ead8" />
+          </mesh>
+          <mesh geometry={CAP_GEO} position={[0, 0.95, 0]} castShadow>
+            <meshLambertMaterial color={m.color} emissive={m.color} emissiveIntensity={0.18} />
+          </mesh>
+        </group>
+      ))}
+      {/* 星晶林：淡紫色石地 */}
+      <mesh position={[GROVE.x, 0.03, GROVE.z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <circleGeometry args={[GROVE.r + 1, 32]} />
+        <meshLambertMaterial color="#b8b4d8" />
+      </mesh>
+      {/* 月泉：石砌泉邊、發光的泉水、漂浮的光點 */}
+      <group position={[SPRING.x, 0, SPRING.z]}>
+        <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <circleGeometry args={[SPRING.r + 1.6, 40]} />
+          <meshLambertMaterial color="#cfd6d0" />
+        </mesh>
+        <mesh ref={spring} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[SPRING.r - 0.4, 40]} />
+          <meshLambertMaterial color="#8fdcff" emissive="#6fc8ff" emissiveIntensity={0.55} transparent opacity={0.85} />
+        </mesh>
+        {Array.from({ length: 14 }, (_, i) => {
+          const a = (i / 14) * Math.PI * 2
+          return (
+            <mesh
+              key={i}
+              position={[Math.cos(a) * (SPRING.r + 0.5), 0.18, Math.sin(a) * (SPRING.r + 0.5)]}
+              rotation={[0, a, 0]}
+              scale={[0.55, 0.3, 0.4]}
+              castShadow
+            >
+              <dodecahedronGeometry args={[1, 0]} />
+              <meshLambertMaterial color="#a9b3ad" flatShading />
+            </mesh>
+          )
+        })}
+        <group ref={orbs}>
+          {Array.from({ length: 7 }, (_, i) => (
+            <mesh key={i}>
+              <sphereGeometry args={[0.09, 8, 6]} />
+              <meshBasicMaterial color="#e6fbff" />
+            </mesh>
+          ))}
+        </group>
+      </group>
+    </group>
   )
+}
+
+function Backdrop() {
+  // 山丘圍著可行走範圍外側排成橢圓（地圖往北延伸後不再是正圓）
+  const hills = useMemo(() => {
+    const cx = (BOUNDS.minX + BOUNDS.maxX) / 2
+    const cz = (BOUNDS.minZ + BOUNDS.maxZ) / 2
+    const rx = (BOUNDS.maxX - BOUNDS.minX) / 2 + 40
+    const rz = (BOUNDS.maxZ - BOUNDS.minZ) / 2 + 40
+    return Array.from({ length: 16 }, (_, i) => {
+      const a = (i / 16) * Math.PI * 2 + 0.2
+      return { x: cx + Math.cos(a) * rx, z: cz + Math.sin(a) * rz, r: 18 + (i % 3) * 6, c: i % 2 ? '#7fc98a' : '#93d59a' }
+    })
+  }, [])
   const clouds = useMemo(
     () =>
       Array.from({ length: 9 }, (_, i) => {
         const a = (i / 9) * Math.PI * 2
-        return { x: Math.cos(a) * (60 + (i % 3) * 14), y: 24 + (i % 4) * 4, z: Math.sin(a) * (60 + (i % 2) * 18) }
+        return { x: Math.cos(a) * (60 + (i % 3) * 14), y: 24 + (i % 4) * 4, z: -18 + Math.sin(a) * (75 + (i % 2) * 18) }
       }),
     [],
   )
@@ -441,6 +559,7 @@ export function World() {
       <Signpost />
       <Forest />
       <Ruins />
+      <Valley />
       <Backdrop />
     </>
   )

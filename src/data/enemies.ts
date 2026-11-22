@@ -11,12 +11,31 @@ export interface EnemyStats {
   gold: number
 }
 
-/** 怪物種族：決定外觀與能力傾向（階級另外計算） */
-export type Species = 'slime' | 'goblin'
-export const SPECIES: Record<Species, { hp: number; atk: number; speed: number }> = {
-  slime: { hp: 1, atk: 1, speed: 1 },
+/** 怪物種族：決定外觀、能力傾向與攻擊方式（階級另外計算） */
+export type Species = 'slime' | 'goblin' | 'wolf' | 'mushroom' | 'crystal' | 'stag'
+export interface SpeciesDef {
+  hp: number
+  atk: number
+  speed: number
+  /** 普攻間隔倍率 */
+  interval: number
+  /** 遠程：保持距離、發射光彈 */
+  range?: number
+  /** Boss 狂暴時召喚的手下 */
+  summon?: { name: string; color: string; species: Species }
+}
+export const SPECIES: Record<Species, SpeciesDef> = {
+  slime: { hp: 1, atk: 1, speed: 1, interval: 1, summon: { name: '史萊姆衛兵', color: '#d9a6ff', species: 'slime' } },
   // 哥布林：血少、攻高、跑得快
-  goblin: { hp: 0.85, atk: 1.15, speed: 1.12 },
+  goblin: { hp: 0.85, atk: 1.15, speed: 1.12, interval: 1 },
+  // 月影幼狼：血少、跑最快、會撲擊
+  wolf: { hp: 0.75, atk: 1, speed: 1.3, interval: 0.85 },
+  // 孢子蘑菇：耐打、走得慢、會放毒霧
+  mushroom: { hp: 1.15, atk: 0.8, speed: 0.75, interval: 1.15 },
+  // 星晶魔靈：遠程射擊，靠太近會後退
+  crystal: { hp: 0.8, atk: 1.05, speed: 0.95, interval: 1.25, range: 6.5 },
+  // 苔蘚靈鹿：Boss，會衝撞、治療自己與手下
+  stag: { hp: 1.1, atk: 1, speed: 1.05, interval: 1, summon: { name: '月影幼狼', color: '#8fa6d8', species: 'wolf' } },
 }
 
 export const ENEMY = {

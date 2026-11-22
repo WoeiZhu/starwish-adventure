@@ -1,16 +1,17 @@
-// 第一章劇情：任務進度、可互動物件（村長、商人、待招募夥伴、寶箱、祭壇）與事件流程。
+// 劇情：任務進度、可互動物件（村長、商人、待招募夥伴、寶箱、祭壇、月光石碑、星晶簇、月泉）與事件流程。
+// 第一章在草原、森林、石環招募夥伴並擊敗史萊姆王；第二章前往北方的月光山谷。
 import { CLASSES, type ClassId } from '../data/classes'
 import { makeItem, type Quality } from '../data/items'
-import { CHESTS, EVENT_SPOTS, MERCHANT, NPC_ELDER, REGION_NAME, RUINS } from '../data/world'
+import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE } from '../data/world'
 import { sfx } from '../systems/sfx'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
 import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, spawnEnemy } from './combat/state'
 import type { Unit } from './combat/types'
-import { HUNT_GOAL, addItem, progress } from './progress'
+import { C2_HUNT_GOAL, HUNT_GOAL, addItem, progress, storyReached } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
-export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar'
+export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar' | 'stele' | 'grove' | 'spring'
 export interface Interactable {
   id: string
   kind: InteractKind
@@ -39,9 +40,13 @@ const companions = () => companionClasses(heroClass())
 export function interactables(): Interactable[] {
   const s = story()
   const list: Interactable[] = [
-    { id: 'elder', kind: 'elder', ...NPC_ELDER, verb: '交談', marker: s.step === 'talk' },
+    { id: 'elder', kind: 'elder', ...NPC_ELDER, verb: '交談', marker: s.step === 'talk' || s.step === 'done' },
     { id: 'merchant', kind: 'merchant', ...MERCHANT, verb: '交談', marker: false },
     { id: 'altar', kind: 'altar', x: RUINS.x, z: RUINS.z, facing: 0, name: '石環祭壇', verb: '調查', marker: s.step === 'boss' && !bossAlive() },
+    // 第二章：月光山谷的三個調查點
+    { id: 'stele', kind: 'stele', ...STELE, facing: 0.2, name: '月光石碑', verb: '調查', marker: s.step === 'c2_scout' },
+    { id: 'grove', kind: 'grove', x: GROVE.x, z: GROVE.z, facing: 0, name: '星晶簇', verb: '調查', marker: s.step === 'c2_crystal' && !tagAlive('ev_grove') },
+    { id: 'spring', kind: 'spring', x: SPRING.x, z: SPRING.z, facing: 0, name: '月泉', verb: '調查', marker: s.step === 'c2_boss' && !tagAlive('boss2') },
   ]
   // 待招募的夥伴：教學任務完成後才會出現在事件地點
   if (s.step !== 'talk' && s.step !== 'hunt') {
@@ -68,11 +73,17 @@ export function interactables(): Interactable[] {
   return list
 }
 
-const bossAlive = () => combat.units.some((u) => u.tag === 'boss' && u.alive)
+const tagAlive = (tag: string) => combat.units.some((u) => u.tag === tag && u.alive)
+const bossAlive = () => tagAlive('boss')
 
-/** 區域首領何時開始定期重生：森林精英在救出森林夥伴之後，石環 Boss 在第一章完成之後 */
+/**
+ * 區域首領何時開始定期重生：森林精英在救出森林夥伴之後、石環 Boss 在第一章完成之後、
+ * 星晶林的魔靈在第二章擊碎星晶簇之後、月泉的靈鹿在第二章完成之後
+ */
 export function areaBossUnlocked(id: string) {
-  if (id === 'ab_ruins') return story().step === 'done'
+  if (id === 'ab_ruins') return storyReached('done')
+  if (id === 'ab_grove') return storyReached('c2_boss') && !combat.units.some((u) => u.tag === 'ev_grove')
+  if (id === 'ab_spring') return storyReached('c2_done')
   if (id === 'ab_forest') {
     const forestMate = companions()[1]
     return progress.recruited.includes(forestMate) && !combat.units.some((u) => u.tag === 'ev_forest')
@@ -151,7 +162,153 @@ function talkElder() {
   if (s.step === 'boss') {
     return say(name, ['四個人都到齊了呢！', '東北方古代石環的祭壇封印著史萊姆王。準備好之後，去調查祭壇吧。'])
   }
-  say(name, ['你們打倒了史萊姆王！星光村會永遠記得你們。', '前方還有更遼闊的世界——水晶洞窟、古代遺跡、天空神殿，那會是下一段旅程了。'])
+  if (s.step === 'done') {
+    return say(
+      name,
+      [
+        '你們打倒了史萊姆王！星光村會永遠記得你們。',
+        '不過……史萊姆王倒下的那一刻，祭壇的光直直射向了北方。',
+        '村子北邊的林帶後面是「月光山谷」，山谷深處的月泉一直守護著這片土地。最近夜裡常聽見狼嚎，連溫馴的蘑菇精都變得很暴躁。',
+        '從廣場往北的小路可以穿過林帶。先去看看山谷入口的月光石碑吧。山谷裡的怪物比草原強，記得補充藥水。',
+      ],
+      undefined,
+      () => setStep('c2_scout', '前往北方的月光山谷，調查入口的月光石碑'),
+    )
+  }
+  if (s.step === 'c2_scout') return say(name, ['月光石碑就在北邊林帶的出口，沿著廣場往北的小路走就會看到。'])
+  if (s.step === 'c2_hunt') return say(name, ['山谷的幼狼和蘑菇被星晶侵蝕了嗎……', '幼狼會突然撲過來，蘑菇會噴出毒霧。看到綠色的霧就趕快離開！'])
+  if (s.step === 'c2_crystal') return say(name, ['星晶林在山谷東側。如果那裡就是侵蝕的源頭，一定有強大的東西守著。'])
+  if (s.step === 'c2_boss') {
+    return say(name, ['月之碎片……傳說月泉的守護者是一頭苔蘚靈鹿。', '如果牠也被侵蝕了，就靠你們讓牠恢復平靜了。牠會治療同伴，用暈眩技能打斷牠的詠唱！'])
+  }
+  say(name, [
+    '月泉恢復了光芒，連村子的井水都變得清甜了。謝謝你們！',
+    '不過星晶到底是從哪裡掉下來的呢？最近天空偶爾會出現奇怪的裂縫……也許那會是下一段旅程了。',
+  ])
+}
+
+/** 第二章的解說由第三位夥伴（在石環研究古代遺跡的學者）負責；還沒招募時由主角自己念 */
+function scholar() {
+  const c = companions()[2]
+  return progress.recruited.includes(c) ? CLASSES[c].companion : hero().name
+}
+
+const ENGRAVING = '石碑上刻著：「月泉映照星辰，靈鹿守之。若星墜於谷，泉水蒙塵，萬物將失其溫順。」'
+
+function readStele() {
+  const s = story()
+  if (!storyReached('done')) {
+    return say('月光石碑', [ENGRAVING, '石碑在微微發光，但現在還看不懂這段話的意思。（第一章完成後再來調查）'])
+  }
+  if (s.step === 'done' || s.step === 'c2_scout') {
+    return say(
+      scholar(),
+      [
+        ENGRAVING,
+        '看這些發光的碎片……和石環祭壇是同一種力量。史萊姆王的封印碎掉之後，碎片落進了山谷。',
+        '山谷的動物就是被這些星晶侵蝕，才會變得這麼兇。',
+        `先把失控的月影幼狼和孢子蘑菇各打倒 ${C2_HUNT_GOAL} 隻，減弱星晶的力量，再去找侵蝕的源頭。`,
+      ],
+      undefined,
+      () => setStep('c2_hunt', `淨化山谷——打倒月影幼狼與孢子蘑菇各 ${C2_HUNT_GOAL} 隻`),
+    )
+  }
+  say('月光石碑', [ENGRAVING, storyReached('c2_done') ? '石碑發出和月泉一樣清澈的光。' : '石碑的光比之前明亮了一些。'])
+}
+
+function touchGrove() {
+  const s = story()
+  if (tagAlive('ev_grove')) return
+  if (!storyReached('c2_crystal')) {
+    return say('星晶簇', ['巨大的星晶簇嗡嗡作響，四周的空氣都在震動。', '太危險了，先淨化山谷再來調查吧。'])
+  }
+  if (s.step === 'c2_crystal') {
+    return say(
+      scholar(),
+      ['就是這個！整座山谷的星晶都是從這裡長出來的。', '把它擊碎的話……等等，裡面好像有什麼在動！'],
+      [
+        {
+          label: '擊碎星晶簇',
+          desc: '挑戰精英怪「星晶魔靈・核」',
+          run: () => {
+            const lv = hero().level
+            spawnEnemy({ name: '星晶魔靈・核', color: '#8fd8ff', species: 'crystal', tier: 'elite', x: GROVE.x, z: GROVE.z, level: lv + 1, tag: 'ev_grove' })
+            for (const side of [-1, 1]) {
+              spawnEnemy({ name: '月影幼狼', color: '#8fa6d8', species: 'wolf', x: GROVE.x + side * 2.5, z: GROVE.z + 2, level: lv - 1, tag: 'ev_grove' })
+            }
+            pillar(GROVE.x, GROVE.z, '#8fd8ff', 1.4, 7, 1)
+            ring(GROVE.x, GROVE.z, '#8fd8ff', 0.5, GROVE.r, 0.8)
+            shake(0.4)
+            sfx.ultimate()
+            addFeed('星晶簇碎裂，星晶魔靈・核現身了！', '#6fa8dc')
+            pending.ev_grove = () =>
+              say(
+                scholar(),
+                ['魔靈碎掉之後，留下了一塊散發月光的碎片……這是「月之碎片」！', '把它帶到山谷深處的月泉，應該就能淨化泉水。'],
+                undefined,
+                () => setStep('c2_boss', '帶著月之碎片前往山谷深處的月泉'),
+              )
+          },
+        },
+        { label: '還沒準備好', run: () => {} },
+      ],
+    )
+  }
+  const b = combat.units.find((u) => u.area === 'ab_grove')
+  const state = !b
+    ? '殘留的星晶正在慢慢聚集……'
+    : b.alive
+      ? '星晶魔靈又凝聚成形了！'
+      : `約 ${Math.max(1, Math.ceil(b.respawnTime - b.deadTime))} 秒後，殘留的星晶會再次凝聚成魔靈。`
+  say('星晶簇', ['星晶簇的碎片還在微微發光。', `${state}可以反覆挑戰來收集裝備。`])
+}
+
+function useSpring() {
+  const s = story()
+  if (tagAlive('boss2')) return
+  if (!storyReached('c2_boss')) {
+    return say('月泉', ['泉水混濁，水底沉著幾塊黯淡的星晶。', '好像需要某種東西才能淨化它。'])
+  }
+  if (s.step === 'c2_boss') {
+    return say(
+      '月泉',
+      [
+        '你們把月之碎片放進泉水——',
+        '泉水亮了一瞬間，又被黑影吞沒。泉底傳來沉重的腳步聲……',
+        '靈鹿會蓄力衝撞（紅圈），會詠唱治療（用暈眩技能打斷），半血時還會呼喚幼狼。',
+      ],
+      [
+        {
+          label: '放入月之碎片',
+          desc: '挑戰 Boss「苔蘚靈鹿」',
+          run: () => {
+            spawnEnemy({ name: '被侵蝕的苔蘚靈鹿', color: '#7cc98a', species: 'stag', tier: 'boss', x: SPRING.x, z: SPRING.z, level: hero().level + 2, tag: 'boss2' })
+            ring(SPRING.x, SPRING.z, '#7cc98a', 0.5, SPRING.r + 1, 0.8)
+            pillar(SPRING.x, SPRING.z, '#7cc98a', 1.6, 8, 1)
+            shake(0.5)
+            sfx.ultimate()
+            addFeed('苔蘚靈鹿從月泉中站了起來！', '#2f9e52')
+            pending.boss2 = () => {
+              setStep('c2_done', '第二章完成！')
+              say('苔蘚靈鹿', [
+                '……（靈鹿身上的星晶一片片碎裂，眼神恢復了溫柔）',
+                '靈鹿低頭碰了碰泉水，月泉重新亮起清澈的光。牠看了你們一眼，緩緩走進森林深處。',
+              ])
+              useGame.getState().setChapterDone(2)
+            }
+          },
+        },
+        { label: '還沒準備好', run: () => {} },
+      ],
+    )
+  }
+  const b = combat.units.find((u) => u.area === 'ab_spring')
+  const state = !b
+    ? '泉底的星晶還在微微發亮……'
+    : b.alive
+      ? '靈鹿又被殘留的星晶影響，守在泉水中央。'
+      : `約 ${Math.max(1, Math.ceil(b.respawnTime - b.deadTime))} 秒後，靈鹿會再次失控出現。`
+  say('月泉', ['泉水清澈，映著天上的星星。', `${state}可以反覆挑戰來收集裝備。`])
 }
 
 function talkMerchant() {
@@ -269,7 +426,7 @@ function openChest(id: string) {
 function useAltar() {
   const s = story()
   if (bossAlive()) return
-  if (s.step === 'done') {
+  if (storyReached('done')) {
     const b = combat.units.find((u) => u.area === 'ab_ruins')
     const state = !b
       ? '祭壇的光芒正在慢慢凝聚……'
@@ -297,7 +454,7 @@ function useAltar() {
           addFeed('史萊姆王甦醒了！', '#a96bf0')
           pending.boss = () => {
             setStep('done', '第一章完成！')
-            useGame.getState().setChapterDone(true)
+            useGame.getState().setChapterDone(1)
           }
         },
       },
@@ -314,6 +471,9 @@ export function interactWith(id: string) {
   else if (it.kind === 'merchant') talkMerchant()
   else if (it.kind === 'companion') talkCompanion(it.classId!)
   else if (it.kind === 'chest') openChest(it.id)
+  else if (it.kind === 'stele') readStele()
+  else if (it.kind === 'grove') touchGrove()
+  else if (it.kind === 'spring') useSpring()
   else useAltar()
 }
 
@@ -332,6 +492,12 @@ export function storyOnKill(e: Unit) {
   if (s.step === 'hunt' && e.species === 'slime' && e.tier === 'normal' && !e.tag) {
     s.huntKills++
     if (s.huntKills >= HUNT_GOAL) setStep('recruit', '尋找夥伴——草原東側傳來求救聲')
+  }
+  // 第二章淨化山谷：幼狼與蘑菇各打倒 C2_HUNT_GOAL 隻
+  if (s.step === 'c2_hunt' && (e.species === 'wolf' || e.species === 'mushroom')) {
+    if (e.species === 'wolf') s.c2Wolf = Math.min(C2_HUNT_GOAL, s.c2Wolf + 1)
+    else s.c2Shroom = Math.min(C2_HUNT_GOAL, s.c2Shroom + 1)
+    if (s.c2Wolf >= C2_HUNT_GOAL && s.c2Shroom >= C2_HUNT_GOAL) setStep('c2_crystal', '前往山谷東側的星晶林，調查發光的星晶簇')
   }
   if (e.tag && pending[e.tag] && !combat.units.some((u) => u.tag === e.tag && u.alive)) {
     const done = pending[e.tag]
@@ -369,7 +535,23 @@ export function questInfo(): QuestInfo {
         title: '封印的源頭',
         lines: [bossAlive() ? '擊敗史萊姆王！看到紅圈立刻離開' : '前往東北方的古代石環，調查中央的祭壇'],
       }
+    case 'done':
+      return { title: '第一章 完成', lines: [`回${REGION_NAME.village}向${NPC_ELDER.name}報告（頭上有 ! 標記）`, '區域首領會定期重生，可以反覆挑戰刷裝備'] }
+    case 'c2_scout':
+      return { title: '第二章　月光山谷', lines: ['從村子廣場往北穿過林帶，調查山谷入口的月光石碑'] }
+    case 'c2_hunt':
+      return {
+        title: '淨化山谷',
+        lines: [`月影幼狼 ${s.c2Wolf}/${C2_HUNT_GOAL}、孢子蘑菇 ${s.c2Shroom}/${C2_HUNT_GOAL}`, '幼狼會撲擊，蘑菇的綠色毒霧要快點離開'],
+      }
+    case 'c2_crystal':
+      return { title: '侵蝕的源頭', lines: [tagAlive('ev_grove') ? '擊敗星晶魔靈・核！紅圈落下前移開' : '前往山谷東側的星晶林，調查中央的星晶簇'] }
+    case 'c2_boss':
+      return {
+        title: '月泉的守護者',
+        lines: [tagAlive('boss2') ? '擊敗苔蘚靈鹿！牠詠唱治療時用暈眩技能打斷' : '帶著月之碎片前往山谷深處的月泉'],
+      }
     default:
-      return { title: '第一章 完成', lines: ['自由探索，繼續升級與收集裝備', '區域首領會定期重生，可以反覆挑戰刷裝備'] }
+      return { title: '第二章 完成', lines: ['自由探索，繼續升級與收集裝備', '各地的區域首領會定期重生，可以反覆挑戰刷裝備'] }
   }
 }

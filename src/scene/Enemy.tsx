@@ -1,7 +1,8 @@
-// 怪物顯示：每個槽位對應戰鬥模擬中的第 N 隻怪物，依階級換成對應的 GLB 模型並播放自帶動作。
-//   普通 → 星芽史萊姆 / 精英 → 森林菁英哥布林 / Boss → 星核石像
+// 怪物顯示：每個槽位對應戰鬥模擬中的第 N 隻怪物，依種族與階級換成對應的 GLB 模型並播放自帶動作。
+//   第一章：普通 → 星芽史萊姆 / 小哥布林；精英 → 森林菁英哥布林；Boss → 星核石像
+//   第二章：月影幼狼、孢子蘑菇、星晶魔靈、苔蘚靈鹿（同一個模型依階級放大）
 // 位置、等級、狀態都由 Unit 決定，這裡只負責外觀與動作。載入中或失敗時退回程序化史萊姆。
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { modelUrl } from '../data/appearance'
@@ -13,11 +14,11 @@ import { ModelBoundary } from './characters/CharacterModel'
 import { addPose, crossFade, useClipModel } from './characters/clipModel'
 import { Slime } from './Slime'
 
-type Kind = 'slime' | 'goblin' | 'guardian'
+type Kind = 'slime' | 'goblin' | 'guardian' | 'wolf' | 'mushroom' | 'crystal' | 'stag'
 
 interface KindConfig {
   url: string
-  /** 等級 1 時的顯示高度 */
+  /** 等級 1、普通階級時的顯示高度 */
   height: number
   /** 血條在頭上的額外高度 */
   barGap: number
@@ -25,7 +26,23 @@ interface KindConfig {
   deathHold: number
   /** 攻擊表現秒數；有 attackClip 時播放模型片段（從 from 秒開始、倍速 speed），否則由程式揮拳 */
   attackTime: number
-  attackClip?: { from: number; speed: number }
+  attackClip?: { name: string; from: number; speed: number }
+  /** 移動動作：走路片段、跑步片段（沒有就一直用走路）、切換成跑步的速度 */
+  walk: string
+  run?: string
+  runAt?: number
+  /** 走路動作倍速的基準速度 */
+  walkRef: number
+  /** 被打時播放模型的 Hit 片段（否則用程式做後仰） */
+  hitClip: boolean
+  /** 依個體顏色染色 */
+  tint: boolean
+  /** 同一個模型當精英 / Boss 時放大 */
+  tierScale: boolean
+  /** 特技片段的倍速（u.actionClip 指定播放哪一段） */
+  clipSpeed?: Record<string, number>
+  /** 模型裡要隱藏的節點（例如自帶的投射物，改由遊戲的光彈表現） */
+  hide?: string[]
 }
 
 const CONFIG: Record<Kind, KindConfig> = {
@@ -35,7 +52,12 @@ const CONFIG: Record<Kind, KindConfig> = {
     barGap: 0.3,
     deathHold: 1.3,
     attackTime: 0.8,
-    attackClip: { from: 0, speed: 1.6 },
+    attackClip: { name: 'Attack', from: 0, speed: 1.6 },
+    walk: 'Hop',
+    walkRef: 3.5,
+    hitClip: true,
+    tint: true,
+    tierScale: false,
   },
   goblin: {
     url: modelUrl('elite-goblin.glb'),
@@ -44,6 +66,13 @@ const CONFIG: Record<Kind, KindConfig> = {
     deathHold: 2.2,
     // 模型的 Attack 片段長 7.3 秒且會位移，不適合戰鬥節奏，改用程式揮拳
     attackTime: 0.5,
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.6,
+    walkRef: 1.5,
+    hitClip: false,
+    tint: false,
+    tierScale: false,
   },
   guardian: {
     url: modelUrl('guardian-boss.glb'),
@@ -52,12 +81,88 @@ const CONFIG: Record<Kind, KindConfig> = {
     deathHold: 2.2,
     // Attack 片段 3.5 秒：1.0～2.7 秒是蓄力、雙拳前擊、收招，取這段並加速
     attackTime: 0.77,
-    attackClip: { from: 1.0, speed: 2.2 },
+    attackClip: { name: 'Attack', from: 1.0, speed: 2.2 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.6,
+    walkRef: 1.5,
+    hitClip: false,
+    tint: false,
+    tierScale: false,
+  },
+  wolf: {
+    url: modelUrl('moon-wolf.glb'),
+    height: 0.8,
+    barGap: 0.3,
+    deathHold: 1.6,
+    attackTime: 0.6,
+    attackClip: { name: 'Pounce', from: 0.35, speed: 1.8 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.4,
+    walkRef: 1.6,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Pounce: 1.3 },
+  },
+  mushroom: {
+    url: modelUrl('spore-mushroom.glb'),
+    height: 0.9,
+    barGap: 0.3,
+    deathHold: 1.6,
+    attackTime: 0.8,
+    attackClip: { name: 'Bonk', from: 0, speed: 1.5 },
+    walk: 'Walk',
+    walkRef: 1.4,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Spore: 1.4 },
+    hide: ['AnimatedProjectile'],
+  },
+  crystal: {
+    url: modelUrl('star-crystal.glb'),
+    height: 1.15,
+    barGap: 0.3,
+    deathHold: 1.7,
+    attackTime: 0.9,
+    attackClip: { name: 'Shoot', from: 0.1, speed: 1.5 },
+    walk: 'Float',
+    walkRef: 1.4,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Shoot: 1.5 },
+    hide: ['AnimatedProjectile'],
+  },
+  stag: {
+    url: modelUrl('moss-stag.glb'),
+    height: 1.6,
+    barGap: 0.35,
+    deathHold: 1.9,
+    attackTime: 0.6,
+    attackClip: { name: 'Charge', from: 0.4, speed: 2 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.8,
+    walkRef: 1.6,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Charge: 1.4, Heal: 1.25 },
   },
 }
 
-/** 外觀模型：Boss 是石像、精英是大哥布林，普通怪依種族（史萊姆或小哥布林） */
+/** 外觀模型：第一章的精英是大哥布林、Boss 是石像；其餘依種族 */
 function kindOf(u: Unit): Kind {
+  switch (u.species) {
+    case 'wolf':
+    case 'mushroom':
+    case 'crystal':
+    case 'stag':
+      return u.species
+  }
   if (u.tier === 'boss') return 'guardian'
   if (u.tier === 'elite') return 'goblin'
   return u.species === 'goblin' ? 'goblin' : 'slime'
@@ -65,14 +170,23 @@ function kindOf(u: Unit): Kind {
 
 /** 普通哥布林比精英小一圈 */
 const GOBLIN_NORMAL_SCALE = 0.72
+/** 第二章的怪物：同一個模型當精英、Boss 時放大的倍率 */
+const TIER_SCALE = { normal: 1, elite: 1.4, boss: 2 }
 
 /** 等級越高怪物越大（與 state.ts 的 setEnemyLevel 同一公式）；再乘上種族與階級的體型 */
-const levelFactor = (u: Unit) => (1 + (u.baseLevel - 1) * 0.12) * (u.tier === 'normal' && u.species === 'goblin' ? GOBLIN_NORMAL_SCALE : 1)
+function levelFactor(u: Unit, kind: Kind) {
+  let k = 1 + (u.baseLevel - 1) * 0.12
+  // 第二章的營地從 6 級起跳：從 6 級開始才慢慢變大，避免幼狼長得比主角還大
+  if (CONFIG[kind].tierScale) k = (1 + Math.max(0, u.baseLevel - 6) * 0.05) * TIER_SCALE[u.tier]
+  if (u.tier === 'normal' && u.species === 'goblin') k *= GOBLIN_NORMAL_SCALE
+  return k
+}
 
 /** 血條位置：頭頂上方 */
 export function enemyBarTop(u: Unit) {
-  const c = CONFIG[kindOf(u)]
-  return c.height * levelFactor(u) + c.barGap
+  const kind = kindOf(u)
+  const c = CONFIG[kind]
+  return c.height * levelFactor(u, kind) + c.barGap
 }
 
 const WHITE = new THREE.Color('#ffffff')
@@ -95,22 +209,41 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     side: 1,
     prevAtk: 0,
     prevSquash: 0,
+    prevSeq: 0,
     color: '',
   })
+
+  useEffect(() => {
+    for (const name of cfg.hide ?? []) {
+      const o = m.scene.getObjectByName(name)
+      if (o) o.visible = false
+    }
+  }, [m, cfg])
 
   const play = (name: string, fade = 0.2, once = false) => {
     const s = st.current
     const next = m.actions[name]
-    if (!next || s.cur === next) return
+    if (!next) return
+    if (s.cur === next && !once) return
     if (once) {
       next.setLoop(THREE.LoopOnce, 1)
       next.clampWhenFinished = true
     } else {
       next.setLoop(THREE.LoopRepeat, Infinity)
     }
-    crossFade(s.cur, next, fade)
+    crossFade(s.cur === next ? undefined : s.cur, next, fade)
     next.timeScale = 1
     s.cur = next
+  }
+
+  /** 播放一次特技或攻擊片段，回傳實際的播放秒數 */
+  const playOnce = (name: string, from: number, speed: number) => {
+    const a = m.actions[name]
+    if (!a) return 0
+    play(name, 0.08, true)
+    a.time = from
+    a.timeScale = speed
+    return (a.getClip().duration - from) / speed
   }
 
   useFrame((_, dtRaw) => {
@@ -134,6 +267,7 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
       s.hit = 0
       s.prevAtk = u.attackAnim
       s.prevSquash = u.squash
+      s.prevSeq = u.actionSeq
       s.color = ''
       play(alive ? 'Idle' : 'Death', 0, !alive)
     }
@@ -158,47 +292,43 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     if (!root.current.visible) return
     root.current.position.set(u.x, 0, u.z)
     root.current.rotation.y = u.facing
-    root.current.scale.setScalar(s.shown * levelFactor(u))
+    root.current.scale.setScalar(s.shown * levelFactor(u, kind))
 
     if (alive) {
-      // 出手：攻擊倒數由 1 開始，偵測到重新拉高就是新的一擊
-      if (u.attackAnim > s.prevAtk + 0.3) {
-        s.atk = cfg.attackTime
+      // 特技（撲擊、放毒、衝撞、治療）：模擬端把 actionSeq 加 1
+      if (u.actionSeq !== s.prevSeq) {
+        s.prevSeq = u.actionSeq
+        const sp = cfg.clipSpeed?.[u.actionClip] ?? 1
+        const t = playOnce(u.actionClip, 0, sp)
+        if (t > 0) s.atk = t
+      } else if (u.attackAnim > s.prevAtk + 0.3) {
+        // 普攻：攻擊倒數由 1 開始，偵測到重新拉高就是新的一擊
         s.side = -s.side
         if (cfg.attackClip) {
-          play('Attack', 0.08, true)
-          const a = m.actions.Attack
-          if (a) {
-            a.time = cfg.attackClip.from
-            a.timeScale = cfg.attackClip.speed
-          }
-        }
+          playOnce(cfg.attackClip.name, cfg.attackClip.from, cfg.attackClip.speed)
+          s.atk = cfg.attackTime
+        } else s.atk = cfg.attackTime
       }
-      // 受擊：史萊姆播受擊動作（人形用下面的後仰）
-      if (kind === 'slime' && u.squash > s.prevSquash + 0.5 && s.atk <= 0) {
+      // 受擊：有 Hit 片段的模型播受擊動作（人形用下面的後仰）
+      if (cfg.hitClip && u.squash > s.prevSquash + 0.5 && s.atk <= 0) {
         play('Hit', 0.05, true)
         if (m.actions.Hit) m.actions.Hit.timeScale = 1.5
-        s.hit = 0.65
+        s.hit = 0.55
       }
       s.atk = Math.max(0, s.atk - dt)
       s.hit = Math.max(0, s.hit - dt)
 
       if (s.atk <= 0 && s.hit <= 0) {
-        // 移動中走路 / 跑步（跳躍），停下來待機
+        // 移動中走路 / 跑步，停下來待機
         const sp = u.speed
         let want = 'Idle'
         let ts = 1
-        if (kind === 'slime') {
-          if (sp > 0.3) {
-            want = 'Hop'
-            ts = THREE.MathUtils.clamp(0.7 + sp / 3.5, 0.8, 1.8)
-          }
-        } else if (sp > 2.6) {
-          want = 'Run'
-          ts = THREE.MathUtils.clamp(sp / 3.6, 0.8, 1.5)
+        if (cfg.run && cfg.runAt && sp > cfg.runAt) {
+          want = cfg.run
+          ts = THREE.MathUtils.clamp(sp / (cfg.runAt * 1.4), 0.8, 1.6)
         } else if (sp > 0.3) {
-          want = 'Walk'
-          ts = THREE.MathUtils.clamp(sp / 1.5, 0.6, 1.5)
+          want = cfg.walk
+          ts = THREE.MathUtils.clamp(0.4 + sp / cfg.walkRef, 0.6, 1.8)
         }
         play(want)
         if (s.cur) s.cur.timeScale = ts
@@ -214,7 +344,7 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     // 哥布林出拳與人形受擊後仰：在動作之上疊加骨頭旋轉與整體位移
     let lunge = 0
     let recoil = 0
-    if (kind !== 'slime' && alive) {
+    if (!cfg.hitClip && alive) {
       recoil = Math.sin(u.squash * Math.PI) * 0.12
       if (kind === 'goblin' && s.atk > 0) {
         const swing = Math.sin((1 - s.atk / cfg.attackTime) * Math.PI)
@@ -234,7 +364,7 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     const flashing = u.hitFlash > 0
     const emissive = flashing ? WHITE : u.enraged ? RAGE : BLACK
     const intensity = flashing ? 0.7 : u.enraged ? 0.35 : 0
-    const retint = kind === 'slime' && s.color !== u.color
+    const retint = cfg.tint && s.color !== u.color
     if (retint) s.color = u.color
     for (const mat of m.materials) {
       mat.emissive.copy(emissive)
@@ -266,7 +396,7 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
 export function Enemy({ slot }: { slot: number }) {
   const [kind, setKind] = useState<Kind>('slime')
 
-  // 槽位的怪物階級改變（例如精英、Boss 出現）時換模型
+  // 槽位的怪物種族或階級改變（例如精英、Boss 出現）時換模型
   useFrame(() => {
     const u = enemyAt(slot)
     if (!u) return

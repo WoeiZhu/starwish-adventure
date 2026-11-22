@@ -41,9 +41,23 @@ export interface Unit {
   area: string | null
   /** 外觀縮放 */
   scale: number
-  /** 範圍重擊的倒數計時 */
+  /** 範圍重擊（或種族特技）的倒數計時 */
   special: number
+  /** 第二個特技的倒數（靈鹿的治療） */
+  special2: number
   enraged: boolean
+  /** 畫面用：要播放的特技動作片段名稱；actionSeq 每次加 1 代表重新播放 */
+  actionClip: string
+  actionSeq: number
+  /** 衝刺 / 撲擊：剩餘秒數與終點 */
+  dashT: number
+  dashX: number
+  dashZ: number
+  /** 撲擊落地時對目標造成的傷害倍率（0 = 衝刺本身不造成傷害） */
+  dashPower: number
+  /** 原地動作中（蓄力衝撞、詠唱治療）：剩餘秒數，期間站著不動；結束時依 castKind 生效 */
+  castT: number
+  castKind: '' | 'hold' | 'heal'
 
   x: number
   z: number
@@ -157,6 +171,14 @@ export interface Hazard {
   delay: number
   total: number
   power: number
+  /** 毒霧：生效後繼續留在地上 linger 秒，每 tick 秒傷害一次 */
+  linger?: number
+  tick?: number
+  tickTimer?: number
+  /** 警示圈顏色（預設紅色） */
+  color?: string
+  /** 衝撞：生效前一刻怪物衝到圈中心 */
+  dash?: boolean
 }
 
 export interface Drop {

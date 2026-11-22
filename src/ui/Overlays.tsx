@@ -116,21 +116,35 @@ export function DialogBox() {
   )
 }
 
+const CHAPTERS: Record<number, { title: string; lines: string[]; next: string }> = {
+  1: {
+    title: '第一章　星願的起點',
+    lines: ['你從孤身一人出發，在草原、迷霧森林與古代石環遇見了三位夥伴，', '並一起擊敗了史萊姆王。星願冒險團正式成立！'],
+    next: '地上的戰利品別忘了撿。回星光村找村長，下一段旅程正在等著你們。',
+  },
+  2: {
+    title: '第二章　月光山谷',
+    lines: ['你們穿過北方林帶，淨化了被星晶侵蝕的月光山谷，', '並讓失控的苔蘚靈鹿恢復平靜。月泉再次發出溫柔的光。'],
+    next: '地上的戰利品別忘了撿。山谷的魔靈與靈鹿會定期重生，可以反覆挑戰收集裝備。',
+  },
+}
+
 /** Boss 擊敗後的章節完成畫面 */
-export function ChapterComplete() {
+export function ChapterComplete({ chapter }: { chapter: number }) {
   const close = useGame((s) => s.setChapterDone)
+  const c = CHAPTERS[chapter] ?? CHAPTERS[1]
   return (
     <div className="overlay">
       <div className="panel chapter">
-        <div className="chapter-en">✦ CHAPTER 1 CLEAR</div>
-        <h2>第一章　星願的起點</h2>
+        <div className="chapter-en">✦ CHAPTER {chapter} CLEAR</div>
+        <h2>{c.title}</h2>
         <p>
-          你從孤身一人出發，在草原、迷霧森林與古代石環遇見了三位夥伴，
+          {c.lines[0]}
           <br />
-          並一起擊敗了史萊姆王。星願冒險團正式成立！
+          {c.lines[1]}
         </p>
-        <p className="muted">地上的戰利品別忘了撿。之後可以繼續自由探索、升級與收集裝備。</p>
-        <button className="btn-primary" onClick={() => close(false)}>
+        <p className="muted">{c.next}</p>
+        <button className="btn-primary" onClick={() => close(0)}>
           繼續冒險
         </button>
       </div>

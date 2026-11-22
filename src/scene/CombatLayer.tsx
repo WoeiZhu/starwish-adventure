@@ -124,9 +124,10 @@ function HpBar({ id, slot, height, width }: { id?: string; slot?: number; height
   )
 }
 
-const HAZARD_POOL = 6
+const HAZARD_POOL = 12
+const HAZARD_RED = '#ff3b3b'
 
-/** 怪物範圍重擊的預兆：紅色外圈標出範圍，內圈隨倒數填滿 */
+/** 怪物範圍重擊的預兆：外圈標出範圍，內圈隨倒數填滿；毒霧生效後整圈變成淡綠色並慢慢淡出 */
 function Hazards() {
   const refs = useRef<(THREE.Group | null)[]>([])
   useFrame((state) => {
@@ -139,10 +140,16 @@ function Hazards() {
       g.position.set(z.x, 0.1, z.z)
       const fill = g.children[1] as THREE.Mesh
       const k = 1 - Math.max(0, z.delay) / z.total
+      const color = z.color ?? HAZARD_RED
       g.children[0].scale.setScalar(z.radius)
       g.children[2].scale.setScalar(z.radius)
       fill.scale.setScalar(Math.max(0.01, z.radius * k))
-      ;(fill.material as THREE.MeshBasicMaterial).opacity = 0.35 + Math.sin(state.clock.elapsedTime * 18) * 0.1
+      for (const c of g.children) ((c as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(color)
+      const lingering = z.delay <= 0 && z.linger !== undefined
+      const fade = lingering ? Math.min(1, (z.linger ?? 0) * 2) : 1
+      ;(fill.material as THREE.MeshBasicMaterial).opacity =
+        (lingering ? 0.22 + Math.sin(state.clock.elapsedTime * 4) * 0.05 : 0.35 + Math.sin(state.clock.elapsedTime * 18) * 0.1) * fade
+      ;(((g.children[2] as THREE.Mesh).material) as THREE.MeshBasicMaterial).opacity = 0.95 * fade
     }
   })
   return (

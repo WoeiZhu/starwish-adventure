@@ -1,6 +1,6 @@
 // 戰鬥模擬：每幀更新計時器、怪物 AI、隊友 AI、主角自動普攻、投射物與範圍效果。
 import { CLASSES } from '../../data/classes'
-import { ENEMY, aggroRange, scaledEnemyLevel } from '../../data/enemies'
+import { ENEMY, SPECIES, aggroRange, scaledEnemyLevel } from '../../data/enemies'
 import { AREA_BOSSES, SPAWN, inSafeZone } from '../../data/world'
 import { resolveCollisions } from '../../systems/collision'
 import { findPath } from '../../systems/pathfinding'
@@ -8,7 +8,7 @@ import { RUN_SPEED, WALK_SPEED, runtime } from '../runtime'
 import { useGame } from '../store'
 import { moveAxis } from '../../systems/input'
 import { sfx } from '../../systems/sfx'
-import { BUFF_COLOR, basicAttack, castSkill, damage, faceTarget, hasBuff, heal } from './actions'
+import { BUFF_COLOR, basicAttack, castSkill, damage, enemyShot, faceTarget, hasBuff, heal } from './actions'
 import { burst, emit, flash, pillar, ring, shake, updateFx } from './fx'
 import { updateDrops } from './rewards'
 import { areaBossUnlocked } from '../story'
@@ -27,6 +27,9 @@ import {
   updateEnemySlots,
 } from './state'
 import type { Unit, Zone } from './types'
+
+/** 離主角太遠的事件不出聲 */
+const audible = (p: { x: number; z: number }) => Math.hypot(p.x - runtime.player.x, p.z - runtime.player.z) < 24
 
 function dampAngle(a: number, b: number, k: number, dt: number) {
   return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * (1 - Math.exp(-k * dt))
@@ -110,6 +113,7 @@ function reviveEnemy(e: Unit) {
   e.targetId = null
   e.atkTimer = 0
   e.special = 4
+  e.special2 = 8
   if (def) {
     addFeed(`${e.name}在${def.place}再度現身了！`, '#a96bf0')
     pillar(e.x, e.z, def.color, 1.2, 7, 1)
@@ -134,7 +138,40 @@ function enemyAI(e: Unit, party: Unit[], dt: number) {
     if (e.respawns && e.deadTime > e.respawnTime) reviveEnemy(e)
     return
   }
-  if (e.stun > 0) return
+  if (e.stun > 0) {
+    // 暈眩可以打斷治癒之光
+    if (e.castKind === 'heal') {
+      e.castT = 0
+      e.castKind = ''
+      addFloater(e, '打斷！', '#ffe27a', true, 3.2)
+    }
+    return
+  }
+
+  // 撲擊 / 衝撞中：直線衝向終點，落地時咬一口
+  if (e.dashT > 0) {
+    const left = Math.hypot(e.dashX - e.x, e.dashZ - e.z)
+    moveToward(e, e.dashX, e.dashZ, left / Math.max(dt, e.dashT), dt)
+    e.dashT -= dt
+    if (e.dashT <= 0 && e.dashPower > 0) {
+      const t = unitById(e.targetId)
+      if (t?.alive && dist(e, t) - t.radius - e.radius < 1) damage(e, t, e.dashPower, true)
+      burst(e.x, 0.2, e.z, '#e8f0ff', 10, 3, { up: 2, size: 0.08, life: 0.4 })
+      e.dashPower = 0
+    }
+    return
+  }
+  // 原地動作中（蓄力、詠唱）：站著面向目標，時間到才生效
+  if (e.castT > 0) {
+    e.castT -= dt
+    const t = unitById(e.targetId)
+    if (t) e.facing = dampAngle(e.facing, Math.atan2(t.x - e.x, t.z - e.z), 6, dt)
+    if (e.castT <= 0) {
+      if (e.castKind === 'heal') finishHeal(e)
+      e.castKind = ''
+    }
+    return
+  }
 
   const homeD = Math.hypot(e.x - e.homeX, e.z - e.homeZ)
   let t = unitById(e.targetId)
@@ -183,35 +220,153 @@ function enemyAI(e: Unit, party: Unit[], dt: number) {
   }
 
   const gap = dist(e, t) - t.radius - e.radius
-  if (gap > 0.25) moveToward(e, t.x, t.z, e.moveSpeed * (e.slow > 0 ? 0.5 : 1), dt)
+  const speed = e.moveSpeed * (e.slow > 0 ? 0.5 : 1)
+  if (e.ranged) {
+    // 遠程（星晶魔靈）：保持射程；被貼身就往後飄，拉開距離再射
+    const d = dist(e, t) || 1
+    if (gap > e.range * 0.9) moveToward(e, t.x, t.z, speed, dt)
+    else if (gap < 2) moveToward(e, e.x + ((e.x - t.x) / d) * 2, e.z + ((e.z - t.z) / d) * 2, speed * 0.8, dt)
+    else e.facing = dampAngle(e.facing, Math.atan2(t.x - e.x, t.z - e.z), 10, dt)
+  } else if (gap > 0.25) moveToward(e, t.x, t.z, speed, dt)
   else e.facing = dampAngle(e.facing, Math.atan2(t.x - e.x, t.z - e.z), 10, dt)
-  if (e.tier !== 'normal') enemySpecial(e, t, dt)
+  enemySpecial(e, t, dt)
+  if (e.castT > 0 || e.dashT > 0) return
   if (gap <= e.range && e.atkTimer <= 0) {
-    e.atkTimer = e.interval
-    e.attackAnim = 1
-    damage(e, t, 1)
+    if (e.ranged) {
+      // 移動中不射擊（跟隊伍同樣的規則）
+      if (e.moved < 0.3) enemyShot(e, t, 1, e.tier === 'normal' ? '#9fd8ff' : '#c9b6ff', 0.3, e.tier !== 'normal')
+    } else {
+      e.atkTimer = e.interval
+      e.attackAnim = 1
+      damage(e, t, 1)
+    }
   }
 }
 
-/** 精英與 Boss：定時對目標腳下放範圍重擊（先出紅圈預兆）；Boss 半血時狂暴並召喚小怪 */
+/** 讓畫面播放一次特技動作片段 */
+function action(e: Unit, clip: string) {
+  e.actionClip = clip
+  e.actionSeq++
+}
+
+/** Boss 半血狂暴：攻速、移速提高，並召喚兩隻手下 */
+function enrage(e: Unit) {
+  e.enraged = true
+  e.interval *= 0.7
+  e.moveSpeed += 0.8
+  e.special = 1.5
+  addFloater(e, '狂暴！', '#ff5a5a', true, 3.4)
+  addFeed(`${e.name}進入狂暴狀態，並召喚了手下！`, '#e0525a')
+  ring(e.x, e.z, '#ff5a5a', 0.5, 7, 0.7)
+  burst(e.x, 1, e.z, '#ff5a5a', 40, 7, { up: 6, gravity: 8, size: 0.15, life: 0.9 })
+  shake(0.5)
+  sfx.ultimate()
+  const s = SPECIES[e.species].summon
+  if (!s) return
+  for (const side of [-1, 1]) {
+    spawnEnemy({ name: s.name, color: s.color, species: s.species, x: e.x + side * 3, z: e.z + 1.5, level: e.level - 1, tag: e.tag ?? 'boss' })
+  }
+}
+
+/** 月影幼狼：隔一段距離時撲向目標，落地咬一口 */
+function wolfPounce(e: Unit, t: Unit) {
+  const gap = dist(e, t) - t.radius - e.radius
+  if (e.special > 0 || gap < 1.6 || gap > 6) return
+  e.special = 6 + Math.random() * 2.5
+  const d = dist(e, t) || 1
+  const stop = t.radius + e.radius + 0.1
+  e.dashX = t.x - ((t.x - e.x) / d) * stop
+  e.dashZ = t.z - ((t.z - e.z) / d) * stop
+  e.dashT = 0.42
+  e.dashPower = e.tier === 'normal' ? 1.3 : 1.6
+  e.atkTimer = Math.max(e.atkTimer, 0.8)
+  action(e, 'Pounce')
+  addFloater(e, '撲擊！', '#c9d8ff', false, 1.4)
+}
+
+/** 孢子蘑菇：目標靠近時在自己周圍噴出毒霧（綠圈，會留在地上一陣子） */
+function mushroomSpore(e: Unit, t: Unit) {
+  if (e.special > 0 || dist(e, t) - t.radius > 3) return
+  e.special = 7 + Math.random() * 2
+  const delay = 0.9
+  combat.hazards.push({ owner: e, x: e.x, z: e.z, radius: e.tier === 'normal' ? 2.4 : 3.4, delay, total: delay, power: 0.35, linger: 3.5, tick: 0.7, tickTimer: 0, color: '#8fdc5a' })
+  e.castT = delay
+  e.castKind = 'hold'
+  action(e, 'Spore')
+  addFloater(e, '孢子毒霧！', '#a8e87a', false, 1.5)
+}
+
+/** 精英星晶魔靈：在目標周圍落下三道星晶（紅圈） */
+function crystalBarrage(e: Unit, t: Unit) {
+  if (e.special > 0 || dist(e, t) > 11) return
+  e.special = e.area ? 6 : 7.5
+  const delay = 1.3
+  const d = dist(e, t) || 1
+  const px = -(t.z - e.z) / d
+  const pz = (t.x - e.x) / d
+  for (const k of [-2.3, 0, 2.3]) {
+    combat.hazards.push({ owner: e, x: t.x + px * k, z: t.z + pz * k, radius: 1.8, delay: delay + Math.abs(k) * 0.08, total: delay, power: 1.25 })
+  }
+  e.castT = 0.9
+  e.castKind = 'hold'
+  e.atkTimer = Math.max(e.atkTimer, delay)
+  action(e, 'Shoot')
+  addFloater(e, '星晶彈幕！', '#bfe9ff', true, 2.6)
+  sfx.taunt()
+}
+
+/** 苔蘚靈鹿：蓄力後衝撞目標所在位置；血量偏低時詠唱治癒之光，治療自己與身邊的手下 */
+function stagSkills(e: Unit, t: Unit) {
+  if (e.special2 <= 0 && e.hp < e.maxHp * 0.7) {
+    e.special2 = e.enraged ? 12 : 15
+    e.castT = 1.6
+    e.castKind = 'heal'
+    action(e, 'Heal')
+    addFloater(e, '治癒之光…', '#8dffb0', true, 3.6)
+    pillar(e.x, e.z, '#8dffb0', 1.4, 5, 1.6)
+    ring(e.x, e.z, '#8dffb0', 0.5, 8, 1.6)
+    addFeed(`${e.name}開始詠唱治癒之光！快打斷牠（暈眩技能有效）`, '#2f9e52')
+    return
+  }
+  if (e.special > 0 || dist(e, t) > 12) return
+  e.special = e.enraged ? 5 : 7
+  const delay = 1.25
+  combat.hazards.push({ owner: e, x: t.x, z: t.z, radius: 2.5, delay, total: delay, power: 1.7, dash: true })
+  e.castT = delay - 0.3
+  e.castKind = 'hold'
+  e.atkTimer = Math.max(e.atkTimer, delay + 0.3)
+  addFloater(e, '蓄力衝撞！', '#ff8f8f', true, 3.6)
+  sfx.taunt()
+}
+
+/** 治癒之光生效：靈鹿回復 8%，8 公尺內的其他怪物回復 20% */
+function finishHeal(e: Unit) {
+  heal(e, e.maxHp * 0.08)
+  for (const o of combat.units) {
+    if (o !== e && o.team === 'enemy' && o.alive && dist(o, e) < 8) heal(o, o.maxHp * 0.2)
+  }
+  ring(e.x, e.z, '#8dffb0', 0.5, 8, 0.6)
+  burst(e.x, 1, e.z, '#8dffb0', 30, 5, { up: 5, gravity: 4, size: 0.12, life: 1 })
+}
+
+/** 精英與 Boss：定時對目標腳下放範圍重擊（先出紅圈預兆）；Boss 半血時狂暴並召喚小怪。第二章的種族各有特技 */
 function enemySpecial(e: Unit, t: Unit, dt: number) {
   const boss = e.tier === 'boss'
-  if (boss && !e.enraged && e.hp < e.maxHp * 0.5) {
-    e.enraged = true
-    e.interval *= 0.7
-    e.moveSpeed += 0.8
-    e.special = 1.5
-    addFloater(e, '狂暴！', '#ff5a5a', true, 3.4)
-    addFeed('史萊姆王進入狂暴狀態，並召喚了手下！', '#e0525a')
-    ring(e.x, e.z, '#ff5a5a', 0.5, 7, 0.7)
-    burst(e.x, 1, e.z, '#ff5a5a', 40, 7, { up: 6, gravity: 8, size: 0.15, life: 0.9 })
-    shake(0.5)
-    sfx.ultimate()
-    for (const side of [-1, 1]) {
-      spawnEnemy({ name: '史萊姆衛兵', color: '#d9a6ff', x: e.x + side * 3, z: e.z + 1.5, level: e.level - 1, tag: e.tag ?? 'boss' })
-    }
-  }
+  if (boss && !e.enraged && e.hp < e.maxHp * 0.5) enrage(e)
   e.special -= dt
+  e.special2 -= dt
+  switch (e.species) {
+    case 'wolf':
+      return wolfPounce(e, t)
+    case 'mushroom':
+      return mushroomSpore(e, t)
+    case 'crystal':
+      if (e.tier !== 'normal') crystalBarrage(e, t)
+      return
+    case 'stag':
+      return stagSkills(e, t)
+  }
+  if (e.tier === 'normal') return
   if (e.special > 0 || dist(e, t) > 10) return
   e.special = boss ? (e.enraged ? 4 : 6.5) : 7
   const delay = boss ? 1.3 : 1.1
@@ -227,8 +382,46 @@ function updateHazards(dt: number) {
   const list = combat.hazards
   for (let i = list.length - 1; i >= 0; i--) {
     const z = list[i]
+    const wasWaiting = z.delay > 0
     z.delay -= dt
+    // 衝撞：生效前 0.3 秒怪物衝向圈中心
+    if (z.dash && z.delay <= 0.3) {
+      z.dash = false
+      const o = z.owner
+      if (o.alive && o.stun <= 0) {
+        o.castT = 0
+        o.castKind = ''
+        o.dashX = z.x
+        o.dashZ = z.z
+        o.dashT = 0.3
+        o.dashPower = 0
+        action(o, 'Charge')
+      }
+    }
     if (z.delay > 0) continue
+    // 毒霧：生效後留在地上，每隔一段時間傷害圈內隊員
+    if (z.linger !== undefined) {
+      if (wasWaiting) {
+        burst(z.x, 0.3, z.z, z.color ?? '#8fdc5a', 30, 3.5, { up: 2.5, gravity: 1, size: 0.18, life: 1.2 })
+        if (audible(z)) sfx.explode()
+      }
+      z.linger -= dt
+      z.tickTimer = (z.tickTimer ?? 0) - dt
+      if (Math.random() < dt * 14) {
+        const a = Math.random() * Math.PI * 2
+        const r = Math.sqrt(Math.random()) * z.radius
+        emit(z.x + Math.cos(a) * r, 0.15, z.z + Math.sin(a) * r, z.color ?? '#8fdc5a', { vy: 0.6 + Math.random() * 0.6, life: 1.1, size: 0.16 })
+      }
+      if (z.tickTimer <= 0) {
+        z.tickTimer += z.tick ?? 0.7
+        for (const u of combat.units) {
+          if (u.team !== 'party' || !u.alive) continue
+          if (Math.hypot(u.x - z.x, u.z - z.z) <= z.radius + u.radius) damage(z.owner, u, z.power * (u.kind === 'ally' ? 0.5 : 1))
+        }
+      }
+      if (z.linger <= 0) list.splice(i, 1)
+      continue
+    }
     list.splice(i, 1)
     flash(z.x, 0.6, z.z, '#ff8f8f', z.radius * 1.1, 0.25)
     ring(z.x, z.z, '#ff5a5a', z.radius * 0.4, z.radius * 1.15, 0.4)

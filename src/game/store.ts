@@ -97,7 +97,8 @@ interface GameState {
   save: SaveSummary | null
   /** 隊伍成員變動時遞增，讓場景重新建立隊友模型 */
   partyVersion: number
-  chapterDone: boolean
+  /** 剛完成的章節（顯示章節完成畫面）；0 = 不顯示 */
+  chapterDone: number
   region: RegionId
   /** 畫質：高畫質 / 省電（手機預設省電） */
   quality: Quality
@@ -113,7 +114,7 @@ interface GameState {
   closeMenu: () => void
   bumpGear: () => void
   partyChanged: () => void
-  setChapterDone: (v: boolean) => void
+  setChapterDone: (chapter: number) => void
   setRegion: (r: RegionId) => void
   openDialog: (d: DialogState) => void
   choose: (i: number) => void
@@ -154,7 +155,7 @@ export const useGame = create<GameState>()((set, get) => ({
   gearVersion: 0,
   save: summarize(readSave()),
   partyVersion: 0,
-  chapterDone: false,
+  chapterDone: 0,
   region: 'village',
   quality: loadQuality(),
 
@@ -193,7 +194,7 @@ export const useGame = create<GameState>()((set, get) => ({
       hero,
       gearVersion: s.gearVersion + 1,
       partyVersion: s.partyVersion + 1,
-      chapterDone: false,
+      chapterDone: 0,
     }))
     get().saveGame()
   },
@@ -219,7 +220,7 @@ export const useGame = create<GameState>()((set, get) => ({
       hero: d.profile,
       gearVersion: s.gearVersion + 1,
       partyVersion: s.partyVersion + 1,
-      chapterDone: false,
+      chapterDone: 0,
     }))
   },
   saveGame: () => {
@@ -241,7 +242,7 @@ export const useGame = create<GameState>()((set, get) => ({
       dialog: null,
       hint: null,
       showHelp: false,
-      chapterDone: false,
+      chapterDone: 0,
       partyVersion: s.partyVersion + 1,
     }))
   },

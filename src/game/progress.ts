@@ -36,16 +36,29 @@ export interface DerivedStats {
   mods: SkillMods
 }
 
-export type StoryStep = 'talk' | 'hunt' | 'recruit' | 'boss' | 'done'
+/**
+ * 劇情進度（依序推進）：
+ *   第一章 talk → hunt → recruit → boss → done
+ *   第二章 done（向村長報告）→ c2_scout（調查月光石碑）→ c2_hunt（淨化山谷）→ c2_crystal（星晶林）→ c2_boss（月泉）→ c2_done
+ */
+export const STORY_STEPS = ['talk', 'hunt', 'recruit', 'boss', 'done', 'c2_scout', 'c2_hunt', 'c2_crystal', 'c2_boss', 'c2_done'] as const
+export type StoryStep = (typeof STORY_STEPS)[number]
 export interface StoryState {
   step: StoryStep
   /** 教學任務已擊敗的史萊姆數 */
   huntKills: number
   /** 已開啟的寶箱 id */
   chests: string[]
+  /** 第二章淨化山谷：已擊敗的幼狼與蘑菇數 */
+  c2Wolf: number
+  c2Shroom: number
 }
 export const HUNT_GOAL = 3
-const newStory = (): StoryState => ({ step: 'talk', huntKills: 0, chests: [] })
+/** 第二章淨化山谷：幼狼與蘑菇各要打倒幾隻 */
+export const C2_HUNT_GOAL = 4
+const newStory = (): StoryState => ({ step: 'talk', huntKills: 0, chests: [], c2Wolf: 0, c2Shroom: 0 })
+/** 劇情是否已經推進到（或超過）某一步 */
+export const storyReached = (step: StoryStep) => STORY_STEPS.indexOf(progress.story.step) >= STORY_STEPS.indexOf(step)
 
 export const BAG_LIMIT = 40
 export const POTION_HEAL = 0.45

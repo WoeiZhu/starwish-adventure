@@ -46,7 +46,7 @@ export function App() {
           {showHelp && !paused && <HelpPanel />}
           {menu && <MenuPanel />}
           {paused && !menu && <PauseOverlay />}
-          {chapterDone && !dialog && <ChapterComplete />}
+          {chapterDone > 0 && !dialog && <ChapterComplete chapter={chapterDone} />}
         </>
       )}
       <RotateHint />

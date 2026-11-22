@@ -86,6 +86,73 @@ function Altar({ active }: { active: boolean }) {
   )
 }
 
+/** 月光石碑：長滿青苔的石板，刻文在發光 */
+function Stele({ active }: { active: boolean }) {
+  const rune = useRef<THREE.MeshBasicMaterial>(null!)
+  useFrame((state) => {
+    rune.current.opacity = (active ? 0.75 : 0.45) + Math.sin(state.clock.elapsedTime * 2.2) * 0.2
+  })
+  return (
+    <group>
+      <mesh position={[0, 0.12, 0]} receiveShadow>
+        <boxGeometry args={[1.5, 0.24, 0.9]} />
+        <meshLambertMaterial color="#9aa39c" flatShading />
+      </mesh>
+      <mesh position={[0, 1.05, 0]} castShadow>
+        <boxGeometry args={[1.05, 1.7, 0.3]} />
+        <meshLambertMaterial color="#b6bdb4" flatShading />
+      </mesh>
+      <mesh position={[0, 1.95, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
+        <boxGeometry args={[0.74, 0.74, 0.3]} />
+        <meshLambertMaterial color="#b6bdb4" flatShading />
+      </mesh>
+      {/* 青苔 */}
+      <mesh position={[-0.32, 0.4, 0.17]} scale={[0.45, 0.3, 0.08]}>
+        <sphereGeometry args={[1, 10, 8]} />
+        <meshLambertMaterial color="#6fae6a" />
+      </mesh>
+      <mesh position={[0, 1.15, 0.16]}>
+        <planeGeometry args={[0.7, 1.1]} />
+        <meshBasicMaterial ref={rune} color="#bfe9ff" transparent opacity={0.6} />
+      </mesh>
+    </group>
+  )
+}
+
+/** 星晶簇：中央懸浮的大星晶，任務進行中會發亮 */
+function GroveCore({ active }: { active: boolean }) {
+  const gem = useRef<THREE.Group>(null!)
+  useFrame((state) => {
+    gem.current.position.y = 1.6 + Math.sin(state.clock.elapsedTime * 1.4) * 0.12
+    gem.current.rotation.y = state.clock.elapsedTime * 0.6
+  })
+  return (
+    <group ref={gem} position={[0, 1.6, 0]}>
+      <mesh scale={[0.5, 1.2, 0.5]}>
+        <octahedronGeometry args={[1, 0]} />
+        <meshLambertMaterial color="#9fe0ff" emissive="#8fd8ff" emissiveIntensity={active ? 0.9 : 0.4} flatShading transparent opacity={0.9} />
+      </mesh>
+    </group>
+  )
+}
+
+/** 月泉中央：任務進行中浮現一枚月形光球 */
+function SpringOrb({ active }: { active: boolean }) {
+  const orb = useRef<THREE.Mesh>(null!)
+  useFrame((state) => {
+    orb.current.visible = active
+    orb.current.position.y = 1.1 + Math.sin(state.clock.elapsedTime * 2) * 0.1
+  })
+  return (
+    <mesh ref={orb} position={[0, 1.1, 0]}>
+      <sphereGeometry args={[0.3, 16, 12]} />
+      <meshBasicMaterial color="#e8f6ff" />
+    </mesh>
+  )
+}
+
+const MARKER_Y: Partial<Record<Interactable['kind'], number>> = { altar: 2.2, stele: 2.7, grove: 3.2, spring: 1.9 }
+
 function Item({ it }: { it: Interactable }) {
   const root = useRef<THREE.Group>(null!)
   const appearance = useMemo(
@@ -129,8 +196,11 @@ function Item({ it }: { it: Interactable }) {
         {person && <CharacterModel appearance={appearance} />}
         {it.kind === 'chest' && <Chest />}
         {it.kind === 'altar' && <Altar active={it.marker} />}
+        {it.kind === 'stele' && <Stele active={it.marker} />}
+        {it.kind === 'grove' && <GroveCore active={it.marker} />}
+        {it.kind === 'spring' && <SpringOrb active={it.marker} />}
       </group>
-      {it.marker && <Marker y={it.kind === 'altar' ? 2.2 : 1.9} />}
+      {it.marker && <Marker y={MARKER_Y[it.kind] ?? 1.9} />}
     </group>
   )
 }

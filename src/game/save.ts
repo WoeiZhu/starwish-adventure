@@ -2,12 +2,12 @@
 import { CLASSES, CLASS_ORDER, MAX_LEVEL, type ClassId } from '../data/classes'
 import type { Gender } from '../data/appearance'
 import { SLOTS, type Item } from '../data/items'
-import { PLAY_HALF } from '../data/world'
-import { progress, type MemberProgress, type StoryState } from './progress'
+import { BOUNDS } from '../data/world'
+import { STORY_STEPS, progress, type MemberProgress, type StoryState } from './progress'
 
 const SAVE_KEY = 'starwish.save.v1'
 const VERSION = 1
-const STEPS: StoryState['step'][] = ['talk', 'hunt', 'recruit', 'boss', 'done']
+const STEPS: readonly StoryState['step'][] = STORY_STEPS
 
 export interface SaveProfile {
   name: string
@@ -89,7 +89,7 @@ export function readSave(): SaveData | null {
         gender: d.profile.gender === 'boy' ? 'boy' : 'girl',
         classId: d.profile.classId,
       },
-      pos: { x: num(d.pos?.x, -PLAY_HALF, PLAY_HALF, 0), z: num(d.pos?.z, -PLAY_HALF, PLAY_HALF, 6) },
+      pos: { x: num(d.pos?.x, BOUNDS.minX, BOUNDS.maxX, 0), z: num(d.pos?.z, BOUNDS.minZ, BOUNDS.maxZ, 6) },
       members,
       inventory,
       gold: Math.round(num(d.gold, 0, 1e9, 0)),
@@ -107,8 +107,11 @@ export function readSave(): SaveData | null {
               step: d.story.step,
               huntKills: Math.round(num(d.story.huntKills, 0, 99, 0)),
               chests: Array.isArray(d.story.chests) ? d.story.chests.filter((c) => typeof c === 'string') : [],
+              // 第二章以前的存檔沒有這兩個欄位
+              c2Wolf: Math.round(num(d.story.c2Wolf, 0, 99, 0)),
+              c2Shroom: Math.round(num(d.story.c2Shroom, 0, 99, 0)),
             }
-          : { step: 'boss', huntKills: 0, chests: [] },
+          : { step: 'boss', huntKills: 0, chests: [], c2Wolf: 0, c2Shroom: 0 },
     }
   } catch {
     return null

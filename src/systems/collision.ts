@@ -1,5 +1,5 @@
 // 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。
-import { COLLIDERS, PLAY_HALF, type Vec2 } from '../data/world'
+import { BOUNDS, COLLIDERS, type Vec2 } from '../data/world'
 
 /** 把圓形角色推出所有障礙物，並限制在可行走範圍內 */
 export function resolveCollisions(p: Vec2, radius: number) {
@@ -43,8 +43,8 @@ export function resolveCollisions(p: Vec2, radius: number) {
       }
     }
   }
-  p.x = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, p.x))
-  p.z = Math.max(-PLAY_HALF, Math.min(PLAY_HALF, p.z))
+  p.x = Math.max(BOUNDS.minX, Math.min(BOUNDS.maxX, p.x))
+  p.z = Math.max(BOUNDS.minZ, Math.min(BOUNDS.maxZ, p.z))
 }
 
 /**
