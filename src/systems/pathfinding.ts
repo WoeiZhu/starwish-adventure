@@ -1,5 +1,5 @@
 // 點地面移動：A* 網格尋路 + 視線平滑。
-import { BOUNDS, COLLIDERS, type Vec2 } from '../data/world'
+import { BOUNDS, COLLIDERS, DYNAMIC, type Vec2 } from '../data/world'
 
 const CELL = 0.5
 // 網格：X 方向 NX 格、Z 方向 NZ 格（地圖往北延伸後不再是正方形）
@@ -14,14 +14,17 @@ const centerX = (i: number) => BOUNDS.minX + (i + 0.5) * CELL
 const centerZ = (i: number) => BOUNDS.minZ + (i + 0.5) * CELL
 
 let blocked: Uint8Array | null = null
+let builtFor = -1
 function grid() {
-  if (blocked) return blocked
+  if (blocked && builtFor === DYNAMIC.version) return blocked
+  builtFor = DYNAMIC.version
   blocked = new Uint8Array(NX * NZ)
+  const list = [...COLLIDERS, ...DYNAMIC.list]
   for (let iz = 0; iz < NZ; iz++) {
     for (let ix = 0; ix < NX; ix++) {
       const x = centerX(ix)
       const z = centerZ(iz)
-      for (const c of COLLIDERS) {
+      for (const c of list) {
         const hit =
           c.kind === 'circle'
             ? Math.hypot(x - c.x, z - c.z) < c.r + CLEARANCE
@@ -200,4 +203,11 @@ export function findPath(from: Vec2, to: Vec2): Vec2[] | null {
     i = j + 1
   }
   return out
+}
+
+/** 最近的可走位置（讀檔時位置剛好落在新地形裡會用到） */
+export function nearestWalkable(p: Vec2): Vec2 {
+  if (!isBlockedAt(p.x, p.z)) return { x: p.x, z: p.z }
+  const i = nearestFree(toCellX(p.x), toCellZ(p.z))
+  return i < 0 ? { x: p.x, z: p.z } : { x: centerX(i % N), z: centerZ((i / N) | 0) }
 }

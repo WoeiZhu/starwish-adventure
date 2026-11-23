@@ -151,7 +151,45 @@ function SpringOrb({ active }: { active: boolean }) {
   )
 }
 
-const MARKER_Y: Partial<Record<Interactable['kind'], number>> = { altar: 2.2, stele: 2.7, grove: 3.2, spring: 1.9 }
+/** 吊橋絞盤：木架上一個可以轉的輪子 */
+function Lever() {
+  return (
+    <group>
+      {[-0.4, 0.4].map((x) => (
+        <mesh key={x} position={[x, 0.55, 0]} castShadow>
+          <boxGeometry args={[0.14, 1.1, 0.14]} />
+          <meshLambertMaterial color="#7d5532" />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.85, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.16, 0.16, 0.95, 10]} />
+        <meshLambertMaterial color="#a8743f" />
+      </mesh>
+      <mesh position={[0.52, 0.85, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <torusGeometry args={[0.32, 0.05, 6, 14]} />
+        <meshLambertMaterial color="#5d5a63" />
+      </mesh>
+    </group>
+  )
+}
+
+/** 告示牌 */
+function Notice() {
+  return (
+    <group>
+      <mesh position={[0, 0.6, 0]} castShadow>
+        <boxGeometry args={[0.1, 1.2, 0.1]} />
+        <meshLambertMaterial color="#7d5532" />
+      </mesh>
+      <mesh position={[0, 1.15, 0.05]} castShadow>
+        <boxGeometry args={[0.9, 0.55, 0.06]} />
+        <meshLambertMaterial color="#e6c58f" />
+      </mesh>
+    </group>
+  )
+}
+
+const MARKER_Y: Partial<Record<Interactable['kind'], number>> = { altar: 2.2, stele: 2.7, grove: 3.2, spring: 1.9, lever: 1.6, notice: 1.8 }
 
 function Item({ it }: { it: Interactable }) {
   const root = useRef<THREE.Group>(null!)
@@ -199,6 +237,8 @@ function Item({ it }: { it: Interactable }) {
         {it.kind === 'stele' && <Stele active={it.marker} />}
         {it.kind === 'grove' && <GroveCore active={it.marker} />}
         {it.kind === 'spring' && <SpringOrb active={it.marker} />}
+        {it.kind === 'lever' && <Lever />}
+        {it.kind === 'notice' && <Notice />}
       </group>
       {it.marker && <Marker y={MARKER_Y[it.kind] ?? 1.9} />}
     </group>

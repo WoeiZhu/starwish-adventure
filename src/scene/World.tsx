@@ -1,16 +1,16 @@
-// 草原場景：地面、道路、草、花、樹、石頭、房屋、水井、路牌與遠景。
+// 主線世界場景：依區域配色的地面、道路、草、花、樹、石頭、房屋、水井、路牌，
+// 加上第一階段的地形地標（Landmarks）與遠景（Vista）。
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { WORLD_CENTER, groundHeight } from '../data/terrain'
 import {
   BORDER_TREES,
-  BOUNDS,
   CRYSTALS,
-  FOREST_EDGE,
+  FERNS,
   GROVE,
   SHROOMS,
   SPRING,
-  VALLEY_EDGE,
   RUINS,
   RUIN_PILLARS,
   FLOWERS,
@@ -28,8 +28,11 @@ import {
 import { findPath } from '../systems/pathfinding'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
+import { Landmarks } from './Landmarks'
+import { buildGround, buildRibbon, roadColor } from './terrainMeshes'
+import { Vista } from './Vista'
 
-const ROAD_COLOR = '#ecd9a8'
+const ROAD_COLOR = '#efdcae'
 
 function handleGroundClick(e: ThreeEvent<MouseEvent>) {
   if (e.nativeEvent.button !== 0 || e.delta > 6) return
@@ -48,67 +51,46 @@ function handleGroundClick(e: ThreeEvent<MouseEvent>) {
   runtime.marker.life = 1
 }
 
+/** 地面：一整片依區域配色的網格；可行走範圍外慢慢隆起成丘陵，看不到地面的盡頭 */
 function Ground() {
-  const patches = useMemo(() => {
-    const out: { x: number; z: number; r: number; c: string }[] = []
-    for (let i = 0; i < 26; i++) {
-      const a = i * 2.399
-      const d = 6 + ((i * 7.3) % 34)
-      out.push({ x: Math.cos(a) * d, z: Math.sin(a) * d, r: 3 + ((i * 3.7) % 5), c: i % 2 ? '#9bdc74' : '#84c962' })
-    }
-    return out
-  }, [])
+  const geo = useMemo(() => buildGround(WORLD_CENTER.x - 210, WORLD_CENTER.z - 210, 420, 3), [])
   return (
-    <>
-      <mesh position={[0, 0, -18]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow onClick={handleGroundClick}>
-        <circleGeometry args={[115, 64]} />
-        <meshLambertMaterial color="#8fd36c" />
-      </mesh>
-      {patches.map((p, i) => (
-        <mesh key={i} position={[p.x, 0.012, p.z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <circleGeometry args={[p.r, 24]} />
-          <meshLambertMaterial color={p.c} transparent opacity={0.55} depthWrite={false} />
-        </mesh>
-      ))}
-    </>
+    <mesh geometry={geo} receiveShadow onClick={handleGroundClick}>
+      <meshLambertMaterial vertexColors />
+    </mesh>
   )
 }
 
+/** 道路：每條路有較寬的路肩當外框，顏色依所在區域（村子石板、森林泥土、山谷月白石） */
 function Roads() {
   const geos = useMemo(
     () =>
       ROADS.map((road) => {
-        const pts = road.curve.getSpacedPoints(90)
-        const pos: number[] = []
-        const idx: number[] = []
-        pts.forEach((p, i) => {
-          const a = pts[Math.max(0, i - 1)]
-          const b = pts[Math.min(pts.length - 1, i + 1)]
-          const t = new THREE.Vector3().subVectors(b, a).normalize()
-          const nx = -t.z * (road.width / 2)
-          const nz = t.x * (road.width / 2)
-          pos.push(p.x + nx, 0, p.z + nz, p.x - nx, 0, p.z - nz)
-          if (i < pts.length - 1) {
-            const k = i * 2
-            idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2)
-          }
-        })
-        const g = new THREE.BufferGeometry()
-        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-        g.setIndex(idx)
-        g.computeVertexNormals()
-        return g
+        const pts = road.curve.getSpacedPoints(Math.ceil(road.curve.getLength() / 0.7)).map((p) => ({ x: p.x, z: p.z }))
+        return {
+          edge: buildRibbon(pts, road.width + 0.55, 0.022, roadColor(true)),
+          top: buildRibbon(pts, road.width, 0.03, roadColor(false)),
+        }
       }),
     [],
   )
   return (
     <>
       {geos.map((g, i) => (
-        <mesh key={i} geometry={g} position={[0, 0.03 + i * 0.004, 0]} receiveShadow>
-          <meshLambertMaterial color={ROAD_COLOR} side={THREE.DoubleSide} />
-        </mesh>
+        <group key={i} position={[0, i * 0.002, 0]}>
+          <mesh geometry={g.edge} receiveShadow>
+            <meshLambertMaterial vertexColors />
+          </mesh>
+          <mesh geometry={g.top} receiveShadow>
+            <meshLambertMaterial vertexColors />
+          </mesh>
+        </group>
       ))}
       <mesh position={[PLAZA.x, 0.026, PLAZA.z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <circleGeometry args={[PLAZA.r + 0.3, 40]} />
+        <meshLambertMaterial color="#c9b88d" />
+      </mesh>
+      <mesh position={[PLAZA.x, 0.034, PLAZA.z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[PLAZA.r, 40]} />
         <meshLambertMaterial color={ROAD_COLOR} />
       </mesh>
@@ -154,14 +136,24 @@ const ROCK_GEO = new THREE.DodecahedronGeometry(1, 0)
 const PINE_GEO = new THREE.ConeGeometry(1.6, 5, 7)
 const grassShape = (t: Tuft): [number, number, number] => [0.12 * t.s, t.s, t.s]
 const flowerShape = (t: Tuft): [number, number, number] => [0.1, t.s, t.s * 0.7]
-const pineShape = (t: Tuft): [number, number, number] => [2.5 * t.s, t.s, t.s]
+const pineShape = (t: Tuft): [number, number, number] => [groundHeight(t.x, t.z) + 2.5 * t.s - 0.3, t.s, t.s]
+const FERN_GEO = new THREE.ConeGeometry(0.42, 0.55, 5)
+const fernShape = (t: Tuft): [number, number, number] => [0.2 * t.s, t.s * 1.1, t.s * 0.75]
 const ROCK_ITEMS: Tuft[] = ROCKS.map((r, i) => ({ ...r, color: i % 2 ? '#b7bcc4' : '#a3a9b3' }))
 const rockShape = (t: Tuft): [number, number, number] => [t.s * 0.45, t.s, t.s * 0.7]
+
+// 樹木共用的幾何與樹幹材質（樹冠材質每棵一份，才能各自淡出）
+const TRUNK = new THREE.CylinderGeometry(0.17, 0.26, 1.6, 8)
+const BIRCH_TRUNK = new THREE.CylinderGeometry(0.12, 0.17, 2.6, 8)
+const CROWN = new THREE.SphereGeometry(1, 14, 10)
+const PINE_TIER = new THREE.ConeGeometry(1, 1, 8)
+const BARK = new THREE.MeshLambertMaterial({ color: '#9a6b45' })
+const BIRCH_BARK = new THREE.MeshLambertMaterial({ color: '#f1ece2' })
 
 /** 樹：擋在相機與主角之間時樹冠淡出，避免遮住角色 */
 function Trees() {
   const mats = useMemo(
-    () => TREES.map((t) => new THREE.MeshLambertMaterial({ color: t.color, flatShading: t.kind === 'pine' })),
+    () => TREES.map((t) => new THREE.MeshLambertMaterial({ color: t.color, flatShading: t.kind !== 'round' })),
     [],
   )
   useFrame(({ camera }, dt) => {
@@ -195,33 +187,23 @@ function Trees() {
     <>
       {TREES.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]} rotation={[0, t.rot, 0]} scale={t.s}>
-          <mesh position={[0, 0.8, 0]} castShadow>
-            <cylinderGeometry args={[0.17, 0.26, 1.6, 8]} />
-            <meshLambertMaterial color="#9a6b45" />
-          </mesh>
+          <mesh geometry={t.kind === 'birch' ? BIRCH_TRUNK : TRUNK} material={t.kind === 'birch' ? BIRCH_BARK : BARK} position={[0, t.kind === 'birch' ? 1.3 : 0.8, 0]} castShadow />
           {t.kind === 'round' ? (
             <>
-              <mesh position={[0, 2.3, 0]} material={mats[i]} castShadow>
-                <sphereGeometry args={[1.15, 14, 10]} />
-              </mesh>
-              <mesh position={[0.6, 2.95, 0.2]} material={mats[i]} castShadow>
-                <sphereGeometry args={[0.8, 12, 9]} />
-              </mesh>
-              <mesh position={[-0.55, 2.8, -0.25]} material={mats[i]} castShadow>
-                <sphereGeometry args={[0.75, 12, 9]} />
-              </mesh>
+              <mesh geometry={CROWN} position={[0, 2.3, 0]} scale={1.15} material={mats[i]} castShadow />
+              <mesh geometry={CROWN} position={[0.6, 2.95, 0.2]} scale={0.8} material={mats[i]} castShadow />
+              <mesh geometry={CROWN} position={[-0.55, 2.8, -0.25]} scale={0.75} material={mats[i]} castShadow />
+            </>
+          ) : t.kind === 'birch' ? (
+            <>
+              <mesh geometry={CROWN} position={[0, 3, 0]} scale={[0.95, 1.25, 0.95]} material={mats[i]} castShadow />
+              <mesh geometry={CROWN} position={[0.35, 3.9, 0.1]} scale={[0.6, 0.8, 0.6]} material={mats[i]} castShadow />
             </>
           ) : (
             <>
-              <mesh position={[0, 2, 0]} material={mats[i]} castShadow>
-                <coneGeometry args={[1.25, 1.9, 8]} />
-              </mesh>
-              <mesh position={[0, 3, 0]} material={mats[i]} castShadow>
-                <coneGeometry args={[0.95, 1.7, 8]} />
-              </mesh>
-              <mesh position={[0, 3.9, 0]} material={mats[i]} castShadow>
-                <coneGeometry args={[0.62, 1.4, 8]} />
-              </mesh>
+              <mesh geometry={PINE_TIER} position={[0, 2, 0]} scale={[1.25, 1.9, 1.25]} material={mats[i]} castShadow />
+              <mesh geometry={PINE_TIER} position={[0, 3, 0]} scale={[0.95, 1.7, 0.95]} material={mats[i]} castShadow />
+              <mesh geometry={PINE_TIER} position={[0, 3.9, 0]} scale={[0.62, 1.4, 0.62]} material={mats[i]} castShadow />
             </>
           )}
         </group>
@@ -333,7 +315,7 @@ function Signpost() {
   )
 }
 
-/** 迷霧森林：西側地面較暗，並有一層低矮的霧氣 */
+/** 迷霧森林：一層低矮、緩慢飄動的霧氣（地面顏色由區域配色決定） */
 function Forest() {
   const mist = useRef<THREE.Group>(null!)
   useFrame((state) => {
@@ -343,10 +325,6 @@ function Forest() {
   })
   return (
     <>
-      <mesh position={[(FOREST_EDGE - 60) / 2, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[60 + FOREST_EDGE, 110]} />
-        <meshLambertMaterial color="#4f9a63" transparent opacity={0.6} depthWrite={false} />
-      </mesh>
       <group ref={mist}>
         {Array.from({ length: 9 }, (_, i) => (
           <mesh key={i} position={[-30, 0.5 + (i % 3) * 0.25, -34 + i * 8.5]} scale={[6, 0.5, 3.5]}>
@@ -387,34 +365,14 @@ function Ruins() {
   )
 }
 
-/** 從 VALLEY_EDGE 往北漸層變深的山谷地面色（畫在一張漸層貼圖上，避免出現硬邊） */
-function valleyGroundTexture() {
-  const c = document.createElement('canvas')
-  c.width = 4
-  c.height = 256
-  const g = c.getContext('2d')!
-  // 貼圖的上緣（v=1）對應平面的北端
-  const grad = g.createLinearGradient(0, 256, 0, 0)
-  grad.addColorStop(0, 'rgba(70,140,140,0)')
-  grad.addColorStop(0.16, 'rgba(70,140,140,0.55)')
-  grad.addColorStop(1, 'rgba(60,120,140,0.7)')
-  g.fillStyle = grad
-  g.fillRect(0, 0, 4, 256)
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  return t
-}
-
 const GEM_GEO = new THREE.OctahedronGeometry(1, 0).scale(0.38, 1.25, 0.38)
 const STEM_GEO = new THREE.CylinderGeometry(0.16, 0.24, 1, 10)
 const CAP_GEO = new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.7, 1)
 
-/** 月光山谷：偏藍綠的地面、發光星晶、大蘑菇、星晶林地面、月泉 */
+/** 月光山谷：發光星晶、大蘑菇、星晶林地面、月泉（地面的藍綠色由區域配色決定） */
 function Valley() {
-  const tex = useMemo(valleyGroundTexture, [])
   const spring = useRef<THREE.Mesh>(null!)
   const orbs = useRef<THREE.Group>(null!)
-  const depth = 40
   useFrame((state) => {
     const t = state.clock.elapsedTime
     ;(spring.current.material as THREE.MeshLambertMaterial).emissiveIntensity = 0.55 + Math.sin(t * 1.6) * 0.12
@@ -426,10 +384,6 @@ function Valley() {
   })
   return (
     <group>
-      <mesh position={[0, 0.016, VALLEY_EDGE + 6 - depth / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[120, depth]} />
-        <meshLambertMaterial map={tex} transparent depthWrite={false} />
-      </mesh>
       {CRYSTALS.map((c, i) => (
         <group key={i} position={[c.x, 0, c.z]} rotation={[0, c.rot, 0]} scale={c.s}>
           <mesh geometry={GEM_GEO} position={[0, 1.1, 0]} castShadow>
@@ -496,18 +450,8 @@ function Valley() {
   )
 }
 
+/** 天上的雲（山丘改由地面起伏與遠景山脈取代） */
 function Backdrop() {
-  // 山丘圍著可行走範圍外側排成橢圓（地圖往北延伸後不再是正圓）
-  const hills = useMemo(() => {
-    const cx = (BOUNDS.minX + BOUNDS.maxX) / 2
-    const cz = (BOUNDS.minZ + BOUNDS.maxZ) / 2
-    const rx = (BOUNDS.maxX - BOUNDS.minX) / 2 + 40
-    const rz = (BOUNDS.maxZ - BOUNDS.minZ) / 2 + 40
-    return Array.from({ length: 16 }, (_, i) => {
-      const a = (i / 16) * Math.PI * 2 + 0.2
-      return { x: cx + Math.cos(a) * rx, z: cz + Math.sin(a) * rz, r: 18 + (i % 3) * 6, c: i % 2 ? '#7fc98a' : '#93d59a' }
-    })
-  }, [])
   const clouds = useMemo(
     () =>
       Array.from({ length: 9 }, (_, i) => {
@@ -518,12 +462,6 @@ function Backdrop() {
   )
   return (
     <>
-      {hills.map((h, i) => (
-        <mesh key={i} position={[h.x, -2, h.z]} scale={[h.r, h.r * 0.55, h.r]}>
-          <sphereGeometry args={[1, 16, 10]} />
-          <meshLambertMaterial color={h.c} />
-        </mesh>
-      ))}
       {clouds.map((c, i) => (
         <group key={i} position={[c.x, c.y, c.z]}>
           {[
@@ -551,6 +489,7 @@ export function World() {
       <Instanced items={FLOWERS} geometry={FLOWER_GEO} shape={flowerShape} />
       <Instanced items={ROCK_ITEMS} geometry={ROCK_GEO} shape={rockShape} castShadow flat />
       <Instanced items={BORDER_TREES} geometry={PINE_GEO} shape={pineShape} flat />
+      <Instanced items={FERNS} geometry={FERN_GEO} shape={fernShape} flat />
       <Trees />
       {HOUSES.map((h, i) => (
         <House key={i} h={h} />
@@ -560,7 +499,9 @@ export function World() {
       <Forest />
       <Ruins />
       <Valley />
+      <Landmarks />
       <Backdrop />
+      <Vista />
     </>
   )
 }

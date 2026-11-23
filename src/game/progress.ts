@@ -3,6 +3,7 @@
 import { CLASSES, CLASS_ORDER, MAX_LEVEL, type ClassId } from '../data/classes'
 import { SLOTS, itemScore, type Item, type Slot } from '../data/items'
 import { TREES, type TreeNode } from '../data/skilltree'
+import { refreshGates } from '../data/world'
 
 export interface MemberProgress {
   level: number
@@ -74,6 +75,16 @@ export const progress = {
   /** 已招募的隊友職業（依加入順序）；主角不在其中 */
   recruited: [] as ClassId[],
   story: newStory(),
+  /** 已解鎖的地圖捷徑（例如放下的吊橋 id）；寶箱另外記在 story.chests */
+  unlocks: [] as string[],
+}
+
+/** 解鎖捷徑：記錄下來並更新碰撞（尋路網格會自動重建） */
+export function unlock(id: string) {
+  if (progress.unlocks.includes(id)) return false
+  progress.unlocks.push(id)
+  refreshGates(progress.unlocks)
+  return true
 }
 
 export function resetProgress() {
@@ -84,6 +95,8 @@ export function resetProgress() {
   progress.kills = 0
   progress.recruited = []
   progress.story = newStory()
+  progress.unlocks = []
+  refreshGates(progress.unlocks)
 }
 
 export const expToNext = (level: number) => Math.round(30 * Math.pow(level, 1.45) + 20)

@@ -2,11 +2,21 @@
 import { CLASSES, CLASS_ORDER, MAX_LEVEL, type ClassId } from '../data/classes'
 import type { Gender } from '../data/appearance'
 import { SLOTS, type Item } from '../data/items'
-import { BOUNDS } from '../data/world'
+import { BRIDGES } from '../data/terrain'
+import { BOUNDS, refreshGates, regionAt, type RegionId } from '../data/world'
+import { nearestWalkable } from '../systems/pathfinding'
 import { STORY_STEPS, progress, type MemberProgress, type StoryState } from './progress'
 
+// 存檔鍵沿用 v1 的名稱，舊存檔才找得到；格式版本記在資料裡的 version
 const SAVE_KEY = 'starwish.save.v1'
-const VERSION = 1
+/**
+ * 版本紀錄：
+ *   1：角色、成長、背包、劇情、位置
+ *   2：加上 unlocks（地圖捷徑）與 region（所在區域）。讀到 1 版會自動轉換：
+ *      捷徑視為未解鎖；位置若剛好落在新地形（河流、山脊）裡，移到最近的可走處
+ */
+const VERSION = 2
+const UNLOCK_IDS = new Set(BRIDGES.filter((b) => b.locked).map((b) => b.id))
 const STEPS: readonly StoryState['step'][] = STORY_STEPS
 
 export interface SaveProfile {
@@ -20,6 +30,8 @@ export interface SaveData {
   savedAt: number
   profile: SaveProfile
   pos: { x: number; z: number }
+  /** 存檔時所在區域：讀檔時先準備這一區，再放上人物 */
+  region: RegionId
   members: Record<ClassId, MemberProgress>
   inventory: Item[]
   gold: number
@@ -27,6 +39,7 @@ export interface SaveData {
   kills: number
   recruited: ClassId[]
   story: StoryState
+  unlocks: string[]
 }
 
 export function writeSave(profile: SaveProfile, pos: { x: number; z: number }) {
@@ -35,6 +48,7 @@ export function writeSave(profile: SaveProfile, pos: { x: number; z: number }) {
     savedAt: Date.now(),
     profile,
     pos: { x: pos.x, z: pos.z },
+    region: regionAt(pos.x, pos.z),
     members: progress.members,
     inventory: progress.inventory,
     gold: progress.gold,
@@ -42,6 +56,7 @@ export function writeSave(profile: SaveProfile, pos: { x: number; z: number }) {
     kills: progress.kills,
     recruited: progress.recruited,
     story: progress.story,
+    unlocks: progress.unlocks,
   }
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(data))
@@ -60,8 +75,10 @@ export function readSave(): SaveData | null {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
     const d = JSON.parse(raw) as Partial<SaveData>
-    if (d.version !== VERSION || !d.profile || !d.members || !(d.profile.classId in CLASSES)) return null
+    if ((d.version !== 1 && d.version !== VERSION) || !d.profile || !d.members || !(d.profile.classId in CLASSES)) return null
     const heroClass = d.profile.classId
+    // 位置：限制在可行走範圍內；落在障礙物裡（例如舊存檔站的地方後來變成河）就移到最近的可走處
+    const pos = nearestWalkable({ x: num(d.pos?.x, BOUNDS.minX, BOUNDS.maxX, 0), z: num(d.pos?.z, BOUNDS.minZ, BOUNDS.maxZ, 6) })
     const inventory = (Array.isArray(d.inventory) ? d.inventory : []).filter(
       (i): i is Item => !!i && typeof i.uid === 'string' && SLOTS.includes(i.slot) && typeof i.stats === 'object',
     )
@@ -89,7 +106,8 @@ export function readSave(): SaveData | null {
         gender: d.profile.gender === 'boy' ? 'boy' : 'girl',
         classId: d.profile.classId,
       },
-      pos: { x: num(d.pos?.x, BOUNDS.minX, BOUNDS.maxX, 0), z: num(d.pos?.z, BOUNDS.minZ, BOUNDS.maxZ, 6) },
+      pos,
+      region: regionAt(pos.x, pos.z),
       members,
       inventory,
       gold: Math.round(num(d.gold, 0, 1e9, 0)),
@@ -112,6 +130,8 @@ export function readSave(): SaveData | null {
               c2Shroom: Math.round(num(d.story.c2Shroom, 0, 99, 0)),
             }
           : { step: 'boss', huntKills: 0, chests: [], c2Wolf: 0, c2Shroom: 0 },
+      // 1 版沒有這個欄位；只保留目前地圖上存在的捷徑 id
+      unlocks: Array.isArray(d.unlocks) ? [...new Set(d.unlocks.filter((u) => typeof u === 'string' && UNLOCK_IDS.has(u)))] : [],
     }
   } catch {
     return null
@@ -127,6 +147,8 @@ export function applySave(d: SaveData) {
   progress.kills = d.kills
   progress.recruited = d.recruited
   progress.story = d.story
+  progress.unlocks = [...d.unlocks]
+  refreshGates(progress.unlocks)
 }
 
 export function clearSave() {

@@ -1,0 +1,7 @@
+{
+  "name": "starwish-map-qa",
+  "private": true,
+  "type": "module",
+  "description": "無頭 Edge 地圖測試：拍各區畫面、量效能、連續往返檢查記憶體。先開 dev server（port 5183）。",
+  "dependencies": { "playwright-core": "1.64.0" }
+}

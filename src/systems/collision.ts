@@ -1,10 +1,21 @@
 // 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。
-import { BOUNDS, COLLIDERS, type Vec2 } from '../data/world'
+import { BOUNDS, COLLIDERS, DYNAMIC, type Collider, type Vec2 } from '../data/world'
+
+let merged: Collider[] = COLLIDERS
+let mergedFor = -1
+/** 固定碰撞＋會隨進度改變的碰撞（版本變了才重新合併） */
+function allColliders() {
+  if (mergedFor !== DYNAMIC.version) {
+    mergedFor = DYNAMIC.version
+    merged = [...COLLIDERS, ...DYNAMIC.list]
+  }
+  return merged
+}
 
 /** 把圓形角色推出所有障礙物，並限制在可行走範圍內 */
 export function resolveCollisions(p: Vec2, radius: number) {
   for (let pass = 0; pass < 2; pass++) {
-    for (const c of COLLIDERS) {
+    for (const c of allColliders()) {
       if (c.kind === 'circle') {
         let dx = p.x - c.x
         let dz = p.z - c.z

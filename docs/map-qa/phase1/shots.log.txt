@@ -1,0 +1,3 @@
+頁面載入 404 ms
+11_horizon_north {"fps":60,"calls":808,"tris":1742680,"geometries":187,"textures":35,"objects":2408,"heapMB":130,"chunks":null,"units":66}
+錯誤 無

@@ -1,7 +1,7 @@
 // 3D 場景層入口：光照、世界、主角、NPC、史萊姆與相機。
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ENEMY_SLOTS } from '../game/combat/state'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
@@ -12,7 +12,7 @@ import { MoveMarker, Player } from './Player'
 import { Enemy } from './Enemy'
 import { World } from './World'
 
-const SKY = '#bfe8ff'
+const SKY = '#d6eefa'
 
 /** 陽光與陰影範圍跟著主角移動，讓大地圖也有清楚的影子 */
 function Lighting() {
@@ -58,6 +58,18 @@ function Lighting() {
   )
 }
 
+/** 開發模式：把 renderer 與 scene 掛到 window.__sw，自動化測試用來量效能與記憶體 */
+function DevHooks() {
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const sw = (window as unknown as { __sw?: Record<string, unknown> }).__sw
+    if (sw) Object.assign(sw, { gl, scene })
+  }, [gl, scene])
+  return null
+}
+
 export function GameScene() {
   const quality = useGame((s) => s.quality)
   return (
@@ -81,6 +93,7 @@ export function GameScene() {
         <Enemy key={i} slot={i} />
       ))}
       <CameraRig />
+      <DevHooks />
     </Canvas>
   )
 }

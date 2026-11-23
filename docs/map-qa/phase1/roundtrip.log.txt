@@ -1,0 +1,10 @@
+頁面載入 376 ms
+開始 {"calls":502,"tris":1308294,"geometries":145,"textures":24,"objects":2260,"heapMB":143,"chunks":null,"units":70}
+第1輪 村莊→山谷月泉 {"ok":true,"ms":11205} 隊友最遠 5.4 m
+第1輪 山谷→村莊 {"ok":true,"ms":11313} 隊友最遠 5.4 m
+第1輪 村莊→迷霧森林 {"ok":true,"ms":5742} 隊友最遠 5.4 m
+第1輪 森林→石環 {"ok":true,"ms":10105} 隊友最遠 5.4 m
+第1輪 石環→草原南 {"ok":true,"ms":9254} 隊友最遠 20.5 m
+第1輪 草原→村莊 {"ok":true,"ms":5538} 隊友最遠 6 m
+第1輪結束 {"fps":60,"calls":522,"tris":1305680,"geometries":248,"textures":56,"objects":2284,"heapMB":161.1,"chunks":null,"units":70}
+錯誤 無

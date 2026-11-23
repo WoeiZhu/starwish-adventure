@@ -1,6 +1,29 @@
-// MVP 地圖「星光村外草原」：以固定亂數種子產生，確保每次載入佈局一致。
+// 主線地圖：星光村、翠綠草原、迷霧森林、古代石環、北境林道、月光山谷。
+// 以固定亂數種子產生，確保每次載入佈局一致。第一階段新增的地形（河流、山脊、步道、地標）
+// 定義在 terrain.ts，這裡在原本的生成完成後才「過濾」掉擋到的裝飾，所以舊的樹木與怪物位置不變。
 import * as THREE from 'three'
 import type { Species } from './enemies'
+import { REGIONS, REGION_NAME, regionAt, type RegionId } from './regions'
+import {
+  BRIDGES,
+  DRAW_LEVER,
+  DRAW_NOTICE,
+  ELDER_TREE,
+  LAMPS,
+  PASS_ARCH,
+  RIDGE_ROCKS,
+  RIDGE_Z,
+  RUIN_PIECES,
+  TRAILS,
+  WALK,
+  WINDMILL,
+  distToRiver,
+  mulberry32,
+  RIVER,
+  RIVER_SAMPLES,
+} from './terrain'
+
+export { REGION_NAME, regionAt, type RegionId }
 
 export interface Vec2 {
   x: number
@@ -8,20 +31,10 @@ export interface Vec2 {
 }
 
 /** 玩家可行走範圍：原本的草原一帶是 ±37，第二章往北延伸出月光山谷 */
-export const BOUNDS = { minX: -37, maxX: 37, minZ: -72, maxZ: 37 }
+export const BOUNDS = WALK
 export const SPAWN: Vec2 = { x: 0, z: 6 }
 export const PLAZA = { x: 0, z: -9, r: 6 }
 
-function mulberry32(seed: number) {
-  let a = seed
-  return () => {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 const rng = mulberry32(20261116)
 const rand = (a: number, b: number) => a + (b - a) * rng()
 
@@ -31,7 +44,8 @@ export interface RoadDef {
   width: number
 }
 const v = (x: number, z: number) => new THREE.Vector3(x, 0, z)
-export const ROADS: RoadDef[] = [
+/** 最早的三條路：樹木、石頭、草的生成只避開這三條，保持原本的佈局 */
+const LEGACY_ROADS: RoadDef[] = [
   {
     curve: new THREE.CatmullRomCurve3([v(0, 44), v(1.5, 30), v(-2.5, 19), v(1.2, 9), v(0, 0), v(-0.5, -6)]),
     width: 2.4,
@@ -46,19 +60,33 @@ export const ROADS: RoadDef[] = [
     width: 2.2,
   },
 ]
-const roadSamples: { x: number; z: number; hw: number }[] = []
-for (const r of ROADS) {
-  for (const p of r.curve.getSpacedPoints(120)) roadSamples.push({ x: p.x, z: p.z, hw: r.width / 2 })
+/** 全部道路：舊路＋第一階段的步道與岔路 */
+export const ROADS: RoadDef[] = [
+  ...LEGACY_ROADS,
+  ...TRAILS.map((t) => ({ curve: new THREE.CatmullRomCurve3(t.points.map((p) => v(p.x, p.z))), width: t.width })),
+]
+type RoadSample = { x: number; z: number; hw: number }
+const sampleRoads = (roads: RoadDef[]) => {
+  const out: RoadSample[] = []
+  for (const r of roads) for (const p of r.curve.getSpacedPoints(Math.ceil(r.curve.getLength() / 0.6))) out.push({ x: p.x, z: p.z, hw: r.width / 2 })
+  return out
 }
-/** 到道路邊緣的距離（負值代表在路上） */
-export function distToRoad(x: number, z: number) {
+// 舊路沿用原本的取樣數（120 點），生成結果才會與之前一模一樣
+const legacySamples: RoadSample[] = []
+for (const r of LEGACY_ROADS) for (const p of r.curve.getSpacedPoints(120)) legacySamples.push({ x: p.x, z: p.z, hw: r.width / 2 })
+const allSamples = sampleRoads(ROADS)
+const roadDist = (samples: RoadSample[], x: number, z: number) => {
   let best = Infinity
-  for (const s of roadSamples) {
+  for (const s of samples) {
     const d = Math.hypot(x - s.x, z - s.z) - s.hw
     if (d < best) best = d
   }
   return Math.min(best, Math.hypot(x - PLAZA.x, z - PLAZA.z) - PLAZA.r)
 }
+/** 生成用：到舊路邊緣的距離（負值代表在路上） */
+const distToRoad = (x: number, z: number) => roadDist(legacySamples, x, z)
+/** 到任一條道路邊緣的距離（負值代表在路上） */
+export const distToAnyRoad = (x: number, z: number) => roadDist(allSamples, x, z)
 
 // ── 房屋 ─────────────────────────────────────────────
 export interface HouseDef {
@@ -83,16 +111,8 @@ export const SIGN: Vec2 = { x: 2.2, z: 2.6 }
 export const NPC_ELDER = { x: -2.6, z: -5.2, facing: 0.5, name: '莉莉安村長' }
 export const MERCHANT = { x: 5.4, z: -5.4, facing: -0.6, name: '行商人波可' }
 
-// ── 區域與事件地點（階段 D） ─────────────────────────
-export type RegionId = 'village' | 'meadow' | 'forest' | 'ruins' | 'valley'
-export const REGION_NAME: Record<RegionId, string> = {
-  village: '星光村',
-  meadow: '翠綠草原',
-  forest: '迷霧森林',
-  ruins: '古代石環',
-  valley: '月光山谷',
-}
-/** 月光山谷：村子北邊穿過林帶之後的區域（第二章） */
+// ── 區域與事件地點（區域範圍定義在 regions.ts） ─────────
+/** 月光山谷：村子北邊穿過林帶之後的區域（第二章）；只用在生成裝飾 */
 export const VALLEY_EDGE = -40
 /** 山谷入口的月光石碑、東側的星晶林、最深處的月泉（第二章 Boss 戰場） */
 export const STELE: Vec2 = { x: 4.2, z: -44.5 }
@@ -253,14 +273,6 @@ const CLEARINGS: { x: number; z: number; r: number }[] = [
 ]
 const inClearing = (x: number, z: number) => CLEARINGS.some((c) => Math.hypot(x - c.x, z - c.z) < c.r)
 
-export function regionAt(x: number, z: number): RegionId {
-  if (Math.hypot(x - RUINS.x, z - RUINS.z) < RUINS.r + 5) return 'ruins'
-  if (z < VALLEY_EDGE) return 'valley'
-  if (x < FOREST_EDGE) return 'forest'
-  if (z < -2 && Math.abs(x) < 17) return 'village'
-  return 'meadow'
-}
-
 /** 安全區：星光村與出生點周圍。怪物不會追進來，隊伍在裡面也不能攻擊野怪 */
 export const SAFE_SPAWN_R = 9
 export function inSafeZone(x: number, z: number) {
@@ -280,7 +292,7 @@ export interface TreeDef {
   x: number
   z: number
   s: number
-  kind: 'round' | 'pine'
+  kind: 'round' | 'pine' | 'birch'
   color: string
   rot: number
 }
@@ -450,6 +462,71 @@ export const SHROOMS: GlowProp[] = []
   }
 }
 
+// ── 第一階段地形：過濾擋到河流、山脊、新步道與地標的裝飾，再補上各區特有的植被 ──
+/** 新地形與地標佔用的範圍（樹、石頭不能長在這裡） */
+const FEATURE_CLEAR: { x: number; z: number; r: number }[] = [
+  ...RIDGE_ROCKS.map((b) => ({ x: b.x, z: b.z, r: b.r + 1 })),
+  { ...WINDMILL, r: 4.2 },
+  { ...ELDER_TREE, r: 4.5 },
+  ...RUIN_PIECES.map((p) => ({ x: p.x, z: p.z, r: p.len / 2 + 1.2 })),
+  ...LAMPS.map((p) => ({ ...p, r: 1 })),
+  { x: PASS_ARCH.x, z: PASS_ARCH.z, r: PASS_ARCH.span / 2 + 2 },
+  ...BRIDGES.map((b) => ({ x: b.x, z: b.z, r: b.len / 2 + 2 })),
+  { ...DRAW_LEVER, r: 2 },
+  { ...DRAW_NOTICE, r: 1.6 },
+]
+const inFeature = (x: number, z: number, pad = 0) => FEATURE_CLEAR.some((c) => Math.hypot(x - c.x, z - c.z) < c.r + pad)
+function prune<T extends Vec2>(arr: T[], keep: (t: T) => boolean) {
+  let w = 0
+  for (const t of arr) if (keep(t)) arr[w++] = t
+  arr.length = w
+}
+prune(TREES, (t) => distToRiver(t.x, t.z) > 1.4 && distToAnyRoad(t.x, t.z) > 2.2 && !inFeature(t.x, t.z))
+prune(ROCKS, (r) => distToRiver(r.x, r.z) > 0.8 && distToAnyRoad(r.x, r.z) > 0.9 && !inFeature(r.x, r.z, -0.6))
+prune(CRYSTALS, (c) => distToRiver(c.x, c.z) > 1.2 && distToAnyRoad(c.x, c.z) > 1.2 && !inFeature(c.x, c.z))
+prune(SHROOMS, (m) => distToRiver(m.x, m.z) > 1.2 && distToAnyRoad(m.x, m.z) > 1.2 && !inFeature(m.x, m.z))
+prune(GRASS, (g) => distToRiver(g.x, g.z) > 0.3 && distToAnyRoad(g.x, g.z) > 0.2)
+prune(FLOWERS, (f) => distToRiver(f.x, f.z) > 0.4 && distToAnyRoad(f.x, f.z) > 0.35)
+
+/** 依位置產生的固定雜湊（0～1），重新上色不消耗亂數，不影響其他佈局 */
+const hash01 = (x: number, z: number) => {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453
+  return s - Math.floor(s)
+}
+// 草依所在區域重新上色：森林深綠、石環偏黃、山谷青綠
+{
+  const c = new THREE.Color()
+  for (const g of GRASS) {
+    const p = REGIONS[regionAt(g.x, g.z)].palette
+    const k = hash01(g.x, g.z)
+    c.setHSL(p.grassHue[0] + (p.grassHue[1] - p.grassHue[0]) * k, 0.45 + 0.2 * hash01(g.z, g.x), p.grassLight[0] + (p.grassLight[1] - p.grassLight[0]) * hash01(g.x + 3, g.z))
+    g.color = '#' + c.getHexString()
+  }
+}
+
+/** 北境林道的白樺、迷霧森林的蕨類（各用自己的亂數種子） */
+export const FERNS: Tuft[] = []
+{
+  const br = mulberry32(6060)
+  const brand = (a: number, b: number) => a + (b - a) * br()
+  let guard = 0
+  let added = 0
+  while (added < 34 && guard++ < 3000) {
+    const x = brand(-17, 17)
+    const z = brand(-36.5, RIDGE_Z - 1.6)
+    if (distToRiver(x, z) < 1.6 || distToAnyRoad(x, z) < 2.2 || inFeature(x, z) || nearPoints(x, z, TREES, 2.6)) continue
+    TREES.push({ x, z, s: brand(0.85, 1.25), kind: 'birch', color: ['#9fd49a', '#b4de8c', '#8ccf96'][Math.floor(br() * 3)], rot: brand(0, Math.PI * 2) })
+    added++
+  }
+  guard = 0
+  while (FERNS.length < 320 && guard++ < 6000) {
+    const x = brand(-37, -17)
+    const z = brand(-36, 37)
+    if (distToRiver(x, z) < 0.8 || distToAnyRoad(x, z) < 0.6 || inFeature(x, z) || nearPoints(x, z, TREES, 0.7)) continue
+    FERNS.push({ x, z, s: brand(0.7, 1.4), rot: brand(0, Math.PI * 2), color: ['#3f8a52', '#4d9a5c', '#367a4a'][Math.floor(br() * 3)] })
+  }
+}
+
 // ── 遠景（邊界森林與山丘，純裝飾）：圍著整個可行走範圍外側 ──
 /** 點在可行走範圍外多遠（範圍內為負值） */
 export function outsideBounds(x: number, z: number) {
@@ -498,4 +575,44 @@ export const COLLIDERS: Collider[] = [
   ...CRYSTALS.filter((c) => c.s > 0.75).map((c): Collider => ({ kind: 'circle', x: c.x, z: c.z, r: 0.45 * c.s })),
   ...SHROOMS.filter((m) => m.s > 0.9).map((m): Collider => ({ kind: 'circle', x: m.x, z: m.z, r: 0.25 * m.s })),
   { kind: 'circle', x: STELE.x, z: STELE.z, r: 0.55 },
+  ...terrainColliders(),
 ]
+
+/** 第一階段地形的碰撞：河道（橋的位置留缺口）、山脊、地標 */
+function terrainColliders(): Collider[] {
+  const out: Collider[] = []
+  const circle = (x: number, z: number, r: number) => out.push({ kind: 'circle', x, z, r })
+  for (const p of RIVER_SAMPLES) {
+    if (p.x < BOUNDS.minX - 1.5 || p.x > BOUNDS.maxX + 1.5) continue
+    if (BRIDGES.some((b) => Math.hypot(p.x - b.x, p.z - b.z) < b.hw + RIVER.hw)) continue
+    circle(p.x, p.z, RIVER.hw)
+  }
+  for (const b of RIDGE_ROCKS) circle(b.x, b.z, b.r * 0.82)
+  circle(WINDMILL.x, WINDMILL.z, 1.6)
+  circle(ELDER_TREE.x, ELDER_TREE.z, 1.7)
+  for (const p of RUIN_PIECES) {
+    // 旋轉的斷牆與倒下的石柱：沿長邊排一列小圓
+    const n = Math.ceil(p.len / 0.6)
+    for (let i = 0; i <= n; i++) {
+      const t = (i / n - 0.5) * p.len
+      circle(p.x + Math.cos(p.rot) * t, p.z - Math.sin(p.rot) * t, p.kind === 'wall' ? 0.34 : 0.42)
+    }
+  }
+  for (const l of LAMPS) circle(l.x, l.z, 0.16)
+  circle(PASS_ARCH.x - PASS_ARCH.span / 2, PASS_ARCH.z, 0.5)
+  circle(PASS_ARCH.x + PASS_ARCH.span / 2, PASS_ARCH.z, 0.5)
+  circle(DRAW_LEVER.x, DRAW_LEVER.z, 0.35)
+  circle(DRAW_NOTICE.x, DRAW_NOTICE.z, 0.18)
+  return out
+}
+
+/**
+ * 會隨進度改變的碰撞（還沒放下的吊橋）。解鎖後呼叫 refreshGates，
+ * version 會加一，尋路網格看到版本變了就重建。
+ */
+export const DYNAMIC = { version: 0, list: [] as Collider[] }
+export function refreshGates(unlocks: readonly string[]) {
+  DYNAMIC.list = BRIDGES.filter((b) => b.locked && !unlocks.includes(b.id)).map((b) => ({ kind: 'circle', x: b.x, z: b.z, r: b.hw + 0.9 }))
+  DYNAMIC.version++
+}
+refreshGates([])

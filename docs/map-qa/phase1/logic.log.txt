@@ -1,0 +1,4 @@
+頁面載入 355 ms
+吊橋捷徑 {"locked":51,"tLocked":183,"open":32,"tOpen":173,"leverBefore":true,"leverAfter":false,"unlocks":["east_bridge"]}
+舊存檔轉換 {"pos":[-9.7,-34.7],"unlocks":[],"chests":["c_meadow"],"chestShown":false,"newVersion":2,"region":"northwoods"}
+錯誤 無

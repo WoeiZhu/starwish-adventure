@@ -42,6 +42,12 @@ export function CameraRig() {
     tiltT: 0,
   })
 
+  // 開發模式：自動化測試可直接設定鏡頭方向與距離
+  useEffect(() => {
+    const sw = (window as unknown as { __sw?: Record<string, unknown> }).__sw
+    if (import.meta.env.DEV && sw) sw.cam = st.current
+  }, [])
+
   // 進入遊戲時從近景拉遠到中景
   useEffect(() => {
     if (phase !== 'playing') return

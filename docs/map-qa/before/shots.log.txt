@@ -1,0 +1,12 @@
+頁面載入 343 ms
+01_spawn_north {"fps":60,"calls":485,"tris":1068974,"geometries":450,"textures":18,"objects":2150,"heapMB":133.7,"chunks":null,"units":66}
+02_village_pass {"fps":60,"calls":668,"tris":1575124,"geometries":615,"textures":32,"objects":2372,"heapMB":123,"chunks":null,"units":66}
+03_bridge {"fps":60,"calls":589,"tris":1957242,"geometries":716,"textures":43,"objects":2503,"heapMB":159.8,"chunks":null,"units":66}
+04_valley_north {"fps":60,"calls":745,"tris":1877392,"geometries":865,"textures":43,"objects":2428,"heapMB":161.7,"chunks":null,"units":66}
+05_valley_back {"fps":60,"calls":722,"tris":1875244,"geometries":904,"textures":43,"objects":2428,"heapMB":132.9,"chunks":null,"units":66}
+06_forest_west {"fps":60,"calls":443,"tris":1426892,"geometries":948,"textures":29,"objects":2327,"heapMB":131,"chunks":null,"units":66}
+07_ruins_north {"fps":60,"calls":416,"tris":1121694,"geometries":965,"textures":25,"objects":2201,"heapMB":145.1,"chunks":null,"units":66}
+08_south_edge {"fps":60,"calls":328,"tris":1053368,"geometries":975,"textures":21,"objects":2150,"heapMB":142,"chunks":null,"units":66}
+09_east_edge {"fps":60,"calls":348,"tris":1004274,"geometries":984,"textures":31,"objects":2222,"heapMB":139.9,"chunks":null,"units":66}
+10_overview {"fps":60,"calls":561,"tris":1496106,"geometries":988,"textures":38,"objects":2346,"heapMB":151,"chunks":null,"units":66}
+錯誤 無

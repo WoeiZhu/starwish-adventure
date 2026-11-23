@@ -2,16 +2,17 @@
 // 第一章在草原、森林、石環招募夥伴並擊敗史萊姆王；第二章前往北方的月光山谷。
 import { CLASSES, type ClassId } from '../data/classes'
 import { makeItem, type Quality } from '../data/items'
+import { DRAW_LEVER, DRAW_NOTICE } from '../data/terrain'
 import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE } from '../data/world'
 import { sfx } from '../systems/sfx'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
 import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, spawnEnemy } from './combat/state'
 import type { Unit } from './combat/types'
-import { C2_HUNT_GOAL, HUNT_GOAL, addItem, progress, storyReached } from './progress'
+import { C2_HUNT_GOAL, HUNT_GOAL, addItem, progress, storyReached, unlock } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
-export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar' | 'stele' | 'grove' | 'spring'
+export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar' | 'stele' | 'grove' | 'spring' | 'lever' | 'notice'
 export interface Interactable {
   id: string
   kind: InteractKind
@@ -64,6 +65,11 @@ export function interactables(): Interactable[] {
         marker: true,
       })
     })
+  }
+  // 東側吊橋：從山谷那一側放下後，石環 ↔ 星晶林之間就多了一條捷徑
+  if (!progress.unlocks.includes('east_bridge')) {
+    list.push({ id: 'lever', kind: 'lever', ...DRAW_LEVER, facing: 0, name: '吊橋絞盤', verb: '轉動', marker: false })
+    list.push({ id: 'notice', kind: 'notice', ...DRAW_NOTICE, facing: Math.PI, name: '告示牌', verb: '閱讀', marker: false })
   }
   for (const c of CHESTS) {
     if (!s.chests.includes(c.id)) {
@@ -463,6 +469,16 @@ function useAltar() {
   )
 }
 
+/** 放下東側吊橋：打通古代石環 ↔ 星晶林的捷徑（會存檔） */
+function lowerBridge() {
+  if (!unlock('east_bridge')) return
+  sfx.taunt()
+  shake(0.3)
+  addFeed('吊橋放下了！古代石環與星晶林之間打通了捷徑', '#3f9a6a')
+  useGame.getState().showToast('捷徑開通：東側吊橋')
+  useGame.getState().saveGame()
+}
+
 /** 與指定物件互動（由 F 鍵或點擊觸發） */
 export function interactWith(id: string) {
   const it = interactables().find((i) => i.id === id)
@@ -474,6 +490,8 @@ export function interactWith(id: string) {
   else if (it.kind === 'stele') readStele()
   else if (it.kind === 'grove') touchGrove()
   else if (it.kind === 'spring') useSpring()
+  else if (it.kind === 'lever') lowerBridge()
+  else if (it.kind === 'notice') say('告示牌', ['「吊橋已收起。」', '絞盤在河的對岸。從月光山谷那一側過來，就能把橋放下。'])
   else useAltar()
 }
 
