@@ -162,7 +162,7 @@ export const partySize = () => 1 + progress.recruited.length
 
 /** 隊伍越少人，怪物越弱：讓單人開局也打得贏 */
 const PARTY_SCALE = [
-  { hp: 0.35, atk: 0.6 },
+  { hp: 0.3, atk: 0.5 },
   { hp: 0.55, atk: 0.75 },
   { hp: 0.8, atk: 0.9 },
   { hp: 1, atk: 1 },
@@ -179,9 +179,11 @@ export function setEnemyLevel(u: Unit, level: number) {
   const p = PARTY_SCALE[Math.min(3, partySize() - 1)]
   const t = TIER[u.tier]
   const sp = SPECIES[u.species]
+  // 新手期：1～4 級的怪物再弱一些，5 級起恢復正常
+  const early = level >= 5 ? 1 : 0.75 + (level - 1) * 0.0625
   u.level = level
-  u.maxHp = u.hp = Math.round(s.hp * p.hp * t.hp * sp.hp)
-  u.atk = Math.round(s.atk * p.atk * t.atk * sp.atk)
+  u.maxHp = u.hp = Math.round(s.hp * p.hp * t.hp * sp.hp * early)
+  u.atk = Math.round(s.atk * p.atk * t.atk * sp.atk * early)
   u.def = s.def
   u.interval = s.interval * sp.interval
   u.moveSpeed = s.moveSpeed * sp.speed

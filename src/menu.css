@@ -214,6 +214,29 @@ button.skill.potion.ready {
   font-size: 11px;
   font-weight: 800;
 }
+.bag-group + .bag-group {
+  margin-top: 12px;
+}
+.bag-group h4 {
+  margin: 0 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 2px solid #f1eaf5;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--ink-soft);
+}
+.bag-group h4 small {
+  margin-left: 4px;
+  font-size: 11px;
+}
+.muted.small {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+.bag-item .item-stats {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
 .bag-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

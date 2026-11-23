@@ -125,23 +125,38 @@ function BagTab({ classId, onChange }: { classId: ClassId; onChange: () => void 
           背包 <small>{items.length} / {BAG_LIMIT}　金幣 {progress.gold}　藥水 {progress.potions}</small>
         </h3>
         {items.length === 0 && <p className="muted">還沒有裝備。打倒史萊姆有機會掉落，走過去就能撿起來。</p>}
-        <div className="bag-grid">
-          {items.map((it) => {
-            const by = equippedBy(it.uid)
+        {items.length > 0 &&
+          SLOTS.map((slot) => {
+            const group = items.filter((it) => it.slot === slot)
             return (
-              <button
-                key={it.uid}
-                className={'bag-item' + (it.uid === selected ? ' on' : '') + (canEquip(classId, it) ? '' : ' dim')}
-                style={{ borderColor: QUALITIES[it.quality].color }}
-                onClick={() => setSelected(it.uid)}
-              >
-                <span className="slot-tag">{SLOT_NAME[it.slot]}</span>
-                <ItemChip item={it} />
-                {by && <span className="worn">{CLASSES[by].name}裝備中</span>}
-              </button>
+              <section key={slot} className="bag-group">
+                <h4>
+                  {SLOT_NAME[slot]} <small>{group.length}</small>
+                </h4>
+                {group.length === 0 ? (
+                  <p className="muted small">沒有{SLOT_NAME[slot]}</p>
+                ) : (
+                  <div className="bag-grid">
+                    {group.map((it) => {
+                      const by = equippedBy(it.uid)
+                      return (
+                        <button
+                          key={it.uid}
+                          className={'bag-item' + (it.uid === selected ? ' on' : '') + (canEquip(classId, it) ? '' : ' dim')}
+                          style={{ borderColor: QUALITIES[it.quality].color }}
+                          onClick={() => setSelected(it.uid)}
+                        >
+                          <ItemChip item={it} />
+                          <span className="item-stats">{describeStats(it.stats)}</span>
+                          {by && <span className="worn">{CLASSES[by].name}裝備中</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
             )
           })}
-        </div>
       </div>
       <div className="menu-col">
         <h3>{CLASSES[classId].name}的裝備</h3>
