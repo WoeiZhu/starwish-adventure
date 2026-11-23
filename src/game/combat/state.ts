@@ -288,7 +288,79 @@ export function spawnAreaBoss(def: AreaBossDef, heroLevel: number) {
 export const companionClasses = (heroClass: ClassId) => CLASS_ORDER.filter((c) => c !== heroClass)
 export const allyId = (classId: ClassId) => `ally-${classId}`
 
+// ── 切換地圖：野外的怪物與掉落物先收起來，回到野外再放回去 ──
+// 城鎮裡沒有怪物。收起來的期間，死亡的怪物照樣累積重生時間（回來時一次補上），重生規則不變。
+let stash: { units: Unit[]; drops: Drop[]; time: number } | null = null
+
+/** 進城：收起所有怪物、掉落物，清掉投射物、範圍效果與隊伍的目標 */
+export function stashWorld() {
+  if (stash) return
+  stash = { units: combat.units.filter((u) => u.team === 'enemy'), drops: combat.drops, time: combat.time }
+  combat.units = combat.units.filter((u) => u.team !== 'enemy')
+  clearBattlefield()
+}
+
+/** 回到野外：把收起來的怪物放回去，追擊中的怪物放棄目標、走回出生點 */
+export function restoreWorld() {
+  if (!stash) return
+  const elapsed = Math.max(0, combat.time - stash.time)
+  for (const u of stash.units) {
+    u.targetId = null
+    u.tauntTime = 0
+    u.ai.path = null
+    u.ai.returning = true
+    if (!u.alive) u.deadTime += elapsed
+  }
+  combat.units.push(...stash.units)
+  combat.drops = stash.drops
+  stash = null
+  clearBattlefield()
+  updateEnemySlots()
+}
+
+/** 收起來（不在目前地圖上）的怪物 */
+export const stashedUnits = (): readonly Unit[] => stash?.units ?? []
+
+function clearBattlefield() {
+  combat.projectiles = []
+  combat.zones = []
+  combat.hazards = []
+  if (stash) combat.drops = []
+  slotUnits.fill(undefined)
+  for (const u of combat.units) {
+    u.targetId = null
+    u.ai.path = null
+    u.tauntBy = null
+    u.tauntTime = 0
+  }
+  combat.inCombat = false
+  clearFx()
+}
+
+/** 把主角與隊友放到新位置（隊友排在主角身後） */
+export function placeParty(at: { x: number; z: number }, facing: number) {
+  let i = 0
+  for (const u of combat.units) {
+    if (u.team !== 'party') continue
+    if (u.kind === 'hero') {
+      u.x = at.x
+      u.z = at.z
+    } else {
+      const f = FORMATION[i++ % FORMATION.length]
+      // 隊形是主角本地座標（x 右、z 後），依面向轉到世界座標
+      const s = Math.sin(facing)
+      const c = Math.cos(facing)
+      u.x = at.x + f.x * c - f.z * s
+      u.z = at.z - f.x * s - f.z * c
+    }
+    u.facing = facing
+    u.homeX = u.x
+    u.homeZ = u.z
+  }
+}
+
 export function initCombat(heroName: string, heroClass: ClassId, at = SPAWN) {
+  stash = null
   const heroLevel = progress.members[heroClass].level
   combat.units = [
     partyUnit('hero', 'hero', heroName, heroClass, at.x, at.z),

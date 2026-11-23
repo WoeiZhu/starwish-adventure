@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "mapId": "starlight-town-meshy",
+  "environmentUrl": "models/starwish-town-meshy-20261123-v001/town-environment.glb",
+  "spawnThree": [
+    0,
+    0.055,
+    12.7
+  ],
+  "exitTriggerThree": {
+    "center": [
+      0,
+      0,
+      16.2
+    ],
+    "radius": 0.9,
+    "requireLeaveBeforeActivation": true,
+    "cooldownMs": 1500
+  },
+  "externalPortal": {
+    "sourceMapId": "overworld",
+    "positionThree": [
+      0.2,
+      0,
+      36.4
+    ],
+    "radius": 0.9,
+    "returnPositionThree": [
+      0.2,
+      0,
+      33.2
+    ],
+    "returnFacingY": 3.141592653589793,
+    "gatePositionThree": [
+      0.2,
+      0,
+      36.2
+    ],
+    "gateRotationY": 3.141592653589793,
+    "gateUrl": "models/starwish-town-meshy-20261123-v001/town-gate.glb",
+    "status": "Integrated 2026-11-24: gate replaces the sealed south-road entrance (gate_south) of the Cute25D overworld; game loads town-gate.web.glb"
+  },
+  "navigationUrl": "models/starwish-town-meshy-20261123-v001/navigation.json",
+  "npcPlacementUrl": "models/starwish-town-meshy-20261123-v001/npc-placement.json",
+  "doNotLoadWholeTownAndModulesTogether": true,
+  "buildings": [
+    {
+      "id": "weapon-shop",
+      "doorApproachThree": [
+        -8.6,
+        0.055,
+        4.75
+      ],
+      "exteriorOnly": true
+    },
+    {
+      "id": "general-store",
+      "doorApproachThree": [
+        8.8,
+        0.055,
+        5.5
+      ],
+      "exteriorOnly": true
+    },
+    {
+      "id": "adventurers-guild",
+      "doorApproachThree": [
+        0,
+        0.055,
+        -5.1
+      ],
+      "exteriorOnly": true
+    },
+    {
+      "id": "town-inn",
+      "doorApproachThree": [
+        8.9,
+        0.055,
+        -4.5
+      ],
+      "exteriorOnly": true
+    }
+  ],
+  "triangles": 300064,
+  "environmentMeshBatches": 18,
+  "gameplayIntegration": "待驗證"
+}

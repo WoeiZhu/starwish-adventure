@@ -2,6 +2,8 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { useGame } from '../game/store'
 import { isTouch } from '../systems/mobile'
+import { TOWN_NAME } from '../data/town'
+import { isMapLoading, subscribeMap } from '../world/maps'
 import { isPriming, subscribe } from '../world/stream'
 
 const CONTROLS: [string, string][] = [
@@ -169,8 +171,10 @@ export function Toast() {
   ) : null
 }
 
-/** 讀檔或開局時：主角周圍的區域還在載入 */
+/** 讀檔、開局或進出城鎮時：主角周圍的區域（或城鎮模型）還在載入 */
 export function LoadingVeil() {
-  const loading = useSyncExternalStore(subscribe, isPriming)
-  return loading ? <div className="loading-veil">載入地區中…</div> : null
+  const priming = useSyncExternalStore(subscribe, isPriming)
+  const town = useSyncExternalStore(subscribeMap, isMapLoading)
+  if (town) return <div className="loading-veil">前往{TOWN_NAME}…</div>
+  return priming ? <div className="loading-veil">載入地區中…</div> : null
 }

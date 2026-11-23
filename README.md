@@ -57,8 +57,8 @@ src/
   game/      規則層：Zustand 狀態（store）、每幀資料（runtime）
     combat/  戰鬥：state（單位與投射物）、actions（傷害 / 技能）、sim（每幀更新、怪物與隊友 AI）
   systems/   輸入、碰撞、分區 A* 尋路（與畫面無關，可單獨測試）
-  world/     地圖串流：區塊設定（config）、區塊內容與程序生成接口（chunks）、載入／卸載管理（stream）、碰撞空間索引
-  scene/     3D 場景層：World、Chunks（分區塊畫地面與草木）、Landmarks（地標）、Vista（遠景）、Player、CameraRig、CombatLayer
+  world/     地圖串流：區塊設定（config）、區塊內容與程序生成接口（chunks）、載入／卸載管理（stream）、碰撞空間索引、目前地圖（maps）
+  scene/     3D 場景層：World、Town（星光鎮）、Chunks（分區塊畫地面與草木）、Landmarks（地標）、Vista（遠景）、Player、CameraRig、CombatLayer
     characters/  CharacterModel 是模型替換點；GlbCharacter 載入骨架模型並以程式驅動動作；ChibiCharacter 為備援的程序化人物
   ui/        介面層：角色創建、HUD、暫停、對話
 ```
@@ -71,6 +71,7 @@ src/
 - [x] **D 故事與探索內容**：單人開局、第一章任務鏈、三個招募事件（含選項）、四個區域（星光村 / 翠綠草原 / 迷霧森林 / 古代石環）、三個寶箱、商人、精英怪與 Boss（紅圈預兆、狂暴、召喚）、章節完成畫面
 - [x] **E 第二章 月光山谷**：地圖往北延伸出新區域、四種新怪物（幼狼撲擊、蘑菇毒霧、魔靈遠程彈幕、靈鹿衝撞與治療）、第二章任務鏈（石碑 → 淨化山谷 → 星晶林 → 月泉 Boss）、兩個新的區域首領
 - [x] **F 地圖系統**：河流與三座橋（東側吊橋是要從山谷放下的捷徑）、北方隘口、步道岔路、各區地標、邊界山壁與封閉入口、遠景山脈與遠方地標；分區塊載入、遠處怪物簡化更新、分區尋路、存檔第 2 版。說明與測試紀錄見 `docs/map-system.md`
+- [x] **F2 星光鎮**：南方街道盡頭的 Meshy 城門通往獨立的城鎮地圖（4 間建築、4 位 NPC、旅館休息、雜貨店）；進出城不彈跳、野外怪物暫存、城內存讀檔（存檔第 3 版）、載入失敗退回城門外。武器店與轉職尚未實作。說明與測試紀錄見 `docs/town-integration.md`
 - [ ] **G 程序生成支線**：洞窟與野外支路（接口已預留在 `src/world/chunks.ts` 的 `GENERATORS`）
 
 ## 調整數值

@@ -1,9 +1,15 @@
 // 第一階段的地標：三座橋（含可放下的吊橋）、北方隘口的石拱門、
 // 草原風車、森林巨木、石環斷牆、村子路燈、封閉的區域入口（河流、山脊、山壁在 Chunks.tsx）。
 // 幾何體與材質都在模組層共用，卸載時不會被丟棄（第二階段分區塊載入時可直接重用）。
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { TOWN_GATE_URL, TOWN_PORTAL, WORLD_GATE_VOLUME } from '../data/town'
+import { useGame } from '../game/store'
+import { LoadBoundary } from './ErrorBoundary'
+import { prepareStatic, useGateFade, withMeshopt } from './gltf'
+import { PortalRing } from './Town'
 import {
   BRIDGES,
   ELDER_TREE,
@@ -263,6 +269,43 @@ function Entrance({ g }: { g: GateDef }) {
   )
 }
 
+/** 星光鎮城門（Meshy 模型），放在南方街道盡頭；門洞下的發光圓就是入口 */
+function TownGateModel() {
+  const quality = useGame((s) => s.quality)
+  const gltf = useLoader(GLTFLoader, TOWN_GATE_URL, withMeshopt)
+  // 每次掛上都用一份複本（共用網格與材質），區塊卸載再載入時不會跟舊的打架
+  const scene = useMemo(() => gltf.scene.clone(), [gltf])
+  useLayoutEffect(() => void prepareStatic(scene, quality === 'high'), [scene, quality])
+  // 剛出城時鏡頭在主角身後、隔著城門：城門淡出
+  const mats = useMemo(() => {
+    const out = new Set<THREE.Material>()
+    scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.Material | undefined
+      if (m && !Array.isArray(m)) out.add(m)
+    })
+    return [...out]
+  }, [scene])
+  useGateFade(mats, WORLD_GATE_VOLUME)
+  return <primitive object={scene} />
+}
+
+function TownGate({ g }: { g: GateDef }) {
+  const t = TOWN_PORTAL.trigger
+  return (
+    <>
+      <group position={[TOWN_PORTAL.x, 0, TOWN_PORTAL.z]} rotation={[0, TOWN_PORTAL.rot, 0]}>
+        {/* 模型載入失敗時退回原本的石柱 */}
+        <LoadBoundary fallback={<Entrance g={{ ...g, x: 0, z: 0, rot: 0 }} />}>
+          <Suspense fallback={null}>
+            <TownGateModel />
+          </Suspense>
+        </LoadBoundary>
+      </group>
+      <PortalRing x={t.x} z={t.z} r={t.r} />
+    </>
+  )
+}
+
 /** 地標：每一件都放在自己所在的區塊，區塊載入時才畫（河流、山脊岩石、邊界山壁在 Chunks.tsx 分區塊畫） */
 export function Landmarks() {
   return (
@@ -293,7 +336,7 @@ export function Landmarks() {
       ))}
       {ENTRANCES.map((g) => (
         <InChunk key={g.id} x={g.x} z={g.z}>
-          <Entrance g={g} />
+          {g.id === TOWN_PORTAL.gateId && TOWN_PORTAL.enabled ? <TownGate g={g} /> : <Entrance g={g} />}
         </InChunk>
       ))}
     </>

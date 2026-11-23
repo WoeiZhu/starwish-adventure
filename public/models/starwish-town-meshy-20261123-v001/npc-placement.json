@@ -1,0 +1,61 @@
+{
+  "status": "Existing guide/merchant reused; not new original NPCs",
+  "actors": [
+    {
+      "role": "quest-guide",
+      "asset": "guide-npc.glb",
+      "positionBlender": [
+        -2.2,
+        5.0,
+        0
+      ],
+      "positionThree": [
+        -2.2,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "role": "guild-placeholder",
+      "asset": "guide-npc.glb",
+      "positionBlender": [
+        2.2,
+        5.0,
+        0
+      ],
+      "positionThree": [
+        2.2,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "role": "weapon-vendor-placeholder",
+      "asset": "merchant-npc.glb",
+      "positionBlender": [
+        -10.6,
+        -4.9,
+        0
+      ],
+      "positionThree": [
+        -10.6,
+        0,
+        4.9
+      ]
+    },
+    {
+      "role": "general-vendor",
+      "asset": "merchant-npc.glb",
+      "positionBlender": [
+        10.6,
+        -5.55,
+        0
+      ],
+      "positionThree": [
+        10.6,
+        0,
+        5.55
+      ]
+    }
+  ]
+}

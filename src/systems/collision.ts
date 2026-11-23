@@ -1,6 +1,15 @@
-// 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。用空間索引只檢查附近的碰撞體。
+// 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。主線世界用空間索引只檢查附近的碰撞體；
+// 城鎮只有三十幾個碰撞體，直接全部檢查。
+import { TOWN_BOUNDS, TOWN_COLLIDERS } from '../data/town'
 import { BOUNDS, type Collider, type Vec2 } from '../data/world'
-import { forColliders } from '../world/colliderIndex'
+import { forColliders as forWorldColliders } from '../world/colliderIndex'
+import { inTown } from '../world/maps'
+
+function forColliders(x: number, z: number, r: number, fn: (c: Collider) => boolean | void) {
+  if (!inTown()) return forWorldColliders(x, z, r, fn)
+  for (const c of TOWN_COLLIDERS) if (fn(c)) return true
+  return false
+}
 
 function pushOut(p: Vec2, radius: number, c: Collider) {
   if (c.kind === 'circle') {
@@ -44,8 +53,9 @@ function pushOut(p: Vec2, radius: number, c: Collider) {
 /** 把圓形角色推出附近的障礙物，並限制在可行走範圍內 */
 export function resolveCollisions(p: Vec2, radius: number) {
   for (let pass = 0; pass < 2; pass++) forColliders(p.x, p.z, radius + 0.5, (c) => pushOut(p, radius, c))
-  p.x = Math.max(BOUNDS.minX, Math.min(BOUNDS.maxX, p.x))
-  p.z = Math.max(BOUNDS.minZ, Math.min(BOUNDS.maxZ, p.z))
+  const b = inTown() ? TOWN_BOUNDS : BOUNDS
+  p.x = Math.max(b.minX, Math.min(b.maxX, p.x))
+  p.z = Math.max(b.minZ, Math.min(b.maxZ, p.z))
 }
 
 /**

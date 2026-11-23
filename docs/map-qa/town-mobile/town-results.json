@@ -1,0 +1,360 @@
+{
+  "results": [
+    {
+      "name": "從村子走到南方城門前",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":5435}"
+    },
+    {
+      "name": "進城：換到 starlight-town-meshy",
+      "ok": true,
+      "detail": "{\"map\":\"starlight-town-meshy\",\"storeMap\":\"starlight-town-meshy\",\"loading\":false,\"priming\":false,\"x\":0,\"z\":12.7,\"enemies\":0,\"allyGap\":[1.9,1.9,2.6],\"switches\":1}"
+    },
+    {
+      "name": "進城：落點 (0, 12.7)",
+      "ok": true,
+      "detail": "(0, 12.7)"
+    },
+    {
+      "name": "進城：野外怪物已收起",
+      "ok": true,
+      "detail": "enemies=0"
+    },
+    {
+      "name": "進城後站著 3 秒不會被彈回野外",
+      "ok": true,
+      "detail": "{\"map\":\"starlight-town-meshy\",\"storeMap\":\"starlight-town-meshy\",\"loading\":false,\"priming\":false,\"x\":0,\"z\":12.7,\"enemies\":0,\"allyGap\":[1.9,1.9,2.6],\"switches\":1}"
+    },
+    {
+      "name": "走到 town-npc-quest-guide",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6705} 隊友距離 2.2,2.9,3.4"
+    },
+    {
+      "name": "互動 town-npc-quest-guide",
+      "ok": true,
+      "detail": "{\"speaker\":\"公會引導員\",\"line\":\"歡迎來到星光鎮的冒險者公會！\"}"
+    },
+    {
+      "name": "從 town-npc-quest-guide 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6716}"
+    },
+    {
+      "name": "走到 town-npc-guild-placeholder",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6232} 隊友距離 3,2.7,3.7"
+    },
+    {
+      "name": "互動 town-npc-guild-placeholder",
+      "ok": true,
+      "detail": "{\"speaker\":\"公會接待員\",\"line\":\"這裡是冒險者公會的受理櫃台。\"}"
+    },
+    {
+      "name": "從 town-npc-guild-placeholder 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6229}"
+    },
+    {
+      "name": "走到 town-npc-weapon-vendor-placeholder",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3421} 隊友距離 2.7,2.8,3.6"
+    },
+    {
+      "name": "互動 town-npc-weapon-vendor-placeholder",
+      "ok": true,
+      "detail": "{\"speaker\":\"武器商人\",\"line\":\"歡迎來到星光鎮的武器店！\"}"
+    },
+    {
+      "name": "從 town-npc-weapon-vendor-placeholder 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3271}"
+    },
+    {
+      "name": "走到 town-npc-general-vendor",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3116} 隊友距離 2.7,2.7,3.6"
+    },
+    {
+      "name": "互動 town-npc-general-vendor",
+      "ok": true,
+      "detail": "{\"speaker\":\"雜貨商人\",\"line\":\"要補給嗎？你現在有 200 金幣、3 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。\",\"choices\":[\"買 1 瓶藥水\",\"買 3 瓶藥水\",\"離開\"]}"
+    },
+    {
+      "name": "從 town-npc-general-vendor 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":3115}"
+    },
+    {
+      "name": "走到 town-door-weapon-shop",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3127} 隊友距離 2.8,2.9,3.6"
+    },
+    {
+      "name": "互動 town-door-weapon-shop",
+      "ok": true,
+      "detail": "{\"speaker\":\"武器商人\",\"line\":\"歡迎來到星光鎮的武器店！\"}"
+    },
+    {
+      "name": "從 town-door-weapon-shop 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3121}"
+    },
+    {
+      "name": "走到 town-door-general-store",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":3119} 隊友距離 2.7,2.5,3.6"
+    },
+    {
+      "name": "互動 town-door-general-store",
+      "ok": true,
+      "detail": "{\"speaker\":\"雜貨商人\",\"line\":\"要補給嗎？你現在有 200 金幣、3 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。\",\"choices\":[\"買 1 瓶藥水\",\"買 3 瓶藥水\",\"離開\"]}"
+    },
+    {
+      "name": "從 town-door-general-store 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3126}"
+    },
+    {
+      "name": "走到 town-door-adventurers-guild",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6700} 隊友距離 3,2.5,3.6"
+    },
+    {
+      "name": "互動 town-door-adventurers-guild",
+      "ok": true,
+      "detail": "{\"speaker\":\"公會接待員\",\"line\":\"歡迎來到星光鎮的冒險者公會！\"}"
+    },
+    {
+      "name": "從 town-door-adventurers-guild 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6701}"
+    },
+    {
+      "name": "走到 town-door-town-inn",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":5296} 隊友距離 2.5,2.6,3.6"
+    },
+    {
+      "name": "互動 town-door-town-inn",
+      "ok": true,
+      "detail": "{\"speaker\":\"旅館老闆\",\"line\":\"歡迎光臨！要休息一下嗎？\",\"choices\":[\"住一晚\",\"離開\"]}"
+    },
+    {
+      "name": "從 town-door-town-inn 走回城門內",
+      "ok": true,
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":5300}"
+    },
+    {
+      "name": "旅館：付 10 金幣全隊回滿",
+      "ok": true,
+      "detail": "{\"goldBefore\":200,\"goldAfter\":190,\"full\":true}"
+    },
+    {
+      "name": "噴泉不能穿過",
+      "ok": true,
+      "detail": "最近距離 2.22 m（噴泉半徑 1.9 + 角色 0.32）"
+    },
+    {
+      "name": "北邊城牆不能穿過",
+      "ok": true,
+      "detail": "最北 z=-15.33（牆內緣 -15.65）"
+    },
+    {
+      "name": "西邊城牆不能穿過",
+      "ok": true,
+      "detail": "最西 x=-14.33（牆內緣 -14.65）"
+    },
+    {
+      "name": "武器店牆不能穿過",
+      "ok": true,
+      "detail": "最北 z=4.17（店面 3.85）"
+    },
+    {
+      "name": "城門旁的門樓不能穿過",
+      "ok": true,
+      "detail": "最南 z=14.33（門樓 14.65）"
+    },
+    {
+      "name": "城內存檔：記下 mapId 與返回位置",
+      "ok": true,
+      "detail": "{\"v\":3,\"map\":\"starlight-town-meshy\",\"pos\":{\"x\":-2.919597626611582,\"z\":8.08482450392478},\"ret\":{\"x\":0.2,\"z\":33.2,\"facing\":3.141592653589793},\"region\":\"meadow\"}"
+    },
+    {
+      "name": "回標題：回到主線世界",
+      "ok": true,
+      "detail": "{\"map\":\"overworld\",\"storeMap\":\"overworld\",\"loading\":false,\"priming\":false,\"x\":0,\"z\":6,\"enemies\":65,\"allyGap\":[1.9,1.9,2.6],\"switches\":1}"
+    },
+    {
+      "name": "繼續：先載入城鎮再放人物",
+      "ok": true,
+      "detail": "載入 485 ms，位置 (-2.92, 8.08)"
+    },
+    {
+      "name": "城內讀檔後不會被彈出",
+      "ok": true,
+      "detail": "{\"map\":\"starlight-town-meshy\",\"storeMap\":\"starlight-town-meshy\",\"loading\":false,\"priming\":false,\"x\":-2.92,\"z\":8.08,\"enemies\":0,\"allyGap\":[1.9,1.9,2.6],\"switches\":1}"
+    },
+    {
+      "name": "出城：回到城門外 (0.2, 33.2)",
+      "ok": true,
+      "detail": "(0.2, 33.2) 載入 {\"walkMs\":2264,\"loadMs\":156}"
+    },
+    {
+      "name": "出城：野外怪物放回來",
+      "ok": true,
+      "detail": "enemies=65"
+    },
+    {
+      "name": "出城後站著 3 秒不會再被吸進城",
+      "ok": true,
+      "detail": "{\"map\":\"overworld\",\"storeMap\":\"overworld\",\"loading\":false,\"priming\":false,\"x\":0.2,\"z\":33.2,\"enemies\":66,\"allyGap\":[1.9,1.9,2.6],\"switches\":2}"
+    },
+    {
+      "name": "被事件怪追的時候不能進城",
+      "ok": true,
+      "detail": "map=overworld toast=強敵還在追你，現在不能進城"
+    },
+    {
+      "name": "一般野怪追著時可以進城",
+      "ok": true,
+      "detail": "{\"walkMs\":1231,\"loadMs\":397}"
+    },
+    {
+      "name": "出城後野怪不再追擊、回到營地",
+      "ok": true,
+      "detail": "{\"target\":null,\"d\":7.1}"
+    },
+    {
+      "name": "反覆進出沒有累積幾何體",
+      "ok": true,
+      "detail": "第 2 輪 137 → 第 5 輪 137"
+    },
+    {
+      "name": "反覆進出沒有累積貼圖",
+      "ok": true,
+      "detail": "城內貼圖 第 2 輪 67 → 第 5 輪 67"
+    },
+    {
+      "name": "第 2 版存檔：當作在野外、進度保留",
+      "ok": true,
+      "detail": "{\"map\":\"overworld\",\"ret\":null,\"pos\":{\"x\":5,\"z\":10},\"gold\":321,\"recruited\":3,\"chests\":0,\"step\":\"talk\"}"
+    },
+    {
+      "name": "城內存檔缺返回位置、位置超出範圍：補預設值",
+      "ok": true,
+      "detail": "{\"map\":\"starlight-town-meshy\",\"ret\":{\"x\":0.2,\"z\":33.2,\"facing\":3.141592653589793},\"pos\":{\"x\":0,\"z\":12.7}}"
+    },
+    {
+      "name": "城鎮模型載入失敗：退回城門外、顯示原因",
+      "ok": true,
+      "detail": "{\"map\":\"overworld\",\"storeMap\":\"overworld\",\"loading\":false,\"priming\":false,\"x\":0.2,\"z\":33.2,\"enemies\":65,\"allyGap\":[],\"switches\":16} toast=星光鎮載入失敗，已回到城門外"
+    },
+    {
+      "name": "載入失敗後再進城可以正常載入",
+      "ok": true,
+      "detail": "{\"walkMs\":1232,\"loadMs\":417}"
+    }
+  ],
+  "mem": [
+    {
+      "loop": 1,
+      "enterMs": 432,
+      "exitMs": 144,
+      "town": {
+        "geo": 110,
+        "tex": 67,
+        "calls": 84,
+        "tris": 792815,
+        "heapMB": 158
+      },
+      "world": {
+        "geo": 137,
+        "tex": 54,
+        "calls": 466,
+        "tris": 1275226,
+        "heapMB": 152
+      }
+    },
+    {
+      "loop": 2,
+      "enterMs": 402,
+      "exitMs": 140,
+      "town": {
+        "geo": 110,
+        "tex": 67,
+        "calls": 84,
+        "tris": 792815,
+        "heapMB": 169
+      },
+      "world": {
+        "geo": 137,
+        "tex": 54,
+        "calls": 461,
+        "tris": 1274432,
+        "heapMB": 156
+      }
+    },
+    {
+      "loop": 3,
+      "enterMs": 382,
+      "exitMs": 136,
+      "town": {
+        "geo": 110,
+        "tex": 67,
+        "calls": 84,
+        "tris": 792815,
+        "heapMB": 157
+      },
+      "world": {
+        "geo": 138,
+        "tex": 54,
+        "calls": 461,
+        "tris": 1274080,
+        "heapMB": 162
+      }
+    },
+    {
+      "loop": 4,
+      "enterMs": 400,
+      "exitMs": 147,
+      "town": {
+        "geo": 110,
+        "tex": 67,
+        "calls": 84,
+        "tris": 792815,
+        "heapMB": 186
+      },
+      "world": {
+        "geo": 137,
+        "tex": 54,
+        "calls": 470,
+        "tris": 1274450,
+        "heapMB": 154
+      }
+    },
+    {
+      "loop": 5,
+      "enterMs": 396,
+      "exitMs": 148,
+      "town": {
+        "geo": 110,
+        "tex": 67,
+        "calls": 84,
+        "tris": 792815,
+        "heapMB": 170
+      },
+      "world": {
+        "geo": 137,
+        "tex": 54,
+        "calls": 461,
+        "tris": 1275216,
+        "heapMB": 155
+      }
+    }
+  ],
+  "errors": [
+    "Failed to load resource: net::ERR_FAILED",
+    "PAGEERROR Could not load /models/starwish-town-meshy-20261123-v001/town-environment.web.glb: Failed to fetch"
+  ]
+}

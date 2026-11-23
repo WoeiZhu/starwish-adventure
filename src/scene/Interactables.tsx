@@ -9,6 +9,7 @@ import { useGame } from '../game/store'
 import { interactWith, interactables, type Interactable } from '../game/story'
 import { isTouch } from '../systems/mobile'
 import { findPath } from '../systems/pathfinding'
+import { inTown } from '../world/maps'
 import { isLoaded } from '../world/stream'
 import { CharacterModel } from './characters/CharacterModel'
 
@@ -190,6 +191,27 @@ function Notice() {
   )
 }
 
+/** 城鎮建築的門口：地上一圈淡淡發光的門墊（建築沒有室內，在這裡互動） */
+function DoorMat() {
+  const mat = useRef<THREE.MeshBasicMaterial>(null!)
+  useFrame((state) => {
+    mat.current.opacity = 0.35 + Math.sin(state.clock.elapsedTime * 2.4) * 0.12
+  })
+  return (
+    <group>
+      <mesh position={[0, 0.07, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.5, 0.68, 32]} />
+        <meshBasicMaterial ref={mat} color="#ffe9a8" transparent opacity={0.4} depthWrite={false} />
+      </mesh>
+      {/* 點擊用的隱形範圍 */}
+      <mesh position={[0, 0.6, 0]} visible={false}>
+        <cylinderGeometry args={[0.7, 0.7, 1.2, 10]} />
+        <meshBasicMaterial />
+      </mesh>
+    </group>
+  )
+}
+
 const MARKER_Y: Partial<Record<Interactable['kind'], number>> = { altar: 2.2, stele: 2.7, grove: 3.2, spring: 1.9, lever: 1.6, notice: 1.8 }
 
 function Item({ it }: { it: Interactable }) {
@@ -221,8 +243,8 @@ function Item({ it }: { it: Interactable }) {
     const g = useGame.getState()
     if (g.phase !== 'playing' || g.paused || g.dialog || e.nativeEvent.button !== 0) return
     if (Math.hypot(runtime.player.x - it.x, runtime.player.z - it.z) < TALK_RANGE) return interactWith(it.id)
-    // 太遠就先走過去
-    const path = findPath(runtime.player, { x: it.x, z: it.z + 1.3 })
+    // 太遠就先走過去（門口直接走到門墊上）
+    const path = findPath(runtime.player, it.kind === 'door' ? { x: it.x, z: it.z } : { x: it.x, z: it.z + 1.3 })
     if (path) {
       runtime.path = path
       runtime.approach = false
@@ -240,6 +262,7 @@ function Item({ it }: { it: Interactable }) {
         {it.kind === 'spring' && <SpringOrb active={it.marker} />}
         {it.kind === 'lever' && <Lever />}
         {it.kind === 'notice' && <Notice />}
+        {it.kind === 'door' && <DoorMat />}
       </group>
       {it.marker && <Marker y={MARKER_Y[it.kind] ?? 1.9} />}
     </group>
@@ -257,8 +280,9 @@ export function Interactables() {
     timer.current -= dt
     if (timer.current <= 0) {
       timer.current = 0.2
-      // 只畫所在區塊已載入的物件（互動判斷仍用完整清單）
-      const next = interactables().filter((i) => isLoaded(i.x, i.z))
+      // 只畫所在區塊已載入的物件（互動判斷仍用完整清單）；城鎮不分區塊
+      const town = inTown()
+      const next = interactables().filter((i) => town || isLoaded(i.x, i.z))
       const sig = next.map((i) => i.id + (i.marker ? '!' : '')).join('|')
       if (sig !== signature.current) {
         signature.current = sig
@@ -267,7 +291,7 @@ export function Interactables() {
     }
     if (g.phase !== 'playing' || g.paused) return
     const { x, z } = runtime.player
-    g.setRegion(regionAt(x, z))
+    if (!inTown()) g.setRegion(regionAt(x, z))
 
     let best: Interactable | null = null
     let bestD = TALK_RANGE

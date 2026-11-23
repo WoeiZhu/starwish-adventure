@@ -1,38 +1,18 @@
 // 主線世界場景（分區塊串流）：
 //   - 遠景地面（低解析度、永遠存在）＋各區塊的細節地面、道路、草木（Chunks.tsx，依距離載入／卸載）
 //   - 建築與地標用 InChunk 包起來：所在區塊載入時才畫
-//   - 天空、雲、遠景山脈與遠方地標永遠存在（Vista）
-import { useMemo, useRef } from 'react'
+//   - 雲永遠存在；天空、遠景山脈與遠方地標（Vista）放在 GameScene，主線世界與城鎮共用
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { WORLD_CENTER, groundHeight } from '../data/terrain'
 import { GROVE, SPRING, RUINS, RUIN_PILLARS, HOUSES, PLAZA, SIGN, WELL, type HouseDef } from '../data/world'
-import { findPath } from '../systems/pathfinding'
-import { runtime } from '../game/runtime'
-import { useGame } from '../game/store'
 import { Landmarks } from './Landmarks'
 import { InChunk, StreamedWorld } from './Chunks'
+import { handleGroundClick } from './groundClick'
 import { buildGround } from './terrainMeshes'
-import { Vista } from './Vista'
 
 const ROAD_COLOR = '#efdcae'
-
-function handleGroundClick(e: ThreeEvent<MouseEvent>) {
-  if (e.nativeEvent.button !== 0 || e.delta > 6) return
-  // 手機剛拖曳或雙指縮放鏡頭：放開手指不算點地面
-  if (performance.now() - runtime.gestureAt < 250) return
-  const s = useGame.getState()
-  if (s.phase !== 'playing' || s.paused || s.dialog) return
-  const path = findPath(runtime.player, { x: e.point.x, z: e.point.z })
-  if (!path) return
-  runtime.path = path
-  runtime.approach = false
-  runtime.queuedSkill = null
-  const end = path[path.length - 1]
-  runtime.marker.x = end.x
-  runtime.marker.z = end.z
-  runtime.marker.life = 1
-}
 
 /** 遠景地面：整個世界一張低解析度網格（每 6 公尺一格），略低於區塊地面；區塊還沒載入的地方由它補上 */
 function FarGround() {
@@ -44,6 +24,8 @@ function FarGround() {
     g.computeVertexNormals()
     return g
   }, [])
+  // 進城時整個主線世界會卸下：自己建的網格要自己釋放
+  useEffect(() => () => geo.dispose(), [geo])
   return (
     <mesh geometry={geo} receiveShadow onClick={handleGroundClick}>
       <meshLambertMaterial vertexColors />
@@ -77,6 +59,8 @@ function House({ h }: { h: HouseDef }) {
     shape.closePath()
     return new THREE.ExtrudeGeometry(shape, { depth: h.d + o * 2, bevelEnabled: false })
   }, [h])
+  // 區塊卸載或進城時房子會卸下：屋頂網格是自己建的，要自己釋放
+  useEffect(() => () => roof.dispose(), [roof])
   const front = h.d / 2
   return (
     <group position={[h.x, 0, h.z]}>
@@ -337,7 +321,6 @@ export function World() {
         <Landmarks />
       </StreamedWorld>
       <Backdrop />
-      <Vista />
     </>
   )
 }

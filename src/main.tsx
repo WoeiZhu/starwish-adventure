@@ -10,6 +10,10 @@ import { progress } from './game/progress'
 import { runtime } from './game/runtime'
 import { useGame } from './game/store'
 import * as story from './game/story'
+import * as travel from './game/travel'
+import * as save from './game/save'
+import { mapState } from './world/maps'
+import { townStats } from './scene/Town'
 import './styles.css'
 import './menu.css'
 import './hud.css'
@@ -17,7 +21,9 @@ import './mobile.css'
 
 // 開發模式下把遊戲狀態掛到 window，方便在主控台檢查與自動化測試
 if (import.meta.env.DEV) {
-  Object.assign(window, { __sw: { combat, cstate, sim, runtime, useGame, progress, story, nav, stream: { ...stream, stats: stream.streamStats } } })
+  Object.assign(window, {
+    __sw: { combat, cstate, sim, runtime, useGame, progress, story, nav, travel, save, mapState, townStats, stream: { ...stream, stats: stream.streamStats } },
+  })
 }
 
 createRoot(document.getElementById('root')!).render(

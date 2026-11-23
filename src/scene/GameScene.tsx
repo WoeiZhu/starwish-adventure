@@ -5,12 +5,21 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ENEMY_SLOTS } from '../game/combat/state'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
+import { updatePortals } from '../game/travel'
 import { CameraRig } from './CameraRig'
 import { CombatLayer } from './CombatLayer'
 import { Interactables } from './Interactables'
 import { MoveMarker, Player } from './Player'
 import { Enemy } from './Enemy'
+import { Town } from './Town'
+import { Vista } from './Vista'
 import { World } from './World'
+
+/** 每幀檢查主角有沒有走進城門（進城／出城） */
+function Portals() {
+  useFrame(() => updatePortals())
+  return null
+}
 
 const SKY = '#d6eefa'
 
@@ -72,6 +81,7 @@ function DevHooks() {
 
 export function GameScene() {
   const quality = useGame((s) => s.quality)
+  const mapId = useGame((s) => s.mapId)
   return (
     <Canvas
       shadows
@@ -84,7 +94,11 @@ export function GameScene() {
       <color attach="background" args={[SKY]} />
       <fog attach="fog" args={[SKY, 55, 150]} />
       <Lighting />
-      <World />
+      {/* 同一時間只掛一張地圖：離開的那張會卸下並釋放資源 */}
+      {mapId === 'overworld' ? <World /> : <Town />}
+      {/* 天空與遠景山脈兩張地圖共用，一直掛著 */}
+      <Vista />
+      <Portals />
       <Player />
       <CombatLayer />
       <MoveMarker />

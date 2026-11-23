@@ -3,9 +3,11 @@ import { CLASSES, CLASS_ORDER, MAX_LEVEL, type ClassId } from '../data/classes'
 import type { Gender } from '../data/appearance'
 import { SLOTS, type Item } from '../data/items'
 import { BRIDGES } from '../data/terrain'
+import { TOWN_BOUNDS, TOWN_ID, TOWN_PORTAL, TOWN_SPAWN, type MapId } from '../data/town'
 import { BOUNDS, refreshGates, regionAt, type RegionId } from '../data/world'
-import { nearestWalkable } from '../systems/pathfinding'
+import { isTownBlocked, nearestWalkableOverworld } from '../systems/pathfinding'
 import { STORY_STEPS, progress, type MemberProgress, type StoryState } from './progress'
+import type { MapSpot } from './travel'
 
 // 存檔鍵沿用 v1 的名稱，舊存檔才找得到；格式版本記在資料裡的 version
 const SAVE_KEY = 'starwish.save.v1'
@@ -14,8 +16,10 @@ const SAVE_KEY = 'starwish.save.v1'
  *   1：角色、成長、背包、劇情、位置
  *   2：加上 unlocks（地圖捷徑）與 region（所在區域）。讀到 1 版會自動轉換：
  *      捷徑視為未解鎖；位置若剛好落在新地形（河流、山脊）裡，移到最近的可走處
+ *   3：加上 mapId（所在地圖：主線世界 / 星光鎮）與 returnPortal（在城裡時，出城後回到的位置）。
+ *      讀到 1、2 版：當作在主線世界、沒有返回位置，其他進度照舊
  */
-const VERSION = 2
+const VERSION = 3
 const UNLOCK_IDS = new Set(BRIDGES.filter((b) => b.locked).map((b) => b.id))
 const STEPS: readonly StoryState['step'][] = STORY_STEPS
 
@@ -29,8 +33,13 @@ export interface SaveData {
   version: number
   savedAt: number
   profile: SaveProfile
+  /** 所在地圖上的位置 */
   pos: { x: number; z: number }
-  /** 存檔時所在區域：讀檔時先準備這一區，再放上人物 */
+  /** 存檔時所在地圖：讀檔時先載入這張地圖，再放上人物 */
+  mapId: MapId
+  /** 在城裡存檔時：出城後回到的主線世界位置；在野外時為 null */
+  returnPortal: MapSpot | null
+  /** 存檔時所在區域（在城裡時是城門外那一區）：讀檔時先準備這一區，再放上人物 */
   region: RegionId
   members: Record<ClassId, MemberProgress>
   inventory: Item[]
@@ -42,13 +51,17 @@ export interface SaveData {
   unlocks: string[]
 }
 
-export function writeSave(profile: SaveProfile, pos: { x: number; z: number }) {
+export function writeSave(profile: SaveProfile, pos: { x: number; z: number }, mapId: MapId, returnPortal: MapSpot | null) {
+  const ret = mapId === 'overworld' ? null : returnPortal ?? { ...TOWN_PORTAL.ret }
+  const outside = ret ?? pos
   const data: SaveData = {
     version: VERSION,
     savedAt: Date.now(),
     profile,
     pos: { x: pos.x, z: pos.z },
-    region: regionAt(pos.x, pos.z),
+    mapId,
+    returnPortal: ret && { x: ret.x, z: ret.z, facing: ret.facing },
+    region: regionAt(outside.x, outside.z),
     members: progress.members,
     inventory: progress.inventory,
     gold: progress.gold,
@@ -75,10 +88,27 @@ export function readSave(): SaveData | null {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
     const d = JSON.parse(raw) as Partial<SaveData>
-    if ((d.version !== 1 && d.version !== VERSION) || !d.profile || !d.members || !(d.profile.classId in CLASSES)) return null
+    if (![1, 2, VERSION].includes(d.version ?? 0) || !d.profile || !d.members || !(d.profile.classId in CLASSES)) return null
     const heroClass = d.profile.classId
-    // 位置：限制在可行走範圍內；落在障礙物裡（例如舊存檔站的地方後來變成河）就移到最近的可走處
-    const pos = nearestWalkable({ x: num(d.pos?.x, BOUNDS.minX, BOUNDS.maxX, 0), z: num(d.pos?.z, BOUNDS.minZ, BOUNDS.maxZ, 6) })
+    // 1、2 版沒有 mapId：一律當作在主線世界
+    const mapId: MapId = d.mapId === TOWN_ID ? TOWN_ID : 'overworld'
+    let pos: { x: number; z: number }
+    let returnPortal: MapSpot | null = null
+    if (mapId === 'overworld') {
+      // 位置：限制在可行走範圍內；落在障礙物裡（例如舊存檔站的地方後來變成河）就移到最近的可走處
+      pos = nearestWalkableOverworld({ x: num(d.pos?.x, BOUNDS.minX, BOUNDS.maxX, 0), z: num(d.pos?.z, BOUNDS.minZ, BOUNDS.maxZ, 6) })
+    } else {
+      // 城裡：位置要在城鎮範圍內的可走處，不行就放回進城落點
+      const p = { x: num(d.pos?.x, TOWN_BOUNDS.minX, TOWN_BOUNDS.maxX, TOWN_SPAWN.x), z: num(d.pos?.z, TOWN_BOUNDS.minZ, TOWN_BOUNDS.maxZ, TOWN_SPAWN.z) }
+      pos = isTownBlocked(p.x, p.z) ? { x: TOWN_SPAWN.x, z: TOWN_SPAWN.z } : p
+      // 返回位置：缺少或超出野外範圍就用城門外的預設位置；落在障礙物裡就移到最近的可走處
+      const r = d.returnPortal
+      const ok = r && Number.isFinite(r.x) && Number.isFinite(r.z) && r.x >= BOUNDS.minX && r.x <= BOUNDS.maxX && r.z >= BOUNDS.minZ && r.z <= BOUNDS.maxZ
+      returnPortal = ok
+        ? { ...nearestWalkableOverworld(r), facing: Number.isFinite(r.facing) ? r.facing : TOWN_PORTAL.ret.facing }
+        : { ...TOWN_PORTAL.ret }
+    }
+    const outside = returnPortal ?? pos
     const inventory = (Array.isArray(d.inventory) ? d.inventory : []).filter(
       (i): i is Item => !!i && typeof i.uid === 'string' && SLOTS.includes(i.slot) && typeof i.stats === 'object',
     )
@@ -107,7 +137,9 @@ export function readSave(): SaveData | null {
         classId: d.profile.classId,
       },
       pos,
-      region: regionAt(pos.x, pos.z),
+      mapId,
+      returnPortal,
+      region: regionAt(outside.x, outside.z),
       members,
       inventory,
       gold: Math.round(num(d.gold, 0, 1e9, 0)),

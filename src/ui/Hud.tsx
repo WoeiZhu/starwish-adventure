@@ -3,6 +3,7 @@
 // 戰鬥數值存在 combat 單例，靠 store 的 tick（每 0.1 秒）觸發重繪。
 import { useEffect, useState } from 'react'
 import { CLASSES, MAX_LEVEL } from '../data/classes'
+import { TOWN_NAME } from '../data/town'
 import { REGION_NAME } from '../data/world'
 import { skillCooldown } from '../game/combat/actions'
 import { usePotion } from '../game/combat/rewards'
@@ -42,6 +43,7 @@ export function Hud() {
   const hint = useGame((s) => s.hint)
   const paused = useGame((s) => s.paused)
   const region = useGame((s) => s.region)
+  const mapId = useGame((s) => s.mapId)
   const togglePause = useGame((s) => s.togglePause)
   const resetCamera = useGame((s) => s.resetCamera)
   const toggleHelp = useGame((s) => s.toggleHelp)
@@ -76,10 +78,11 @@ export function Hud() {
     return () => clearTimeout(id)
   }, [questKey])
 
-  // 換區域時用提示訊息顯示區域名稱
+  // 換區域（或進出城鎮）時用提示訊息顯示地名
+  const place = mapId === 'overworld' ? REGION_NAME[region] : TOWN_NAME
   useEffect(() => {
-    showToast(`— ${REGION_NAME[region]} —`)
-  }, [region, showToast])
+    showToast(`— ${place} —`)
+  }, [place, showToast])
 
   const pick = (fn: () => void) => () => {
     setMenuOpen(false)
@@ -200,7 +203,7 @@ export function Hud() {
               {paused ? '繼續' : '暫停'} <kbd>Esc</kbd>
             </button>
             <div className="menu-info">
-              {REGION_NAME[region]}　金幣 {progress.gold}
+              {place}　金幣 {progress.gold}
             </div>
           </div>
         )}

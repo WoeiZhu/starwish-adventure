@@ -64,6 +64,16 @@ export function CameraRig() {
     })
   }, [phase])
 
+  // 進出城鎮：鏡頭直接跳到主角身後（不要從舊地圖的位置飛過去），面向主角的方向
+  const mapId = useGame((s) => s.mapId)
+  useEffect(() => {
+    const c = st.current
+    c.tx = runtime.player.x
+    c.tz = runtime.player.z
+    c.yaw = c.yawT = wrap(runtime.player.facing + Math.PI)
+    c.eff = Math.min(c.eff, c.dist)
+  }, [mapId])
+
   // 相機回正：轉回預設方向、俯角與中景距離
   useEffect(() => {
     if (resetTick === 0) return

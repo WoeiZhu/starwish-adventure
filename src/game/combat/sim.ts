@@ -4,6 +4,7 @@ import { ENEMY, SPECIES, aggroRange, scaledEnemyLevel } from '../../data/enemies
 import { AREA_BOSSES, SPAWN, inSafeZone } from '../../data/world'
 import { resolveCollisions } from '../../systems/collision'
 import { findPath } from '../../systems/pathfinding'
+import { inTown } from '../../world/maps'
 import { RUN_SPEED, WALK_SPEED, runtime } from '../runtime'
 import { useGame } from '../store'
 import { moveAxis } from '../../systems/input'
@@ -125,6 +126,8 @@ function reviveEnemy(e: Unit) {
 
 /** 每秒檢查一次：解鎖條件達成的區域首領還沒建立就建立（以沉睡狀態開始倒數） */
 function syncAreaBosses() {
+  // 在城裡時野外的怪物收起來了，不能因為「找不到」就再建一隻
+  if (inTown()) return
   for (const d of AREA_BOSSES) {
     if (combat.units.some((u) => u.area === d.id)) continue
     if (areaBossUnlocked(d.id)) spawnAreaBoss(d, hero().level)

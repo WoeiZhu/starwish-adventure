@@ -4,6 +4,7 @@
 import * as THREE from 'three'
 import type { Species } from './enemies'
 import { REGIONS, REGION_NAME, regionAt, type RegionId } from './regions'
+import { TOWN_PORTAL } from './town'
 import {
   BRIDGES,
   DRAW_LEVER,
@@ -603,6 +604,12 @@ function terrainColliders(): Collider[] {
   circle(PASS_ARCH.x + PASS_ARCH.span / 2, PASS_ARCH.z, 0.5)
   circle(DRAW_LEVER.x, DRAW_LEVER.z, 0.35)
   circle(DRAW_NOTICE.x, DRAW_NOTICE.z, 0.18)
+  // 星光鎮城門（寬 11 m、深 2.6 m）：兩側門樓擋住，只有中間 2.6 m 寬的門洞能走
+  for (const s of TOWN_PORTAL.enabled ? [-1, 1] : []) {
+    const a = TOWN_PORTAL.x + s * 1.3
+    const b = TOWN_PORTAL.x + s * 5.5
+    out.push({ kind: 'box', minX: Math.min(a, b), maxX: Math.max(a, b), minZ: TOWN_PORTAL.z - 1.3, maxZ: TOWN_PORTAL.z + 1.3, h: 6 })
+  }
   return out
 }
 

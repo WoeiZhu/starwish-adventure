@@ -3,27 +3,42 @@
 //   2. 跨區時，先在「出口圖」上決定要經過哪些區域與出口（橋、隘口、區域交界），
 //      再逐段在各區域的網格裡找路，最後用視線檢查把路徑拉直。
 // 出口是自動找出的：兩個區域交界上、兩側都能走的格子連成一段，取中點當出口。
+// 城鎮（星光鎮）只有一張現成的網格（navigation.json，格距 0.4 m、已含角色半徑），直接在上面做 A*。
+import { TOWN_GRID } from '../data/town'
 import { BOUNDS, DYNAMIC, type Vec2 } from '../data/world'
 import { REGIONS, REGION_IDS, regionAt, type RegionId } from '../data/regions'
 import { blockedAt } from '../world/colliderIndex'
+import { inTown } from '../world/maps'
 
 const CELL = 0.5
 const CLEARANCE = 0.44 // 略大於角色半徑，避免貼牆卡住
 const MARGIN = 2 // 區域網格向外多留的邊（出口點才會同時落在兩邊的網格裡）
 
 const inBounds = (x: number, z: number) => x >= BOUNDS.minX && x <= BOUNDS.maxX && z >= BOUNDS.minZ && z <= BOUNDS.maxZ
-/** 世界座標是否不能走（直接查碰撞索引，不需要網格） */
-export const isBlockedAt = (x: number, z: number) => !inBounds(x, z) || blockedAt(x, z, CLEARANCE)
+/** 主線世界的座標是否不能走（直接查碰撞索引，不需要網格；不管目前在哪張地圖） */
+const worldBlocked = (x: number, z: number) => !inBounds(x, z) || blockedAt(x, z, CLEARANCE)
+/** 目前地圖上的座標是否不能走（主線世界查碰撞索引；城鎮查網格） */
+export const isBlockedAt = (x: number, z: number) => (inTown() ? townBlocked(x, z) : worldBlocked(x, z))
 
 // ── 區域網格 ──
 interface RegionGrid {
-  id: RegionId
+  id: RegionId | 'town'
+  cell: number
   minX: number
   minZ: number
   nx: number
   nz: number
   blocked: Uint8Array
   version: number
+}
+
+const townGrid: RegionGrid = { id: 'town', version: 0, ...TOWN_GRID }
+/** 城鎮座標是否不能走（讀檔檢查位置時也會用到，不管目前在哪張地圖） */
+export const isTownBlocked = (x: number, z: number) => townBlocked(x, z)
+function townBlocked(x: number, z: number) {
+  const ix = Math.floor((x - townGrid.minX) / townGrid.cell)
+  const iz = Math.floor((z - townGrid.minZ) / townGrid.cell)
+  return ix < 0 || iz < 0 || ix >= townGrid.nx || iz >= townGrid.nz || townGrid.blocked[iz * townGrid.nx + ix] === 1
 }
 const grids = new Map<RegionId, RegionGrid>()
 export const navStats = { gridsBuilt: 0, cellsBuilt: 0, lastQueryMs: 0, lastLegs: 0 }
@@ -41,19 +56,19 @@ function regionGrid(id: RegionId): RegionGrid {
   const blocked = new Uint8Array(nx * nz)
   for (let iz = 0; iz < nz; iz++) {
     for (let ix = 0; ix < nx; ix++) {
-      if (isBlockedAt(minX + (ix + 0.5) * CELL, minZ + (iz + 0.5) * CELL)) blocked[iz * nx + ix] = 1
+      if (worldBlocked(minX + (ix + 0.5) * CELL, minZ + (iz + 0.5) * CELL)) blocked[iz * nx + ix] = 1
     }
   }
-  const g = { id, minX, minZ, nx, nz, blocked, version: DYNAMIC.version }
+  const g = { id, cell: CELL, minX, minZ, nx, nz, blocked, version: DYNAMIC.version }
   grids.set(id, g)
   navStats.gridsBuilt++
   navStats.cellsBuilt += nx * nz
   return g
 }
-const cx = (g: RegionGrid, x: number) => Math.max(0, Math.min(g.nx - 1, Math.floor((x - g.minX) / CELL)))
-const cz = (g: RegionGrid, z: number) => Math.max(0, Math.min(g.nz - 1, Math.floor((z - g.minZ) / CELL)))
-const wx = (g: RegionGrid, i: number) => g.minX + ((i % g.nx) + 0.5) * CELL
-const wz = (g: RegionGrid, i: number) => g.minZ + (((i / g.nx) | 0) + 0.5) * CELL
+const cx = (g: RegionGrid, x: number) => Math.max(0, Math.min(g.nx - 1, Math.floor((x - g.minX) / g.cell)))
+const cz = (g: RegionGrid, z: number) => Math.max(0, Math.min(g.nz - 1, Math.floor((z - g.minZ) / g.cell)))
+const wx = (g: RegionGrid, i: number) => g.minX + ((i % g.nx) + 0.5) * g.cell
+const wz = (g: RegionGrid, i: number) => g.minZ + (((i / g.nx) | 0) + 0.5) * g.cell
 
 /** 目標格被擋住時，找最近的可走格 */
 function nearestFree(g: RegionGrid, ix: number, iz: number) {
@@ -213,7 +228,7 @@ function findPortals(a: RegionId, b: RegionId): Portal[] {
   const nx = Math.ceil((maxX - minX) / CELL)
   const nz = Math.ceil((maxZ - minZ) / CELL)
   const hit: [number, number][] = []
-  const free = (ix: number, iz: number) => !isBlockedAt(minX + (ix + 0.5) * CELL, minZ + (iz + 0.5) * CELL)
+  const free = (ix: number, iz: number) => !worldBlocked(minX + (ix + 0.5) * CELL, minZ + (iz + 0.5) * CELL)
   const reg = (ix: number, iz: number) => regionAt(minX + (ix + 0.5) * CELL, minZ + (iz + 0.5) * CELL)
   for (let iz = 0; iz < nz; iz++) {
     for (let ix = 0; ix < nx; ix++) {
@@ -338,9 +353,15 @@ function findPathInner(from: Vec2, to: Vec2): Vec2[] | null {
   const end: Vec2 = isBlockedAt(to.x, to.z) ? nearestWalkable(to) : { x: to.x, z: to.z }
   if (lineClear(from, end)) return [end]
 
+  let cells: Vec2[] | null = null
+  // 城鎮：單張網格
+  if (inTown()) {
+    cells = gridPath(townGrid, from, end)
+    navStats.lastLegs = 1
+    return cells ? smooth(from, cells, end) : null
+  }
   const ra = regionAt(from.x, from.z)
   const rb = regionAt(end.x, end.z)
-  let cells: Vec2[] | null = null
   if (ra === rb) {
     cells = gridPath(regionGrid(ra), from, end)
     navStats.lastLegs = 1
@@ -371,10 +392,13 @@ function findPathInner(from: Vec2, to: Vec2): Vec2[] | null {
     }
   }
   if (!cells) return null
+  return smooth(from, cells, end)
+}
+
+/** 視線平滑：能直走就略過中間點（一次最多往前看 60 點，長路徑也不會太慢） */
+function smooth(from: Vec2, cells: Vec2[], end: Vec2): Vec2[] {
   if (cells.length) cells[cells.length - 1] = end
   else cells.push(end)
-
-  // 視線平滑：能直走就略過中間點（一次最多往前看 60 點，長路徑也不會太慢）
   const out: Vec2[] = []
   let anchor = from
   let i = 0
@@ -388,9 +412,17 @@ function findPathInner(from: Vec2, to: Vec2): Vec2[] | null {
   return out
 }
 
-/** 最近的可走位置（讀檔時位置剛好落在新地形裡會用到） */
+/** 目前地圖上最近的可走位置 */
 export function nearestWalkable(p: Vec2): Vec2 {
-  if (!isBlockedAt(p.x, p.z)) return { x: p.x, z: p.z }
+  if (!inTown()) return nearestWalkableOverworld(p)
+  if (!townBlocked(p.x, p.z)) return { x: p.x, z: p.z }
+  const i = nearestFree(townGrid, cx(townGrid, p.x), cz(townGrid, p.z))
+  return i < 0 ? { x: p.x, z: p.z } : { x: wx(townGrid, i), z: wz(townGrid, i) }
+}
+
+/** 主線世界上最近的可走位置（讀檔時位置剛好落在新地形裡會用到；不管目前在哪張地圖） */
+export function nearestWalkableOverworld(p: Vec2): Vec2 {
+  if (!worldBlocked(p.x, p.z)) return { x: p.x, z: p.z }
   const g = regionGrid(regionAt(p.x, p.z))
   const i = nearestFree(g, cx(g, p.x), cz(g, p.z))
   return i < 0 ? { x: p.x, z: p.z } : { x: wx(g, i), z: wz(g, i) }

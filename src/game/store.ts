@@ -2,12 +2,15 @@
 import { create } from 'zustand'
 import { CLASSES, type ClassId } from '../data/classes'
 import type { Gender } from '../data/appearance'
+import type { MapId } from '../data/town'
 import { SPAWN, type RegionId } from '../data/world'
 import { initCombat } from './combat/state'
 import { progress, resetProgress } from './progress'
 import { resetRuntime, runtime } from './runtime'
 import { applySave, readSave, writeSave, type SaveData } from './save'
+import { arriveFromSave, resetMap, travel } from './travel'
 import { isTouch } from '../systems/mobile'
+import { mapState } from '../world/maps'
 import { primeStream } from '../world/stream'
 
 const PROFILE_KEY = 'starwish.profile.v1'
@@ -101,10 +104,13 @@ interface GameState {
   /** 剛完成的章節（顯示章節完成畫面）；0 = 不顯示 */
   chapterDone: number
   region: RegionId
+  /** 目前所在地圖（場景切換用；每幀判斷用 world/maps.ts 的 mapState） */
+  mapId: MapId
   /** 畫質：高畫質 / 省電（手機預設省電） */
   quality: Quality
 
   setQuality: (q: Quality) => void
+  setMap: (id: MapId) => void
   setProfile: (p: Partial<Profile>) => void
   startGame: () => void
   continueGame: () => void
@@ -158,8 +164,12 @@ export const useGame = create<GameState>()((set, get) => ({
   partyVersion: 0,
   chapterDone: 0,
   region: 'village',
+  mapId: 'overworld',
   quality: loadQuality(),
 
+  setMap: (mapId) => {
+    if (get().mapId !== mapId) set({ mapId })
+  },
   setQuality: (quality) => {
     try {
       localStorage.setItem(QUALITY_KEY, quality)
@@ -185,9 +195,11 @@ export const useGame = create<GameState>()((set, get) => ({
     saveProfile(hero)
     resetProgress()
     resetRuntime()
+    resetMap()
     initCombat(hero.name, hero.classId)
     primeStream(runtime.player.x, runtime.player.z)
     set((s) => ({
+      mapId: 'overworld',
       phase: 'playing',
       paused: false,
       menu: null,
@@ -212,10 +224,11 @@ export const useGame = create<GameState>()((set, get) => ({
     resetRuntime()
     runtime.player.x = d.pos.x
     runtime.player.z = d.pos.z
-    // 先載入存檔位置周圍的區塊，主角在載入完成前不會出現、也不能移動
-    primeStream(d.pos.x, d.pos.z)
     initCombat(d.profile.name, d.profile.classId, d.pos)
+    // 先載入存檔所在的地圖（野外：周圍區塊；城鎮：城鎮模型），主角在載入完成前不會出現、也不能移動
+    arriveFromSave(d.mapId, d.pos, d.returnPortal)
     set((s) => ({
+      mapId: d.mapId,
       phase: 'playing',
       paused: false,
       menu: null,
@@ -230,17 +243,19 @@ export const useGame = create<GameState>()((set, get) => ({
   saveGame: () => {
     const s = get()
     if (s.phase !== 'playing') return
-    if (writeSave(s.hero, runtime.player)) {
+    if (writeSave(s.hero, runtime.player, mapState.id, travel.returnPortal)) {
       set({ save: { name: s.hero.name, classId: s.hero.classId, level: progress.members[s.hero.classId].level, savedAt: Date.now() } })
     }
   },
   backToTitle: () => {
     get().saveGame()
     resetRuntime()
+    resetMap()
     const h = get().hero
     initCombat(h.name, h.classId, SPAWN)
     primeStream(SPAWN.x, SPAWN.z)
     set((s) => ({
+      mapId: 'overworld',
       phase: 'title',
       paused: false,
       menu: null,

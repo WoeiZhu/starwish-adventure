@@ -7,6 +7,7 @@ import { regionAt } from '../data/regions'
 import { allPortals } from '../systems/pathfinding'
 import { CS, chunkCenter, chunkExists, chunkKey } from './chunks'
 import { STREAM } from './config'
+import { inTown } from './maps'
 
 interface ChunkState {
   cx: number
@@ -49,8 +50,9 @@ export function isLoaded(x: number, z: number) {
   return active.has(chunkKey(Math.floor(x / CS), Math.floor(z / CS)))
 }
 
-/** 主角周圍 r 公尺內的區塊是否都已建好 */
+/** 主角周圍 r 公尺內的區塊是否都已建好（城鎮不分區塊，一律算好） */
 export function areaReady(x: number, z: number, r = STREAM.readyRadius) {
+  if (inTown()) return true
   for (let cx = Math.floor((x - r) / CS); cx <= Math.floor((x + r) / CS); cx++) {
     for (let cz = Math.floor((z - r) / CS); cz <= Math.floor((z + r) / CS); cz++) {
       if (!chunkExists(cx, cz)) continue
@@ -149,6 +151,15 @@ export function primeStream(x: number, z: number) {
   updateStream(x, z)
 }
 export const isPriming = () => primePos !== null
+
+/** 離開主線世界（進城）：場景裡的區塊全部卸下，清單也清空；回來時再用 primeStream 從頭載入 */
+export function resetStream() {
+  streamLog.unloads += active.size
+  active.clear()
+  pending = []
+  primePos = null
+  emit()
+}
 
 export function streamStats() {
   const ms = streamLog.buildMs

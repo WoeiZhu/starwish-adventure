@@ -3,16 +3,18 @@
 import { CLASSES, type ClassId } from '../data/classes'
 import { makeItem, type Quality } from '../data/items'
 import { DRAW_LEVER, DRAW_NOTICE } from '../data/terrain'
+import { TOWN_BUILDING_NAME, TOWN_DOORS, TOWN_NAME, TOWN_NPCS, type TownBuildingId, type TownNpcRole } from '../data/town'
 import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE } from '../data/world'
 import { sfx } from '../systems/sfx'
+import { inTown } from '../world/maps'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
-import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, spawnEnemy } from './combat/state'
+import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, spawnEnemy, stashedUnits } from './combat/state'
 import type { Unit } from './combat/types'
 import { C2_HUNT_GOAL, HUNT_GOAL, addItem, progress, storyReached, unlock } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
-export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar' | 'stele' | 'grove' | 'spring' | 'lever' | 'notice'
+export type InteractKind = 'elder' | 'merchant' | 'companion' | 'chest' | 'altar' | 'stele' | 'grove' | 'spring' | 'lever' | 'notice' | 'door'
 export interface Interactable {
   id: string
   kind: InteractKind
@@ -37,8 +39,102 @@ const story = () => progress.story
 const heroClass = () => useGame.getState().hero.classId
 const companions = () => companionClasses(heroClass())
 
+// ── 星光鎮 ──
+const TOWN_NPC_INFO: Record<TownNpcRole, { name: string; building: TownBuildingId }> = {
+  'quest-guide': { name: '公會引導員', building: 'adventurers-guild' },
+  'guild-placeholder': { name: '公會接待員', building: 'adventurers-guild' },
+  'weapon-vendor-placeholder': { name: '武器商人', building: 'weapon-shop' },
+  'general-vendor': { name: '雜貨商人', building: 'general-store' },
+}
+const INN_PRICE = 10
+
+/** 城裡的互動：4 位 NPC ＋ 4 間建築的門口（建築沒有室內，在門口互動） */
+function townInteractables(): Interactable[] {
+  const list: Interactable[] = TOWN_NPCS.map((n) => ({
+    id: `town-npc-${n.role}`,
+    kind: n.model === 'merchant' ? 'merchant' : 'elder',
+    x: n.x,
+    z: n.z,
+    facing: 0, // 店門都朝 +Z（城門方向），NPC 也面向這邊
+    name: TOWN_NPC_INFO[n.role].name,
+    verb: '交談',
+    marker: false,
+  }))
+  for (const d of TOWN_DOORS) {
+    list.push({ id: `town-door-${d.id}`, kind: 'door', x: d.x, z: d.z, facing: 0, name: TOWN_BUILDING_NAME[d.id], verb: '進入', marker: false })
+  }
+  return list
+}
+
+/** 武器店：之後接上武器包（public/models/starwish-weapons-…）；目前還沒有商品 */
+function weaponShop(speaker: string) {
+  say(speaker, [
+    `歡迎來到${TOWN_NAME}的武器店！`,
+    '新一批的劍、弓、法杖和盾牌還在路上，店裡暫時沒有可以賣的武器。',
+    '（武器店尚未開放：商品與購買功能之後加入）',
+  ])
+}
+
+/** 雜貨店：和村子的商人一樣賣生命藥水 */
+function generalStore(speaker: string) {
+  talkMerchant(speaker)
+}
+
+/** 旅館：付錢休息，全隊回滿生命與魔力 */
+function inn() {
+  const rest: Choice = {
+    label: '住一晚',
+    desc: `${INN_PRICE} 金幣，全隊回復生命與魔力`,
+    disabled: progress.gold < INN_PRICE ? '金幣不足' : undefined,
+    run: () => {
+      progress.gold -= INN_PRICE
+      for (const u of combat.units) {
+        if (u.team !== 'party') continue
+        u.alive = true
+        u.hp = u.maxHp
+        u.mp = u.maxMp
+        u.deadTime = 0
+      }
+      addFeed(`在旅館休息，全隊恢復了（-${INN_PRICE} 金幣）`, '#2f9e52')
+      sfx.levelUp()
+      useGame.getState().saveGame()
+      say('旅館老闆', ['早安！睡得好嗎？全隊都恢復精神了。'])
+    },
+  }
+  say('旅館老闆', ['歡迎光臨！要休息一下嗎？', `你現在有 ${progress.gold} 金幣。`], [rest, { label: '離開', run: () => {} }])
+}
+
+/** 冒險者公會：目前提供任務提示；轉職之後加入 */
+function guild(speaker: string, role: TownNpcRole | null) {
+  const q = questInfo()
+  if (role === 'guild-placeholder') {
+    return say(speaker, [
+      '這裡是冒險者公會的受理櫃台。',
+      '轉職的考核還在準備中，等公會的教官到齊就會開放。',
+      '（轉職尚未開放：條件與流程之後加入）',
+    ])
+  }
+  say(speaker, [`歡迎來到${TOWN_NAME}的冒險者公會！`, `你們目前的任務是「${q.title}」：${q.lines.join('；')}`, '公會的委託板還在整理，之後會在這裡接受委託。'])
+}
+
+function townInteract(it: Interactable) {
+  if (it.id.startsWith('town-door-')) {
+    const b = it.id.slice('town-door-'.length) as TownBuildingId
+    if (b === 'weapon-shop') return weaponShop('武器商人')
+    if (b === 'general-store') return generalStore('雜貨商人')
+    if (b === 'town-inn') return inn()
+    return guild('公會接待員', null)
+  }
+  const role = it.id.slice('town-npc-'.length) as TownNpcRole
+  const b = TOWN_NPC_INFO[role].building
+  if (b === 'weapon-shop') return weaponShop(it.name)
+  if (b === 'general-store') return generalStore(it.name)
+  return guild(it.name, role)
+}
+
 /** 目前場上可互動的物件 */
 export function interactables(): Interactable[] {
+  if (inTown()) return townInteractables()
   const s = story()
   const list: Interactable[] = [
     { id: 'elder', kind: 'elder', ...NPC_ELDER, verb: '交談', marker: s.step === 'talk' || s.step === 'done' },
@@ -79,7 +175,8 @@ export function interactables(): Interactable[] {
   return list
 }
 
-const tagAlive = (tag: string) => combat.units.some((u) => u.tag === tag && u.alive)
+// 在城裡時野外的怪物收起來了，也要算進去（任務欄才不會顯示錯）
+const tagAlive = (tag: string) => combat.units.some((u) => u.tag === tag && u.alive) || stashedUnits().some((u) => u.tag === tag && u.alive)
 const bossAlive = () => tagAlive('boss')
 
 /**
@@ -317,7 +414,7 @@ function useSpring() {
   say('月泉', ['泉水清澈，映著天上的星星。', `${state}可以反覆挑戰來收集裝備。`])
 }
 
-function talkMerchant() {
+function talkMerchant(speaker = MERCHANT.name) {
   const buy = (n: number, price: number): Choice => ({
     label: `買 ${n} 瓶藥水`,
     desc: `${price} 金幣`,
@@ -327,11 +424,11 @@ function talkMerchant() {
       progress.potions += n
       addFeed(`買了 ${n} 瓶生命藥水`)
       sfx.pickup(false)
-      talkMerchant() // 留在商店畫面，方便連續購買
+      talkMerchant(speaker) // 留在商店畫面，方便連續購買
     },
   })
   say(
-    MERCHANT.name,
+    speaker,
     [`要補給嗎？你現在有 ${progress.gold} 金幣、${progress.potions} 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。`],
     [buy(1, POTION_PRICE), buy(3, POTION_PRICE * 3 - 5), { label: '離開', run: () => {} }],
   )
@@ -483,7 +580,8 @@ function lowerBridge() {
 export function interactWith(id: string) {
   const it = interactables().find((i) => i.id === id)
   if (!it) return
-  if (it.kind === 'elder') talkElder()
+  if (it.id.startsWith('town-')) townInteract(it)
+  else if (it.kind === 'elder') talkElder()
   else if (it.kind === 'merchant') talkMerchant()
   else if (it.kind === 'companion') talkCompanion(it.classId!)
   else if (it.kind === 'chest') openChest(it.id)

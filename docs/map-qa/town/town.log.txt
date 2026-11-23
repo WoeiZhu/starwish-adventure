@@ -1,0 +1,65 @@
+✔ 從村子走到南方城門前 {"arrived":true,"d":0.12,"ms":5402}
+城門前 {"geo":154,"tex":24,"calls":447,"tris":1242836,"heapMB":161}
+✔ 進城：換到 starlight-town-meshy {"map":"starlight-town-meshy","storeMap":"starlight-town-meshy","loading":false,"priming":false,"x":0,"z":12.7,"enemies":0,"allyGap":[1.9,1.9,2.6],"switches":1}
+✔ 進城：落點 (0, 12.7) (0, 12.7)
+✔ 進城：野外怪物已收起 enemies=0
+進城載入 {"walkMs":1338,"loadMs":431} townLoadMs(內部) 361
+✔ 進城後站著 3 秒不會被彈回野外 {"map":"starlight-town-meshy","storeMap":"starlight-town-meshy","loading":false,"priming":false,"x":0,"z":12.7,"enemies":0,"allyGap":[1.9,1.9,2.6],"switches":1}
+城內落點隊友距離 [1.9,1.9,2.6]
+剛進城鏡頭有效距離 13 目標偏差 0
+城內 {"geo":88,"tex":38,"calls":98,"tris":1092875,"heapMB":156} {"meshes":16,"triangles":300064}
+✔ 走到 town-npc-quest-guide {"arrived":true,"d":0.12,"ms":6709} 隊友距離 2.2,2.9,3.4
+✔ 互動 town-npc-quest-guide {"speaker":"公會引導員","line":"歡迎來到星光鎮的冒險者公會！"}
+✔ 從 town-npc-quest-guide 走回城門內 {"arrived":true,"d":0.13,"ms":6729}
+✔ 走到 town-npc-guild-placeholder {"arrived":true,"d":0.13,"ms":6228} 隊友距離 3,2.7,3.7
+✔ 互動 town-npc-guild-placeholder {"speaker":"公會接待員","line":"這裡是冒險者公會的受理櫃台。"}
+✔ 從 town-npc-guild-placeholder 走回城門內 {"arrived":true,"d":0.13,"ms":6236}
+✔ 走到 town-npc-weapon-vendor-placeholder {"arrived":true,"d":0.12,"ms":3428} 隊友距離 2.7,2.8,3.7
+✔ 互動 town-npc-weapon-vendor-placeholder {"speaker":"武器商人","line":"歡迎來到星光鎮的武器店！"}
+✔ 從 town-npc-weapon-vendor-placeholder 走回城門內 {"arrived":true,"d":0.12,"ms":3280}
+✔ 走到 town-npc-general-vendor {"arrived":true,"d":0.14,"ms":3118} 隊友距離 2.8,2.7,3.6
+✔ 互動 town-npc-general-vendor {"speaker":"雜貨商人","line":"要補給嗎？你現在有 200 金幣、3 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。","choices":["買 1 瓶藥水","買 3 瓶藥水","離開"]}
+✔ 從 town-npc-general-vendor 走回城門內 {"arrived":true,"d":0.13,"ms":3120}
+✔ 走到 town-door-weapon-shop {"arrived":true,"d":0.12,"ms":3123} 隊友距離 2.8,2.9,3.6
+✔ 互動 town-door-weapon-shop {"speaker":"武器商人","line":"歡迎來到星光鎮的武器店！"}
+✔ 從 town-door-weapon-shop 走回城門內 {"arrived":true,"d":0.14,"ms":3115}
+✔ 走到 town-door-general-store {"arrived":true,"d":0.13,"ms":3115} 隊友距離 2.7,2.5,3.6
+✔ 互動 town-door-general-store {"speaker":"雜貨商人","line":"要補給嗎？你現在有 200 金幣、3 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。","choices":["買 1 瓶藥水","買 3 瓶藥水","離開"]}
+✔ 從 town-door-general-store 走回城門內 {"arrived":true,"d":0.13,"ms":3122}
+✔ 走到 town-door-adventurers-guild {"arrived":true,"d":0.12,"ms":6718} 隊友距離 3,2.5,3.6
+✔ 互動 town-door-adventurers-guild {"speaker":"公會接待員","line":"歡迎來到星光鎮的冒險者公會！"}
+✔ 從 town-door-adventurers-guild 走回城門內 {"arrived":true,"d":0.13,"ms":6700}
+✔ 走到 town-door-town-inn {"arrived":true,"d":0.13,"ms":5303} 隊友距離 2.5,2.6,3.6
+✔ 互動 town-door-town-inn {"speaker":"旅館老闆","line":"歡迎光臨！要休息一下嗎？","choices":["住一晚","離開"]}
+✔ 從 town-door-town-inn 走回城門內 {"arrived":true,"d":0.13,"ms":5297}
+✔ 旅館：付 10 金幣全隊回滿 {"goldBefore":200,"goldAfter":190,"full":true}
+✔ 噴泉不能穿過 最近距離 2.22 m（噴泉半徑 1.9 + 角色 0.32）
+✔ 北邊城牆不能穿過 最北 z=-15.33（牆內緣 -15.65）
+✔ 西邊城牆不能穿過 最西 x=-14.33（牆內緣 -14.65）
+✔ 武器店牆不能穿過 最北 z=4.17（店面 3.85）
+✔ 城門旁的門樓不能穿過 最南 z=14.33（門樓 14.65）
+✔ 城內存檔：記下 mapId 與返回位置 {"v":3,"map":"starlight-town-meshy","pos":{"x":-2.9196020387284403,"z":8.084819849141496},"ret":{"x":0.2,"z":33.2,"facing":3.141592653589793},"region":"meadow"}
+✔ 回標題：回到主線世界 {"map":"overworld","storeMap":"overworld","loading":false,"priming":false,"x":0,"z":6,"enemies":65,"allyGap":[1.9,1.9,2.6],"switches":1}
+✔ 繼續：先載入城鎮再放人物 載入 501 ms，位置 (-2.92, 8.08)
+✔ 城內讀檔後不會被彈出 {"map":"starlight-town-meshy","storeMap":"starlight-town-meshy","loading":false,"priming":false,"x":-2.92,"z":8.08,"enemies":0,"allyGap":[1.9,1.9,2.6],"switches":1}
+✔ 出城：回到城門外 (0.2, 33.2) (0.2, 33.2) 載入 {"walkMs":2252,"loadMs":148}
+✔ 出城：野外怪物放回來 enemies=65
+✔ 出城後站著 3 秒不會再被吸進城 {"map":"overworld","storeMap":"overworld","loading":false,"priming":false,"x":0.2,"z":33.2,"enemies":66,"allyGap":[2.6,2.4,2.6],"switches":2}
+✔ 被事件怪追的時候不能進城 map=overworld toast=強敵還在追你，現在不能進城
+戰鬥測試後走回 {"arrived":true,"d":0.13,"ms":1556} {"map":"overworld","storeMap":"overworld","loading":false,"priming":false,"x":0.2,"z":31.63,"enemies":66,"allyGap":[3.9,7,3.7],"switches":2}
+✔ 一般野怪追著時可以進城 {"walkMs":1229,"loadMs":390}
+✔ 出城後野怪不再追擊、回到營地 {"target":null,"d":1.3}
+往返 1 {"loop":1,"enterMs":408,"exitMs":136,"town":{"geo":113,"tex":67,"calls":102,"tris":1092883,"heapMB":169},"world":{"geo":137,"tex":53,"calls":474,"tris":1244622,"heapMB":152}}
+往返 2 {"loop":2,"enterMs":406,"exitMs":137,"town":{"geo":113,"tex":66,"calls":100,"tris":1092879,"heapMB":158},"world":{"geo":136,"tex":53,"calls":477,"tris":1244152,"heapMB":154}}
+往返 3 {"loop":3,"enterMs":405,"exitMs":148,"town":{"geo":113,"tex":66,"calls":100,"tris":1092879,"heapMB":157},"world":{"geo":138,"tex":53,"calls":481,"tris":1245918,"heapMB":163}}
+往返 4 {"loop":4,"enterMs":393,"exitMs":143,"town":{"geo":113,"tex":67,"calls":100,"tris":1092879,"heapMB":158},"world":{"geo":138,"tex":53,"calls":478,"tris":1230358,"heapMB":159}}
+往返 5 {"loop":5,"enterMs":402,"exitMs":138,"town":{"geo":113,"tex":67,"calls":100,"tris":1092879,"heapMB":170},"world":{"geo":138,"tex":53,"calls":462,"tris":1226992,"heapMB":161}}
+✔ 反覆進出沒有累積幾何體 第 2 輪 136 → 第 5 輪 138
+✔ 反覆進出沒有累積貼圖 城內貼圖 第 2 輪 66 → 第 5 輪 67
+✔ 第 2 版存檔：當作在野外、進度保留 {"map":"overworld","ret":null,"pos":{"x":5,"z":10},"gold":321,"recruited":3,"chests":0,"step":"talk"}
+✔ 城內存檔缺返回位置、位置超出範圍：補預設值 {"map":"starlight-town-meshy","ret":{"x":0.2,"z":33.2,"facing":3.141592653589793},"pos":{"x":0,"z":12.7}}
+✔ 城鎮模型載入失敗：退回城門外、顯示原因 {"map":"overworld","storeMap":"overworld","loading":false,"priming":false,"x":0.2,"z":33.2,"enemies":65,"allyGap":[],"switches":16} toast=星光鎮載入失敗，已回到城門外
+✔ 載入失敗後再進城可以正常載入 {"walkMs":1243,"loadMs":404}
+
+結果：51/51 通過
+主控台錯誤 ["Failed to load resource: net::ERR_FAILED","PAGEERROR Could not load /models/starwish-town-meshy-20261123-v001/town-environment.web.glb: Failed to fetch"]

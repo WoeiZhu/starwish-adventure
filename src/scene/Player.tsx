@@ -13,6 +13,7 @@ import { resolveCollisions } from '../systems/collision'
 import { sfx } from '../systems/sfx'
 import { moveAxis } from '../systems/input'
 import { findPath } from '../systems/pathfinding'
+import { mapState } from '../world/maps'
 import { areaReady, isPriming } from '../world/stream'
 import { CharacterModel } from './characters/CharacterModel'
 import type { CharacterMotion } from './characters/types'
@@ -62,8 +63,8 @@ export function Player() {
       return
     }
     if (s.paused) return
-    // 讀檔／開局：主角所在區域的區塊還沒準備好之前，先不出現、不能移動
-    const loading = isPriming()
+    // 讀檔／開局／切換地圖：主角所在區域（或城鎮模型）還沒準備好之前，先不出現、不能移動
+    const loading = isPriming() || mapState.loading
     group.current.visible = !loading
     if (loading) return
 
