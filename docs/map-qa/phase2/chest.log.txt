@@ -1,0 +1,12 @@
+頁面載入 381 ms
+走到寶箱 {"ok":true,"ms":4766}
+開啟後 {"opened":["c_meadow"],"shown":false,"chunkLoaded":true,"bag":1,"gold":30}
+走到山谷 {"ok":true,"ms":15865}
+在山谷時 {"opened":["c_meadow"],"shown":false,"chunkLoaded":false,"bag":1,"gold":30}
+走回寶箱 {"ok":true,"ms":15672}
+回來再開一次 {"opened":["c_meadow"],"shown":false,"chunkLoaded":true,"bag":1,"gold":30}
+讀檔 {"readyMs":83,"primeMs":18,"region":"meadow","pos":[-3,30]}
+讀檔後 {"opened":["c_meadow"],"shown":false,"chunkLoaded":true,"bag":1,"gold":30}
+寶箱狀態維持正確 通過
+山谷存檔後讀檔 {"loadedBefore":true,"hiddenWhileLoading":true,"readyMs":314,"primeMs":273,"region":"valley"}
+錯誤 無

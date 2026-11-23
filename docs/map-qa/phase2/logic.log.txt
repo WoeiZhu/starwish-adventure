@@ -1,0 +1,5 @@
+頁面載入 364 ms
+吊橋捷徑 {"locked":50,"tLocked":6,"open":31,"tOpen":7,"leverBefore":true,"leverAfter":false,"unlocks":["east_bridge"]}
+舊存檔轉換 {"pos":[-9.7,-34.7],"unlocks":[],"chests":["c_meadow"],"chestShown":false,"newVersion":2,"region":"northwoods"}
+跨區追擊 {"heroRegion":"meadow","goblinStart":["ruins","ruins","ruins"],"chasingNearHero":1,"heroDamaged":true,"aiFull":18}
+錯誤 無

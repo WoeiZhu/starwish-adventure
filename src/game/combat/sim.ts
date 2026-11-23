@@ -8,6 +8,7 @@ import { RUN_SPEED, WALK_SPEED, runtime } from '../runtime'
 import { useGame } from '../store'
 import { moveAxis } from '../../systems/input'
 import { sfx } from '../../systems/sfx'
+import { AI } from '../../world/config'
 import { BUFF_COLOR, basicAttack, castSkill, damage, enemyShot, faceTarget, hasBuff, heal } from './actions'
 import { burst, emit, flash, pillar, ring, shake, updateFx } from './fx'
 import { updateDrops } from './rewards'
@@ -756,9 +757,28 @@ function updateZones(dt: number) {
   }
 }
 
-/** 單位互相推開，避免重疊；主角不被推動 */
+/** 遠處閒置的怪物：直接回到出生點、慢慢回血，不做尋敵與移動計算 */
+function idleFar(e: Unit, dt: number) {
+  if (e.ai.returning || e.castT > 0 || e.dashT > 0) {
+    e.x = e.homeX
+    e.z = e.homeZ
+    e.ai.returning = false
+    e.castT = 0
+    e.castKind = ''
+    e.dashT = 0
+  }
+  if (e.respawns && e.hp < e.maxHp) {
+    e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.25 * dt)
+    if (e.enraged && e.hp >= e.maxHp * 0.98) setEnemyLevel(e, e.level)
+  }
+}
+/** 每幀有幾隻怪物跑完整 AI、幾隻只做簡化更新（測試與效能紀錄用） */
+export const aiStats = { full: 0, idle: 0 }
+
+/** 單位互相推開，避免重疊；主角不被推動。只處理主角附近的單位 */
 function separate() {
-  const us = combat.units
+  const h = combat.units[0]
+  const us = combat.units.filter((u) => u.alive && dist(u, h) < AI.fullRadius + 4)
   for (let i = 0; i < us.length; i++) {
     for (let j = i + 1; j < us.length; j++) {
       const a = us[i]
@@ -802,12 +822,22 @@ export function updateCombat(dt: number) {
   c.calm = c.inCombat ? 0 : c.calm + dt
 
   let slot = 0
+  aiStats.full = 0
+  aiStats.idle = 0
   for (const u of c.units) {
     tickTimers(u, dt)
     if (u.kind === 'hero') continue
     u.moved = 0
-    if (u.team === 'enemy') enemyAI(u, party, dt)
-    else allyAI(u, slot++, h, engaged, party, dt)
+    if (u.team === 'enemy') {
+      // 遠處沒在戰鬥的怪物不跑完整 AI：只回家、回血（死亡的照常計算重生時間）
+      if (u.alive && !u.targetId && dist(u, h) > AI.fullRadius) {
+        idleFar(u, dt)
+        aiStats.idle++
+      } else {
+        enemyAI(u, party, dt)
+        aiStats.full++
+      }
+    } else allyAI(u, slot++, h, engaged, party, dt)
     u.speed += (u.moved - u.speed) * (1 - Math.exp(-dt * 12))
   }
 

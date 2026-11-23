@@ -4,6 +4,7 @@ import { App } from './App'
 import * as cstate from './game/combat/state'
 import { combat } from './game/combat/state'
 import * as nav from './systems/pathfinding'
+import * as stream from './world/stream'
 import * as sim from './game/combat/sim'
 import { progress } from './game/progress'
 import { runtime } from './game/runtime'
@@ -16,7 +17,7 @@ import './mobile.css'
 
 // 開發模式下把遊戲狀態掛到 window，方便在主控台檢查與自動化測試
 if (import.meta.env.DEV) {
-  Object.assign(window, { __sw: { combat, cstate, sim, runtime, useGame, progress, story, nav } })
+  Object.assign(window, { __sw: { combat, cstate, sim, runtime, useGame, progress, story, nav, stream: { ...stream, stats: stream.streamStats } } })
 }
 
 createRoot(document.getElementById('root')!).render(

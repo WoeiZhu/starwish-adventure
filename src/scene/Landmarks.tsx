@@ -1,30 +1,26 @@
-// 第一階段的地形與地標：河流與三座橋（含可放下的吊橋）、北方隘口的山脊與石拱門、
-// 草原風車、森林巨木、石環斷牆、村子路燈、邊界山壁與封閉的區域入口。
+// 第一階段的地標：三座橋（含可放下的吊橋）、北方隘口的石拱門、
+// 草原風車、森林巨木、石環斷牆、村子路燈、封閉的區域入口（河流、山脊、山壁在 Chunks.tsx）。
 // 幾何體與材質都在模組層共用，卸載時不會被丟棄（第二階段分區塊載入時可直接重用）。
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import {
   BRIDGES,
-  CLIFFS,
   ELDER_TREE,
   ENTRANCES,
   LAMPS,
   PASS_ARCH,
-  RIDGE_ROCKS,
-  RIVER,
   RUIN_PIECES,
   WINDMILL,
-  groundHeight,
   type BridgeDef,
-  type Boulder,
+  type GateDef,
+  type RuinPiece as RuinPieceDef,
 } from '../data/terrain'
 import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
-import { RIVER_POINTS, buildRibbon, waterTexture } from './terrainMeshes'
+import { InChunk } from './Chunks'
 
 // ── 共用幾何與材質 ──
-const BOULDER_GEO = new THREE.DodecahedronGeometry(1, 0)
 const BOX = new THREE.BoxGeometry(1, 1, 1)
 const CYL8 = new THREE.CylinderGeometry(1, 1, 1, 8)
 const SPHERE = new THREE.SphereGeometry(1, 14, 10)
@@ -46,63 +42,6 @@ const M = {
   lamp: mat('#ffe6a8', { emissive: '#ffcf6a', emissiveIntensity: 0.9 }),
   iron: mat('#5d5a63'),
   sign: mat('#d9a066'),
-}
-
-/** 一組岩石（山脊、邊界山壁）：共用一個 InstancedMesh，每顆有自己的顏色 */
-function Boulders({ items, sink = 0.25 }: { items: Boulder[]; sink?: number }) {
-  const ref = useRef<THREE.InstancedMesh>(null!)
-  useLayoutEffect(() => {
-    const m = new THREE.Object3D()
-    const c = new THREE.Color()
-    items.forEach((b, i) => {
-      m.position.set(b.x, groundHeight(b.x, b.z) + b.h * (0.5 - sink), b.z)
-      m.rotation.set(0, b.rot, 0)
-      m.scale.set(b.r, b.h / 2 + sink * b.h, b.r * 0.9)
-      m.updateMatrix()
-      ref.current.setMatrixAt(i, m.matrix)
-      ref.current.setColorAt(i, c.set(b.color))
-    })
-    ref.current.instanceMatrix.needsUpdate = true
-    if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true
-  }, [items, sink])
-  return (
-    <instancedMesh ref={ref} args={[BOULDER_GEO, undefined, items.length]} castShadow receiveShadow>
-      <meshLambertMaterial flatShading />
-    </instancedMesh>
-  )
-}
-
-// ── 河流 ──
-function River() {
-  const water = useMemo(() => {
-    const t = waterTexture()
-    t.repeat.set(1, 0.35)
-    return t
-  }, [])
-  const geos = useMemo(
-    () => ({
-      bank: buildRibbon(RIVER_POINTS, RIVER.hw * 2 + 2.4, 0.02, (_, c) => c.set('#d8c99a')),
-      bed: buildRibbon(RIVER_POINTS, RIVER.hw * 2 + 0.7, 0.03, (_, c) => c.set('#4fa3c9')),
-      water: buildRibbon(RIVER_POINTS, RIVER.hw * 2 + 0.1, 0.05),
-    }),
-    [],
-  )
-  useFrame((_, dt) => {
-    water.offset.y -= dt * 0.12
-  })
-  return (
-    <group>
-      <mesh geometry={geos.bank} receiveShadow>
-        <meshLambertMaterial vertexColors />
-      </mesh>
-      <mesh geometry={geos.bed}>
-        <meshLambertMaterial vertexColors />
-      </mesh>
-      <mesh geometry={geos.water}>
-        <meshLambertMaterial map={water} transparent opacity={0.88} emissive="#2f8fc0" emissiveIntensity={0.18} />
-      </mesh>
-    </group>
-  )
 }
 
 // ── 橋 ──
@@ -179,15 +118,11 @@ function DrawBridge({ b }: { b: BridgeDef }) {
   )
 }
 
-function Bridges() {
+function Bridge({ b }: { b: BridgeDef }) {
   return (
-    <>
-      {BRIDGES.map((b) => (
-        <group key={b.id} position={[b.x, 0, b.z]} rotation={[0, b.rot, 0]}>
-          {b.style === 'stone' ? <StoneBridge b={b} /> : b.style === 'wood' ? <WoodBridge b={b} /> : <DrawBridge b={b} />}
-        </group>
-      ))}
-    </>
+    <group position={[b.x, 0, b.z]} rotation={[0, b.rot, 0]}>
+      {b.style === 'stone' ? <StoneBridge b={b} /> : b.style === 'wood' ? <WoodBridge b={b} /> : <DrawBridge b={b} />}
+    </group>
   )
 }
 
@@ -196,6 +131,14 @@ function PassArch() {
   const a = PASS_ARCH
   // 拱門自己的材質：鏡頭隔著拱門看主角時淡出，避免橫樑擋住畫面
   const am = useMemo(() => ({ stone: M.stone.clone(), dark: M.stoneDark.clone() }), [])
+  // 這兩份材質是拱門自己的：卸載時丟掉
+  useEffect(
+    () => () => {
+      am.stone.dispose()
+      am.dark.dispose()
+    },
+    [am],
+  )
   useFrame((s, dt) => {
     const p = runtime.player
     const cz = s.camera.position.z
@@ -280,72 +223,79 @@ function ElderTree() {
 }
 
 /** 古代石環一帶的斷牆與倒下的石柱 */
-function RuinPieces() {
-  return (
-    <>
-      {RUIN_PIECES.map((p, i) =>
-        p.kind === 'wall' ? (
-          <group key={i} position={[p.x, 0, p.z]} rotation={[0, p.rot, 0]}>
-            <mesh geometry={BOX} material={M.stone} position={[0, p.h / 2, 0]} scale={[p.len, p.h, 0.5]} castShadow receiveShadow />
-            <mesh geometry={BOX} material={M.stoneDark} position={[p.len * 0.22, p.h + 0.3, 0]} scale={[p.len * 0.45, 0.6, 0.5]} castShadow />
-          </group>
-        ) : (
-          <group key={i} position={[p.x, 0.42, p.z]} rotation={[0, p.rot, 0]}>
-            <mesh geometry={CYL8} material={M.stone} rotation={[0, 0, Math.PI / 2]} scale={[0.42, p.len, 0.42]} castShadow receiveShadow />
-          </group>
-        ),
-      )}
-    </>
+function RuinPiece({ p }: { p: RuinPieceDef }) {
+  return p.kind === 'wall' ? (
+    <group position={[p.x, 0, p.z]} rotation={[0, p.rot, 0]}>
+      <mesh geometry={BOX} material={M.stone} position={[0, p.h / 2, 0]} scale={[p.len, p.h, 0.5]} castShadow receiveShadow />
+      <mesh geometry={BOX} material={M.stoneDark} position={[p.len * 0.22, p.h + 0.3, 0]} scale={[p.len * 0.45, 0.6, 0.5]} castShadow />
+    </group>
+  ) : (
+    <group position={[p.x, 0.42, p.z]} rotation={[0, p.rot, 0]}>
+      <mesh geometry={CYL8} material={M.stone} rotation={[0, 0, Math.PI / 2]} scale={[0.42, p.len, 0.42]} castShadow receiveShadow />
+    </group>
   )
 }
 
-function Lamps() {
+/** 村子的路燈 */
+function Lamp({ x, z }: { x: number; z: number }) {
   return (
-    <>
-      {LAMPS.map((l, i) => (
-        <group key={i} position={[l.x, 0, l.z]}>
-          <mesh geometry={CYL8} material={M.woodDark} position={[0, 1.1, 0]} scale={[0.07, 2.2, 0.07]} castShadow />
-          <mesh geometry={BOX} material={M.iron} position={[0, 2.25, 0]} scale={[0.26, 0.08, 0.26]} />
-          <mesh geometry={BOX} material={M.lamp} position={[0, 2.05, 0]} scale={[0.18, 0.3, 0.18]} />
-        </group>
-      ))}
-    </>
+    <group position={[x, 0, z]}>
+      <mesh geometry={CYL8} material={M.woodDark} position={[0, 1.1, 0]} scale={[0.07, 2.2, 0.07]} castShadow />
+      <mesh geometry={BOX} material={M.iron} position={[0, 2.25, 0]} scale={[0.26, 0.08, 0.26]} />
+      <mesh geometry={BOX} material={M.lamp} position={[0, 2.05, 0]} scale={[0.18, 0.3, 0.18]} />
+    </group>
   )
 }
 
 /** 封閉的區域入口：石柱、木頭路障與告示牌（之後接上新區域時拆掉） */
-function Entrances() {
+function Entrance({ g }: { g: GateDef }) {
   return (
-    <>
-      {ENTRANCES.map((g) => (
-        <group key={g.id} position={[g.x, 0, g.z]} rotation={[0, g.rot, 0]}>
-          {[-1, 1].map((s) => (
-            <mesh geometry={BOX} key={s} material={M.stone} position={[s * 2.3, 1.2, 0]} scale={[0.7, 2.4, 0.7]} castShadow />
-          ))}
-          {[-0.5, 0.5].map((r) => (
-            <mesh geometry={BOX} key={r} material={M.wood} position={[0, 0.75, 0.1]} rotation={[0, 0, r]} scale={[4.2, 0.22, 0.12]} castShadow />
-          ))}
-          <mesh geometry={BOX} material={M.woodDark} position={[0, 1.35, 0.15]} scale={[4.4, 0.18, 0.12]} />
-          <mesh geometry={BOX} material={M.sign} position={[1.4, 1.6, -0.35]} rotation={[0, Math.PI, 0]} scale={[1.2, 0.5, 0.08]} />
-        </group>
+    <group position={[g.x, 0, g.z]} rotation={[0, g.rot, 0]}>
+      {[-1, 1].map((s) => (
+        <mesh geometry={BOX} key={s} material={M.stone} position={[s * 2.3, 1.2, 0]} scale={[0.7, 2.4, 0.7]} castShadow />
       ))}
-    </>
+      {[-0.5, 0.5].map((r) => (
+        <mesh geometry={BOX} key={r} material={M.wood} position={[0, 0.75, 0.1]} rotation={[0, 0, r]} scale={[4.2, 0.22, 0.12]} castShadow />
+      ))}
+      <mesh geometry={BOX} material={M.woodDark} position={[0, 1.35, 0.15]} scale={[4.4, 0.18, 0.12]} />
+      <mesh geometry={BOX} material={M.sign} position={[1.4, 1.6, -0.35]} rotation={[0, Math.PI, 0]} scale={[1.2, 0.5, 0.08]} />
+    </group>
   )
 }
 
+/** 地標：每一件都放在自己所在的區塊，區塊載入時才畫（河流、山脊岩石、邊界山壁在 Chunks.tsx 分區塊畫） */
 export function Landmarks() {
   return (
     <>
-      <River />
-      <Bridges />
-      <Boulders items={RIDGE_ROCKS} />
-      <PassArch />
-      <Windmill />
-      <ElderTree />
-      <RuinPieces />
-      <Lamps />
-      <Entrances />
-      <Boulders items={CLIFFS} sink={0.3} />
+      {BRIDGES.map((b) => (
+        <InChunk key={b.id} x={b.x} z={b.z}>
+          <Bridge b={b} />
+        </InChunk>
+      ))}
+      <InChunk x={PASS_ARCH.x} z={PASS_ARCH.z}>
+        <PassArch />
+      </InChunk>
+      <InChunk x={WINDMILL.x} z={WINDMILL.z}>
+        <Windmill />
+      </InChunk>
+      <InChunk x={ELDER_TREE.x} z={ELDER_TREE.z}>
+        <ElderTree />
+      </InChunk>
+      {RUIN_PIECES.map((p, i) => (
+        <InChunk key={i} x={p.x} z={p.z}>
+          <RuinPiece p={p} />
+        </InChunk>
+      ))}
+      {LAMPS.map((l, i) => (
+        <InChunk key={i} x={l.x} z={l.z}>
+          <Lamp x={l.x} z={l.z} />
+        </InChunk>
+      ))}
+      {ENTRANCES.map((g) => (
+        <InChunk key={g.id} x={g.x} z={g.z}>
+          <Entrance g={g} />
+        </InChunk>
+      ))}
     </>
   )
 }

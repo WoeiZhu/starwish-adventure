@@ -90,6 +90,8 @@ async function stats() {
       objects,
       heapMB: mem ? Math.round((mem.usedJSHeapSize / 1048576) * 10) / 10 : null,
       chunks: sw.stream ? sw.stream.stats() : null,
+      ai: sw.sim.aiStats ? { ...sw.sim.aiStats } : null,
+      nav: sw.nav.navStats ? { ...sw.nav.navStats } : null,
       units: sw.combat.units.length,
     }
   })
@@ -169,7 +171,9 @@ const allyGap = () =>
   ev(() => {
     const us = window.__sw.combat.units
     const h = us[0]
-    return Math.max(0, ...us.filter((u) => u.kind === 'ally').map((u) => Math.round(Math.hypot(u.x - h.x, u.z - h.z) * 10) / 10))
+    const gap = Math.max(0, ...us.filter((u) => u.kind === 'ally').map((u) => Math.round(Math.hypot(u.x - h.x, u.z - h.z) * 10) / 10))
+    const fighting = us.filter((u) => u.kind === 'ally' && u.targetId).length
+    return fighting ? `${gap}（${fighting} 位隊友正在戰鬥）` : gap
   })
 
 if (mode === 'roundtrip') {
@@ -256,15 +260,92 @@ if (mode === 'logic') {
     }
   })
   say('舊存檔轉換', m)
+  // 3) 區域邊界追擊：主角站在草原（z > -4），石環哥布林營地在交界另一側，怪物要追過來打到主角
+  await newGame(false)
+  await teleport(33.5, -1.2)
+  const chase = await ev(async () => {
+    const sw = window.__sw
+    const h = sw.combat.units[0]
+    const gob = sw.combat.units.filter((u) => u.id.startsWith('r1-'))
+    const hp0 = h.hp
+    const startRegions = gob.map((g) => (g.z < -4 ? 'ruins' : 'meadow'))
+    await new Promise((r) => setTimeout(r, 4000))
+    const near = gob.filter((g) => Math.hypot(g.x - h.x, g.z - h.z) < 2.5).length
+    return { heroRegion: 'meadow', goblinStart: startRegions, chasingNearHero: near, heroDamaged: h.hp < hp0, aiFull: sw.sim.aiStats.full }
+  })
+  say('跨區追擊', chase)
 }
 
 if (mode === 'chest') {
   await newGame(false)
-  const res = await ev(() => {
-    const sw = window.__sw
-    return sw.story.interactables().filter((i) => i.kind === 'chest').map((i) => i.id)
+  await ev(() => {
+    const h = window.__sw.combat.units[0]
+    setInterval(() => {
+      h.hp = h.maxHp
+      h.invuln = 1
+    }, 200)
   })
-  say('寶箱', res)
+  const snap = () =>
+    ev(() => {
+      const sw = window.__sw
+      return {
+        opened: [...sw.progress.story.chests],
+        shown: sw.story.interactables().some((i) => i.id === 'c_meadow'),
+        chunkLoaded: sw.stream.isLoaded(-3, 33),
+        bag: sw.progress.inventory.length,
+        gold: sw.progress.gold,
+      }
+    })
+  // 1) 走到草原南邊的寶箱打開
+  say('走到寶箱', await walkTo(-3, 31))
+  await ev(() => window.__sw.story.interactWith('c_meadow'))
+  const a = await snap()
+  say('開啟後', a)
+  // 2) 走到山谷（寶箱所在區塊會被卸載），再走回來
+  say('走到山谷', await walkTo(0, -57))
+  say('在山谷時', await snap())
+  say('走回寶箱', await walkTo(-3, 31))
+  await ev(() => window.__sw.story.interactWith('c_meadow')) // 再開一次：不能重複領
+  const b = await snap()
+  say('回來再開一次', b)
+  // 3) 存檔、回標題、讀檔
+  const c = await ev(async () => {
+    const sw = window.__sw
+    sw.useGame.getState().saveGame()
+    sw.useGame.getState().backToTitle()
+    await new Promise((r) => setTimeout(r, 300))
+    const t0 = performance.now()
+    sw.useGame.getState().continueGame()
+    // 等主角周圍的區塊載入完
+    while (sw.stream.isPriming() && performance.now() - t0 < 10000) await new Promise((r) => setTimeout(r, 30))
+    return {
+      readyMs: Math.round(performance.now() - t0),
+      primeMs: sw.stream.stats().primeMs,
+      region: JSON.parse(localStorage.getItem('starwish.save.v1')).region,
+      pos: [Math.round(sw.runtime.player.x), Math.round(sw.runtime.player.z)],
+    }
+  })
+  say('讀檔', c)
+  const d = await snap()
+  say('讀檔後', d)
+  const pass = a.opened.includes('c_meadow') && !a.shown && !b.shown && b.bag === a.bag && b.gold === a.gold && d.opened.includes('c_meadow') && !d.shown && d.bag === a.bag
+  say('寶箱狀態維持正確', pass ? '通過' : '失敗')
+  // 4) 在山谷深處存檔 → 回標題（村子一帶）→ 讀檔：要先載入山谷的區塊才放出人物
+  await teleport(0, -60)
+  await page.waitForTimeout(2500)
+  const e = await ev(async () => {
+    const sw = window.__sw
+    sw.useGame.getState().saveGame()
+    sw.useGame.getState().backToTitle()
+    await new Promise((r) => setTimeout(r, 2500))
+    const loadedBefore = sw.stream.isLoaded(0, -60)
+    const t0 = performance.now()
+    sw.useGame.getState().continueGame()
+    const hiddenWhileLoading = sw.stream.isPriming()
+    while (sw.stream.isPriming() && performance.now() - t0 < 10000) await new Promise((r) => setTimeout(r, 16))
+    return { loadedBefore, hiddenWhileLoading, readyMs: Math.round(performance.now() - t0), primeMs: sw.stream.stats().primeMs, region: JSON.parse(localStorage.getItem('starwish.save.v1')).region }
+  })
+  say('山谷存檔後讀檔', e)
 }
 
 say('錯誤', errs.length ? errs.slice(0, 10) : '無')

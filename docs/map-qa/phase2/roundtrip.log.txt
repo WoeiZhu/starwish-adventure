@@ -1,0 +1,38 @@
+頁面載入 351 ms
+開始 {"calls":615,"tris":1218478,"geometries":183,"textures":24,"objects":2088,"heapMB":157.1,"chunks":{"active":46,"pending":0,"loads":46,"unloads":0,"buildAvgMs":4.3,"buildMaxMs":16.5,"primeMs":867,"exitsNear":3},"ai":{"full":37,"idle":29},"nav":{"gridsBuilt":0,"cellsBuilt":0,"lastQueryMs":0,"lastLegs":0},"units":70}
+第1輪 村莊→山谷月泉 {"ok":true,"ms":11100} 隊友最遠 5.4 m
+第1輪 山谷→村莊 {"ok":true,"ms":11338} 隊友最遠 5.4 m
+第1輪 村莊→迷霧森林 {"ok":true,"ms":5557} 隊友最遠 5.1 m
+第1輪 森林→石環 {"ok":true,"ms":10288} 隊友最遠 5.4 m
+第1輪 石環→草原南 {"ok":true,"ms":9257} 隊友最遠 20 m
+第1輪 草原→村莊 {"ok":true,"ms":5540} 隊友最遠 6.7 m
+第1輪結束 {"fps":60,"calls":635,"tris":1170102,"geometries":296,"textures":55,"objects":2094,"heapMB":206.6,"chunks":{"active":48,"pending":0,"loads":166,"unloads":118,"buildAvgMs":3.4,"buildMaxMs":11.3,"primeMs":867,"exitsNear":4},"ai":{"full":36,"idle":30},"nav":{"gridsBuilt":6,"cellsBuilt":39660,"lastQueryMs":0,"lastLegs":4},"units":70}
+第2輪 村莊→山谷月泉 {"ok":true,"ms":10857} 隊友最遠 5.3 m
+第2輪 山谷→村莊 {"ok":true,"ms":11378} 隊友最遠 5.3 m
+第2輪 村莊→迷霧森林 {"ok":true,"ms":5785} 隊友最遠 5 m
+第2輪 森林→石環 {"ok":true,"ms":10036} 隊友最遠 5.4 m
+第2輪 石環→草原南 {"ok":true,"ms":9257} 隊友最遠 20 m
+第2輪 草原→村莊 {"ok":true,"ms":5304} 隊友最遠 6 m
+第2輪結束 {"fps":60,"calls":634,"tris":1169934,"geometries":296,"textures":55,"objects":2094,"heapMB":156.1,"chunks":{"active":48,"pending":0,"loads":286,"unloads":238,"buildAvgMs":3.1,"buildMaxMs":8.7,"primeMs":867,"exitsNear":4},"ai":{"full":36,"idle":30},"nav":{"gridsBuilt":6,"cellsBuilt":39660,"lastQueryMs":0,"lastLegs":4},"units":70}
+第3輪 村莊→山谷月泉 {"ok":true,"ms":10805} 隊友最遠 5.4 m
+第3輪 山谷→村莊 {"ok":true,"ms":11338} 隊友最遠 5.4 m
+第3輪 村莊→迷霧森林 {"ok":true,"ms":5764} 隊友最遠 5.1 m
+第3輪 森林→石環 {"ok":true,"ms":10014} 隊友最遠 5.4 m
+第3輪 石環→草原南 {"ok":true,"ms":9231} 隊友最遠 20.9 m
+第3輪 草原→村莊 {"ok":true,"ms":5537} 隊友最遠 9.7 m
+第3輪結束 {"fps":60,"calls":634,"tris":1215840,"geometries":296,"textures":56,"objects":2118,"heapMB":253.7,"chunks":{"active":48,"pending":0,"loads":406,"unloads":358,"buildAvgMs":3,"buildMaxMs":9.1,"primeMs":867,"exitsNear":4},"ai":{"full":37,"idle":29},"nav":{"gridsBuilt":6,"cellsBuilt":39660,"lastQueryMs":0,"lastLegs":4},"units":70}
+第4輪 村莊→山谷月泉 {"ok":true,"ms":10822} 隊友最遠 5.4 m
+第4輪 山谷→村莊 {"ok":true,"ms":11381} 隊友最遠 5.3 m
+第4輪 村莊→迷霧森林 {"ok":true,"ms":5561} 隊友最遠 5.2 m
+第4輪 森林→石環 {"ok":true,"ms":10199} 隊友最遠 5.4 m
+第4輪 石環→草原南 {"ok":true,"ms":9306} 隊友最遠 20 m
+第4輪 草原→村莊 {"ok":true,"ms":5507} 隊友最遠 8.8 m
+第4輪結束 {"fps":60,"calls":639,"tris":1170234,"geometries":296,"textures":55,"objects":2094,"heapMB":164.3,"chunks":{"active":48,"pending":0,"loads":526,"unloads":478,"buildAvgMs":3.5,"buildMaxMs":11,"primeMs":867,"exitsNear":4},"ai":{"full":36,"idle":30},"nav":{"gridsBuilt":6,"cellsBuilt":39660,"lastQueryMs":0,"lastLegs":1},"units":70}
+第5輪 村莊→山谷月泉 {"ok":true,"ms":10835} 隊友最遠 5.4 m
+第5輪 山谷→村莊 {"ok":true,"ms":11403} 隊友最遠 5.4 m
+第5輪 村莊→迷霧森林 {"ok":true,"ms":5536} 隊友最遠 5.2 m
+第5輪 森林→石環 {"ok":true,"ms":10321} 隊友最遠 5.4 m
+第5輪 石環→草原南 {"ok":true,"ms":9253} 隊友最遠 20.2 m
+第5輪 草原→村莊 {"ok":true,"ms":5535} 隊友最遠 9 m
+第5輪結束 {"fps":60,"calls":635,"tris":1170150,"geometries":297,"textures":55,"objects":2094,"heapMB":171.4,"chunks":{"active":48,"pending":0,"loads":646,"unloads":598,"buildAvgMs":3.3,"buildMaxMs":8.4,"primeMs":867,"exitsNear":4},"ai":{"full":36,"idle":30},"nav":{"gridsBuilt":6,"cellsBuilt":39660,"lastQueryMs":0,"lastLegs":1},"units":70}
+錯誤 無

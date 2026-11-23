@@ -7,7 +7,7 @@ import { unlockAudio } from './systems/sfx'
 import { RotateHint } from './ui/RotateHint'
 import { Hud } from './ui/Hud'
 import { MenuPanel } from './ui/MenuPanel'
-import { ChapterComplete, DialogBox, HelpPanel, PauseOverlay, Toast } from './ui/Overlays'
+import { ChapterComplete, DialogBox, HelpPanel, LoadingVeil, PauseOverlay, Toast } from './ui/Overlays'
 import { TitleScreen } from './ui/TitleScreen'
 
 export function App() {
@@ -42,6 +42,7 @@ export function App() {
         <>
           <Hud />
           <Toast />
+          <LoadingVeil />
           {dialog && <DialogBox />}
           {showHelp && !paused && <HelpPanel />}
           {menu && <MenuPanel />}

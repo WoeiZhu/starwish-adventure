@@ -56,8 +56,9 @@ src/
   data/      資料層：職業表、外觀設定、地圖佈局與碰撞體（資料驅動）
   game/      規則層：Zustand 狀態（store）、每幀資料（runtime）
     combat/  戰鬥：state（單位與投射物）、actions（傷害 / 技能）、sim（每幀更新、怪物與隊友 AI）
-  systems/   輸入、碰撞、A* 尋路（與畫面無關，可單獨測試）
-  scene/     3D 場景層：World、Player、CameraRig、Slime、Npc、CombatLayer（隊友、血條、特效、飄字）
+  systems/   輸入、碰撞、分區 A* 尋路（與畫面無關，可單獨測試）
+  world/     地圖串流：區塊設定（config）、區塊內容與程序生成接口（chunks）、載入／卸載管理（stream）、碰撞空間索引
+  scene/     3D 場景層：World、Chunks（分區塊畫地面與草木）、Landmarks（地標）、Vista（遠景）、Player、CameraRig、CombatLayer
     characters/  CharacterModel 是模型替換點；GlbCharacter 載入骨架模型並以程式驅動動作；ChibiCharacter 為備援的程序化人物
   ui/        介面層：角色創建、HUD、暫停、對話
 ```
@@ -69,6 +70,8 @@ src/
 - [x] **C RPG 成長系統**：四人各自累積經驗、LV.50 上限、每級 1 技能點、三分支技能樹（每職 12 節點、可免費重置）、武器 / 防具 / 飾品與五種品質、可見掉落與自動拾取、藥水、背包（上限 40）、自動存檔與讀檔
 - [x] **D 故事與探索內容**：單人開局、第一章任務鏈、三個招募事件（含選項）、四個區域（星光村 / 翠綠草原 / 迷霧森林 / 古代石環）、三個寶箱、商人、精英怪與 Boss（紅圈預兆、狂暴、召喚）、章節完成畫面
 - [x] **E 第二章 月光山谷**：地圖往北延伸出新區域、四種新怪物（幼狼撲擊、蘑菇毒霧、魔靈遠程彈幕、靈鹿衝撞與治療）、第二章任務鏈（石碑 → 淨化山谷 → 星晶林 → 月泉 Boss）、兩個新的區域首領
+- [x] **F 地圖系統**：河流與三座橋（東側吊橋是要從山谷放下的捷徑）、北方隘口、步道岔路、各區地標、邊界山壁與封閉入口、遠景山脈與遠方地標；分區塊載入、遠處怪物簡化更新、分區尋路、存檔第 2 版。說明與測試紀錄見 `docs/map-system.md`
+- [ ] **G 程序生成支線**：洞窟與野外支路（接口已預留在 `src/world/chunks.ts` 的 `GENERATORS`）
 
 ## 調整數值
 
@@ -79,10 +82,13 @@ src/
 - 技能樹節點：`src/data/skilltree.ts`
 - 等級成長、經驗曲線、能力值計算：`src/game/progress.ts`
 - 劇情流程、對話、事件與任務文字：`src/game/story.ts`
-- 區域範圍、事件地點、寶箱位置：`src/data/world.ts`
+- 區域範圍、名稱與配色：`src/data/regions.ts`；事件地點、寶箱位置：`src/data/world.ts`
+- 河流、橋、隘口、步道、地標、邊界與遠景：`src/data/terrain.ts`
+- 區塊大小、載入／卸載距離、怪物 AI 與顯示範圍：`src/world/config.ts`
 - 精英與 Boss 的能力倍率、隊伍人數對怪物強度的影響：`src/game/combat/state.ts`（`TIER`、`PARTY_SCALE`）
-- 存檔格式：`src/game/save.ts`（localStorage 鍵 `starwish.save.v1`）
-- 開發模式下主控台可用 `window.__sw`（combat、sim、runtime、useGame、progress、story）檢查狀態
+- 存檔格式：`src/game/save.ts`（localStorage 鍵 `starwish.save.v1`，資料內 version 2；會自動轉換第 1 版）
+- 開發模式下主控台可用 `window.__sw`（combat、sim、runtime、useGame、progress、story、nav、stream、gl）檢查狀態
+- 地圖自動測試：`tools/qa/map-qa.mjs`（無頭 Edge，先 `npm run dev`；在 `tools/qa` 執行一次 `npm install`）
 
 ## 人物模型
 

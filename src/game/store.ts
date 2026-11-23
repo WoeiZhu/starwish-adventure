@@ -8,6 +8,7 @@ import { progress, resetProgress } from './progress'
 import { resetRuntime, runtime } from './runtime'
 import { applySave, readSave, writeSave, type SaveData } from './save'
 import { isTouch } from '../systems/mobile'
+import { primeStream } from '../world/stream'
 
 const PROFILE_KEY = 'starwish.profile.v1'
 
@@ -185,6 +186,7 @@ export const useGame = create<GameState>()((set, get) => ({
     resetProgress()
     resetRuntime()
     initCombat(hero.name, hero.classId)
+    primeStream(runtime.player.x, runtime.player.z)
     set((s) => ({
       phase: 'playing',
       paused: false,
@@ -210,6 +212,8 @@ export const useGame = create<GameState>()((set, get) => ({
     resetRuntime()
     runtime.player.x = d.pos.x
     runtime.player.z = d.pos.z
+    // 先載入存檔位置周圍的區塊，主角在載入完成前不會出現、也不能移動
+    primeStream(d.pos.x, d.pos.z)
     initCombat(d.profile.name, d.profile.classId, d.pos)
     set((s) => ({
       phase: 'playing',
@@ -235,6 +239,7 @@ export const useGame = create<GameState>()((set, get) => ({
     resetRuntime()
     const h = get().hero
     initCombat(h.name, h.classId, SPAWN)
+    primeStream(SPAWN.x, SPAWN.z)
     set((s) => ({
       phase: 'title',
       paused: false,

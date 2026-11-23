@@ -5,6 +5,7 @@ import { MONSTERS, SPAWN, type AreaBossDef, type MonsterDef } from '../../data/w
 import { computeStats, progress } from '../progress'
 import { RUN_SPEED } from '../runtime'
 import { clearFx } from './fx'
+import { AI } from '../../world/config'
 import type { Drop, EnemyTier, FeedLine, Floater, Hazard, Projectile, Unit, UnitKind, Zone } from './types'
 
 export const FLOATER_POOL = 28
@@ -334,7 +335,7 @@ export function addFeed(text: string, color = '#4a3b52') {
 // 地圖上有幾十隻怪物，但畫面只需要顯示附近的：固定數量的槽位，每個槽位分配給一隻附近的怪物。
 // 怪物離開範圍就釋放槽位；槽位全滿時，較近的怪物會擠掉最遠的那隻。
 export const ENEMY_SLOTS = 28
-const SLOT_RANGE = 48
+const SLOT_RANGE = AI.displayRadius
 const slotUnits: (Unit | undefined)[] = new Array(ENEMY_SLOTS).fill(undefined)
 
 /** 第 slot 個顯示槽位目前對應的怪物 */

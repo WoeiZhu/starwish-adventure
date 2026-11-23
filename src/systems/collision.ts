@@ -1,59 +1,49 @@
-// 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。
-import { BOUNDS, COLLIDERS, DYNAMIC, type Collider, type Vec2 } from '../data/world'
+// 人物與相機的碰撞處理（圓形 / 軸對齊方塊）。用空間索引只檢查附近的碰撞體。
+import { BOUNDS, type Collider, type Vec2 } from '../data/world'
+import { forColliders } from '../world/colliderIndex'
 
-let merged: Collider[] = COLLIDERS
-let mergedFor = -1
-/** 固定碰撞＋會隨進度改變的碰撞（版本變了才重新合併） */
-function allColliders() {
-  if (mergedFor !== DYNAMIC.version) {
-    mergedFor = DYNAMIC.version
-    merged = [...COLLIDERS, ...DYNAMIC.list]
+function pushOut(p: Vec2, radius: number, c: Collider) {
+  if (c.kind === 'circle') {
+    let dx = p.x - c.x
+    let dz = p.z - c.z
+    let d = Math.hypot(dx, dz)
+    const min = radius + c.r
+    if (d >= min) return
+    if (d < 1e-4) {
+      dx = 1
+      dz = 0
+      d = 1
+    }
+    p.x = c.x + (dx / d) * min
+    p.z = c.z + (dz / d) * min
+    return
   }
-  return merged
+  const cx = Math.max(c.minX, Math.min(c.maxX, p.x))
+  const cz = Math.max(c.minZ, Math.min(c.maxZ, p.z))
+  const dx = p.x - cx
+  const dz = p.z - cz
+  const d = Math.hypot(dx, dz)
+  if (d >= radius) return
+  if (d < 1e-4) {
+    // 已在方塊內：沿最近的邊推出
+    const l = p.x - c.minX
+    const r = c.maxX - p.x
+    const n = p.z - c.minZ
+    const f = c.maxZ - p.z
+    const m = Math.min(l, r, n, f)
+    if (m === l) p.x = c.minX - radius
+    else if (m === r) p.x = c.maxX + radius
+    else if (m === n) p.z = c.minZ - radius
+    else p.z = c.maxZ + radius
+  } else {
+    p.x = cx + (dx / d) * radius
+    p.z = cz + (dz / d) * radius
+  }
 }
 
-/** 把圓形角色推出所有障礙物，並限制在可行走範圍內 */
+/** 把圓形角色推出附近的障礙物，並限制在可行走範圍內 */
 export function resolveCollisions(p: Vec2, radius: number) {
-  for (let pass = 0; pass < 2; pass++) {
-    for (const c of allColliders()) {
-      if (c.kind === 'circle') {
-        let dx = p.x - c.x
-        let dz = p.z - c.z
-        let d = Math.hypot(dx, dz)
-        const min = radius + c.r
-        if (d >= min) continue
-        if (d < 1e-4) {
-          dx = 1
-          dz = 0
-          d = 1
-        }
-        p.x = c.x + (dx / d) * min
-        p.z = c.z + (dz / d) * min
-      } else {
-        const cx = Math.max(c.minX, Math.min(c.maxX, p.x))
-        const cz = Math.max(c.minZ, Math.min(c.maxZ, p.z))
-        const dx = p.x - cx
-        const dz = p.z - cz
-        const d = Math.hypot(dx, dz)
-        if (d >= radius) continue
-        if (d < 1e-4) {
-          // 已在方塊內：沿最近的邊推出
-          const l = p.x - c.minX
-          const r = c.maxX - p.x
-          const n = p.z - c.minZ
-          const f = c.maxZ - p.z
-          const m = Math.min(l, r, n, f)
-          if (m === l) p.x = c.minX - radius
-          else if (m === r) p.x = c.maxX + radius
-          else if (m === n) p.z = c.minZ - radius
-          else p.z = c.maxZ + radius
-        } else {
-          p.x = cx + (dx / d) * radius
-          p.z = cz + (dz / d) * radius
-        }
-      }
-    }
-  }
+  for (let pass = 0; pass < 2; pass++) forColliders(p.x, p.z, radius + 0.5, (c) => pushOut(p, radius, c))
   p.x = Math.max(BOUNDS.minX, Math.min(BOUNDS.maxX, p.x))
   p.z = Math.max(BOUNDS.minZ, Math.min(BOUNDS.maxZ, p.z))
 }
@@ -78,12 +68,8 @@ export function cameraClearDistance(
     const x = ox + dx * t
     const y = oy + dy * t
     const z = oz + dz * t
-    for (const c of COLLIDERS) {
-      if (c.kind !== 'box') continue
-      if (y < c.h + pad && x > c.minX - pad && x < c.maxX + pad && z > c.minZ - pad && z < c.maxZ + pad) {
-        return Math.max(0.9, t - maxDist / steps)
-      }
-    }
+    const hit = forColliders(x, z, pad, (c) => c.kind === 'box' && y < c.h + pad && x > c.minX - pad && x < c.maxX + pad && z > c.minZ - pad && z < c.maxZ + pad)
+    if (hit) return Math.max(0.9, t - maxDist / steps)
   }
   return maxDist
 }

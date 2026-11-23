@@ -13,6 +13,7 @@ import { resolveCollisions } from '../systems/collision'
 import { sfx } from '../systems/sfx'
 import { moveAxis } from '../systems/input'
 import { findPath } from '../systems/pathfinding'
+import { areaReady, isPriming } from '../world/stream'
 import { CharacterModel } from './characters/CharacterModel'
 import type { CharacterMotion } from './characters/types'
 
@@ -61,6 +62,10 @@ export function Player() {
       return
     }
     if (s.paused) return
+    // 讀檔／開局：主角所在區域的區塊還沒準備好之前，先不出現、不能移動
+    const loading = isPriming()
+    group.current.visible = !loading
+    if (loading) return
 
     const h = hero()
     const dodge = runtime.dodge
@@ -157,6 +162,11 @@ export function Player() {
       p.x += vx * dt
       p.z += vz * dt
       resolveCollisions(p, PLAYER_RADIUS)
+      // 前方區塊還沒建好（正常走路不會發生，保險用）：停在原地，不會走進空白地形
+      if (!areaReady(p.x, p.z, 4)) {
+        p.x = ox
+        p.z = oz
+      }
       p.facing = dampAngle(p.facing, Math.atan2(vx, vz), 14, dt)
     }
     const actual = Math.min(want, Math.hypot(p.x - ox, p.z - oz) / dt)

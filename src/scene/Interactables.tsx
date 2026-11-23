@@ -9,6 +9,7 @@ import { useGame } from '../game/store'
 import { interactWith, interactables, type Interactable } from '../game/story'
 import { isTouch } from '../systems/mobile'
 import { findPath } from '../systems/pathfinding'
+import { isLoaded } from '../world/stream'
 import { CharacterModel } from './characters/CharacterModel'
 
 const TALK_RANGE = 2.6
@@ -256,7 +257,8 @@ export function Interactables() {
     timer.current -= dt
     if (timer.current <= 0) {
       timer.current = 0.2
-      const next = interactables()
+      // 只畫所在區塊已載入的物件（互動判斷仍用完整清單）
+      const next = interactables().filter((i) => isLoaded(i.x, i.z))
       const sig = next.map((i) => i.id + (i.marker ? '!' : '')).join('|')
       if (sig !== signature.current) {
         signature.current = sig

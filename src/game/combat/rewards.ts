@@ -12,10 +12,14 @@ const PICKUP_RANGE = 1.2
 const MAGNET_RANGE = 3.2
 const DROP_LIFETIME = 90
 
+let dropSeq = 0
+/** 已拾取的掉落物 id（同一局內防止重複發放） */
+const taken = new Set<string>()
 function spawnDrop(e: Unit, kind: 'gold' | 'potion' | 'item', amount: number, item?: Item) {
   const a = Math.random() * Math.PI * 2
   const r = 0.5 + Math.random() * 0.9
   combat.drops.push({
+    id: `drop-${e.id}-${++dropSeq}`,
     x: e.x + Math.cos(a) * r,
     z: e.z + Math.sin(a) * r,
     kind,
@@ -68,6 +72,11 @@ export function onEnemyKilled(e: Unit) {
 
 function collect(i: number) {
   const d = combat.drops[i]
+  if (taken.has(d.id)) {
+    combat.drops.splice(i, 1)
+    return
+  }
+  taken.add(d.id)
   const h = hero()
   if (d.kind === 'gold') {
     progress.gold += d.amount

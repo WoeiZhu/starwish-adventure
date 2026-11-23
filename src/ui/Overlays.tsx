@@ -1,7 +1,8 @@
 // 疊加介面：對話框、暫停選單、操作說明、提示訊息。
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useGame } from '../game/store'
 import { isTouch } from '../systems/mobile'
+import { isPriming, subscribe } from '../world/stream'
 
 const CONTROLS: [string, string][] = [
   ['W / A / S / D', '自由移動（會取消點擊自動移動）'],
@@ -166,4 +167,10 @@ export function Toast() {
       {toast.text}
     </div>
   ) : null
+}
+
+/** 讀檔或開局時：主角周圍的區域還在載入 */
+export function LoadingVeil() {
+  const loading = useSyncExternalStore(subscribe, isPriming)
+  return loading ? <div className="loading-veil">載入地區中…</div> : null
 }

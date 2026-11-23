@@ -182,6 +182,8 @@ export interface Hazard {
 }
 
 export interface Drop {
+  /** 穩定 id：拾取時依 id 移除，同一個掉落物不會被領兩次 */
+  id: string
   x: number
   z: number
   kind: 'gold' | 'potion' | 'item'
