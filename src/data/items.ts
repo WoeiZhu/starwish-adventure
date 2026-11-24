@@ -10,7 +10,7 @@ export const QUALITIES = [
   { name: '優良', color: '#5fc46a', mul: 1.3 },
   { name: '稀有', color: '#4a9cf5', mul: 1.7 },
   { name: '史詩', color: '#a96bf0', mul: 2.2 },
-  { name: '傳說', color: '#f59a2f', mul: 3 },
+  { name: '傳說', color: '#e8b318', mul: 3 },
 ] as const
 export type Quality = 0 | 1 | 2 | 3 | 4
 

@@ -1,5 +1,5 @@
 // 手機直拿時蓋住畫面，請玩家轉成橫向；Android 可以直接按按鈕進入全螢幕並鎖定橫向。
-// 直拿期間遊戲自動暫停，轉回橫向後自動繼續。
+// 直拿期間遊戲自動暫停，轉回橫向後自動繼續。選單開著時不擋（選單有直向版面）。
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../game/store'
 import { canFullscreen, enterAppMode, isIOS, isStandalone, isTouch } from '../systems/mobile'
@@ -20,11 +20,12 @@ function usePortrait() {
 
 export function RotateHint() {
   const portrait = usePortrait()
+  const menu = useGame((s) => s.menu)
   const autoPaused = useRef(false)
 
   useEffect(() => {
     const s = useGame.getState()
-    if (portrait) {
+    if (portrait && !menu) {
       if (s.phase === 'playing' && !s.paused) {
         useGame.setState({ paused: true })
         autoPaused.current = true
@@ -34,9 +35,10 @@ export function RotateHint() {
       // 期間玩家沒有自己打開選單才自動繼續
       if (!s.menu) useGame.setState({ paused: false })
     }
-  }, [portrait])
+  }, [portrait, menu])
 
-  if (!portrait) return null
+  // 選單（背包、隊伍、技能樹）直拿也能用；關掉選單才請玩家轉回橫向
+  if (!portrait || menu) return null
   return (
     <div className="rotate-hint">
       <div className="rotate-phone" aria-hidden>

@@ -1,24 +1,23 @@
-// 選單面板：隊伍（能力值）、背包（裝備）、技能樹（配點）。開啟時遊戲暫停。
-import { useState } from 'react'
+// 選單：隊伍（能力值）、背包（裝備）、技能樹（配點）。開啟時遊戲暫停。
+// 手機近乎全螢幕（避開瀏海、用 100dvh）；電腦是置中的大面板。關閉鈕固定在右上角。
+import { useEffect, useState } from 'react'
+import { isTouch } from '../systems/mobile'
+import { BagTab } from './menu/BagTab'
+import { Avatar } from './menu/icons'
 import { CLASSES, MAX_LEVEL, type ClassId } from '../data/classes'
-import { QUALITIES, SLOTS, SLOT_NAME, describeStats, itemScore, type Item } from '../data/items'
+import { QUALITIES, SLOTS, SLOT_NAME, describeStats, type Item } from '../data/items'
 import { BRANCH_NAMES, TREES, nodeText, type TreeNode } from '../data/skilltree'
 import { combat, refreshParty } from '../game/combat/state'
 import {
-  BAG_LIMIT,
   addRank,
-  canEquip,
   computeStats,
-  equip,
-  equippedBy,
   equippedItem,
   expToNext,
+  freshItems,
   nodeBlock,
   pointsLeft,
   progress,
   resetTree,
-  sellItem,
-  unequip,
 } from '../game/progress'
 import { useGame, type MenuTab } from '../game/store'
 
@@ -106,128 +105,6 @@ function PartyTab({ classId }: { classId: ClassId }) {
   )
 }
 
-function BagTab({ classId, onChange }: { classId: ClassId; onChange: () => void }) {
-  const [selected, setSelected] = useState<string | null>(null)
-  const items = [...progress.inventory].sort((a, b) => b.quality - a.quality || itemScore(b) - itemScore(a))
-  const sel = items.find((i) => i.uid === selected)
-  const owner = sel ? equippedBy(sel.uid) : undefined
-  const current = sel ? equippedItem(classId, sel.slot) : undefined
-  const diff = sel && current && current.uid !== sel.uid ? Math.round(itemScore(sel) - itemScore(current)) : null
-  const act = (fn: () => void) => {
-    fn()
-    onChange()
-  }
-
-  return (
-    <div className="menu-body">
-      <div className="menu-col wide">
-        <h3>
-          背包 <small>{items.length} / {BAG_LIMIT}　金幣 {progress.gold}　藥水 {progress.potions}</small>
-        </h3>
-        {items.length === 0 && <p className="muted">還沒有裝備。打倒史萊姆有機會掉落，走過去就能撿起來。</p>}
-        {items.length > 0 &&
-          SLOTS.map((slot) => {
-            const group = items.filter((it) => it.slot === slot)
-            return (
-              <section key={slot} className="bag-group">
-                <h4>
-                  {SLOT_NAME[slot]} <small>{group.length}</small>
-                </h4>
-                {group.length === 0 ? (
-                  <p className="muted small">沒有{SLOT_NAME[slot]}</p>
-                ) : (
-                  <div className="bag-grid">
-                    {group.map((it) => {
-                      const by = equippedBy(it.uid)
-                      return (
-                        <button
-                          key={it.uid}
-                          className={'bag-item' + (it.uid === selected ? ' on' : '') + (canEquip(classId, it) ? '' : ' dim')}
-                          style={{ borderColor: QUALITIES[it.quality].color }}
-                          onClick={() => setSelected(it.uid)}
-                        >
-                          <ItemChip item={it} />
-                          <span className="item-stats">{describeStats(it.stats)}</span>
-                          {by && <span className="worn">{CLASSES[by].name}裝備中</span>}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </section>
-            )
-          })}
-      </div>
-      <div className="menu-col">
-        <h3>{CLASSES[classId].name}的裝備</h3>
-        {SLOTS.map((slot) => {
-          const it = equippedItem(classId, slot)
-          return (
-            <div key={slot} className="equip-row">
-              <span className="slot-tag">{SLOT_NAME[slot]}</span>
-              {it ? (
-                <>
-                  <div>
-                    <ItemChip item={it} />
-                    <div className="item-stats">{describeStats(it.stats)}</div>
-                  </div>
-                  <button className="mini" onClick={() => act(() => unequip(classId, slot))}>
-                    卸下
-                  </button>
-                </>
-              ) : (
-                <span className="muted">未裝備</span>
-              )}
-            </div>
-          )
-        })}
-        {sel && (
-          <div className="item-detail" style={{ borderColor: QUALITIES[sel.quality].color }}>
-            <ItemChip item={sel} />
-            <div className="muted">
-              {QUALITIES[sel.quality].name} · {SLOT_NAME[sel.slot]} · LV.{sel.level}
-              {sel.classId ? ` · ${CLASSES[sel.classId].name}專用` : ''}
-            </div>
-            <div className="item-stats">{describeStats(sel.stats)}</div>
-            {diff !== null && (
-              <div className={diff >= 0 ? 'up' : 'down'}>
-                與目前裝備相比：{diff >= 0 ? '+' : ''}
-                {diff}
-              </div>
-            )}
-            <div className="detail-actions">
-              {owner === classId ? (
-                <button className="btn" onClick={() => act(() => unequip(classId, sel.slot))}>
-                  卸下
-                </button>
-              ) : canEquip(classId, sel) ? (
-                <button className="btn-primary small" onClick={() => act(() => equip(classId, sel))}>
-                  裝備給{CLASSES[classId].name}
-                </button>
-              ) : (
-                <span className="muted">此職業無法使用，請切換上方角色</span>
-              )}
-              {!owner && (
-                <button
-                  className="btn"
-                  onClick={() =>
-                    act(() => {
-                      sellItem(sel.uid)
-                      setSelected(null)
-                    })
-                  }
-                >
-                  賣出
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function TreeTab({ classId, onChange }: { classId: ClassId; onChange: () => void }) {
   const m = progress.members[classId]
   const left = pointsLeft(classId)
@@ -291,50 +168,85 @@ export function MenuPanel() {
   const heroClass = useGame((s) => s.hero.classId)
   const [member, setMember] = useState<ClassId>(heroClass)
   const [, force] = useState(0)
+  useEffect(() => {
+    if (!tab) return
+    document.documentElement.classList.add('menu-open')
+    return () => document.documentElement.classList.remove('menu-open')
+  }, [tab])
   if (!tab) return null
 
-  const party = combat.units.filter((u) => u.team === 'party')
+  const units = combat.units.filter((u) => u.team === 'party')
+  const party = units.map((u) => u.classId!)
   // 配點或換裝後：重算戰鬥中的能力值、更新武器外觀、重繪面板
   const onChange = () => {
     refreshParty()
     bumpGear()
     force((n) => n + 1)
   }
+  const points = party.reduce((n, c) => n + pointsLeft(c), 0)
+  const fresh = progress.inventory.filter((i) => freshItems.has(i.uid)).length
+  const badge = (id: MenuTab) => (id === 'tree' ? points : id === 'bag' ? fresh : 0)
 
   return (
-    <div className="overlay">
-      <div className="panel menu">
-        <div className="menu-top">
-          <div className="tabs">
+    <div
+      className="ms-back"
+      // 選單開著時，手勢不要穿透到後面的遊戲
+      onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      <div className={`ms ms-${tab}`} role="dialog" aria-modal="true" aria-label="選單">
+        <header className="ms-head">
+          <nav className="ms-tabs" role="tablist">
             {TABS.map((t) => (
-              <button key={t.id} className={t.id === tab ? 'on' : ''} onClick={() => t.id !== tab && openMenu(t.id)}>
-                {t.label} <kbd>{t.key}</kbd>
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={t.id === tab}
+                className={'ms-tab' + (t.id === tab ? ' on' : '')}
+                onClick={() => t.id !== tab && openMenu(t.id)}
+              >
+                {t.label}
+                {!isTouch && <kbd>{t.key}</kbd>}
+                {badge(t.id) > 0 && <i className="badge">{badge(t.id)}</i>}
               </button>
             ))}
+          </nav>
+          <div className="ms-members" role="tablist" aria-label="隊伍成員">
+            {units.map((u) => {
+              const c = u.classId!
+              const pts = pointsLeft(c)
+              return (
+                <button
+                  key={u.id}
+                  role="tab"
+                  aria-selected={c === member}
+                  className={'ms-member' + (c === member ? ' on' : '')}
+                  onClick={() => setMember(c)}
+                  aria-label={`${u.name}，${CLASSES[c].name} LV.${progress.members[c].level}`}
+                >
+                  <Avatar classId={c} level={progress.members[c].level} size={38} />
+                  <span className="ms-member-text">
+                    <b>{u.name}</b>
+                    <small>{CLASSES[c].name}</small>
+                  </span>
+                  {pts > 0 && <i className="badge">{pts}</i>}
+                </button>
+              )
+            })}
           </div>
-          <button className="btn" onClick={closeMenu}>
-            關閉 <kbd>Esc</kbd>
+          <div className="ms-gold" aria-label="金幣">
+            <span className="coin" aria-hidden />
+            {progress.gold}
+          </div>
+          <button className="x-btn ms-x" onClick={closeMenu} aria-label="關閉選單">
+            ✕{!isTouch && <kbd>Esc</kbd>}
           </button>
-        </div>
-        <div className="members">
-          {party.map((u) => {
-            const c = CLASSES[u.classId!]
-            const pts = pointsLeft(u.classId!)
-            return (
-              <button key={u.id} className={u.classId === member ? 'on' : ''} onClick={() => setMember(u.classId!)}>
-                <span className="class-dot" style={{ background: c.colors.primary, borderColor: c.colors.accent }} />
-                {u.name}
-                <small>
-                  {c.name} LV.{progress.members[u.classId!].level}
-                </small>
-                {pts > 0 && <i className="badge">{pts}</i>}
-              </button>
-            )
-          })}
-        </div>
-        {tab === 'party' && <PartyTab classId={member} />}
-        {tab === 'bag' && <BagTab classId={member} onChange={onChange} />}
-        {tab === 'tree' && <TreeTab classId={member} onChange={onChange} />}
+        </header>
+        <main className="ms-body">
+          {tab === 'party' && <PartyTab classId={member} />}
+          {tab === 'bag' && <BagTab classId={member} party={party} onChange={onChange} />}
+          {tab === 'tree' && <TreeTab classId={member} onChange={onChange} />}
+        </main>
       </div>
     </div>
   )

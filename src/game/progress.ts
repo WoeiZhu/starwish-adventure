@@ -153,10 +153,14 @@ export function unequip(classId: ClassId, slot: Slot) {
   delete progress.members[classId].equip[slot]
 }
 
+/** 這次遊玩新拿到、還沒在背包裡看過的裝備（不存檔；背包格子上顯示 NEW） */
+export const freshItems = new Set<string>()
+
 /** 加入背包；背包滿了回傳 false */
 export function addItem(item: Item) {
   if (progress.inventory.length >= BAG_LIMIT) return false
   progress.inventory.push(item)
+  freshItems.add(item.uid)
   return true
 }
 
@@ -165,9 +169,74 @@ export function sellItem(uid: string) {
   const i = progress.inventory.findIndex((it) => it.uid === uid)
   if (i < 0 || equippedBy(uid)) return 0
   const [item] = progress.inventory.splice(i, 1)
-  const gold = Math.max(1, Math.round(itemScore(item) * 0.4))
+  const gold = sellPrice(item)
   progress.gold += gold
+  freshItems.delete(uid)
   return gold
+}
+export const sellPrice = (item: Item) => Math.max(1, Math.round(itemScore(item) * 0.4))
+
+/** 某職業某部位可用的最好裝備（不搶其他人身上的；skip 裡的職業視為空出來） */
+function bestPick(classId: ClassId, slot: Slot, taken: Set<string>) {
+  let best: Item | undefined
+  for (const it of progress.inventory) {
+    if (it.slot !== slot || !canEquip(classId, it) || taken.has(it.uid)) continue
+    if (!best || itemScore(it) > itemScore(best)) best = it
+  }
+  return best
+}
+
+/**
+ * 一鍵最佳裝備：只動這個角色，別人身上的裝備不拿。回傳換了幾件。
+ */
+export function equipBest(classId: ClassId) {
+  const mine = new Set(SLOTS.map((s) => progress.members[classId].equip[s]).filter(Boolean) as string[])
+  const taken = new Set<string>()
+  for (const c of CLASS_ORDER)
+    if (c !== classId) for (const s of SLOTS) if (progress.members[c].equip[s]) taken.add(progress.members[c].equip[s]!)
+  let changed = 0
+  for (const slot of SLOTS) {
+    const best = bestPick(classId, slot, taken)
+    const cur = equippedItem(classId, slot)
+    if (best && (!cur || itemScore(best) > itemScore(cur))) {
+      progress.members[classId].equip[slot] = best.uid
+      if (!mine.has(best.uid)) changed++
+    }
+  }
+  return changed
+}
+
+/**
+ * 全隊最佳裝備：先把隊伍成員身上的裝備都收回，再依隊伍順序（主角優先）分配。
+ * 武器各職業專用；防具與飾品全隊共用，照順序挑剩下最好的。回傳有變動的件數。
+ */
+export function equipBestParty(classes: ClassId[]) {
+  const before = new Map(classes.map((c) => [c, { ...progress.members[c].equip }]))
+  const taken = new Set<string>()
+  for (const c of CLASS_ORDER)
+    if (!classes.includes(c)) for (const s of SLOTS) if (progress.members[c].equip[s]) taken.add(progress.members[c].equip[s]!)
+  for (const c of classes) progress.members[c].equip = {}
+  for (const slot of SLOTS) {
+    for (const c of classes) {
+      const best = bestPick(c, slot, taken)
+      if (!best) continue
+      progress.members[c].equip[slot] = best.uid
+      taken.add(best.uid)
+    }
+  }
+  let changed = 0
+  for (const c of classes) for (const s of SLOTS) if (before.get(c)![s] !== progress.members[c].equip[s]) changed++
+  return changed
+}
+
+/** 換上某件裝備後的能力值（不會真的換） */
+export function statsIfEquipped(classId: ClassId, item: Item) {
+  const equipMap = progress.members[classId].equip
+  const saved = { ...equipMap }
+  equipMap[item.slot] = item.uid
+  const after = computeStats(classId)
+  progress.members[classId].equip = saved
+  return after
 }
 
 /** 給經驗值；回傳升了幾級 */

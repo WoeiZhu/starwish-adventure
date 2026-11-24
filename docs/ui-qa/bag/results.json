@@ -1,0 +1,595 @@
+{
+  "results": [
+    {
+      "view": "phone-landscape",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape",
+      "name": "觸控裝置不顯示鍵盤提示",
+      "ok": true,
+      "detail": "kbd=0"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "背包格子區可以捲動、標頭不動",
+      "ok": true,
+      "detail": "{\"can\":true,\"h\":260,\"sh\":341,\"s\":81,\"head\":0,\"head0\":0}"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "點裝備：彈出詳情面板",
+      "ok": true,
+      "detail": "{\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "詳情面板完整在畫面內、按鈕 ≥ 44px",
+      "ok": true,
+      "detail": "{\"inView\":true,\"closeOk\":true,\"btnsOk\":true}"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "在詳情面板按裝備：換上並關閉面板",
+      "ok": true,
+      "detail": "▲ 11 → 9"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "phone-landscape",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "觸控裝置不顯示鍵盤提示",
+      "ok": true,
+      "detail": "kbd=0"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "背包格子區可以捲動、標頭不動",
+      "ok": true,
+      "detail": "{\"can\":true,\"h\":195,\"sh\":510,\"s\":102,\"head\":0,\"head0\":0}"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "點裝備：彈出詳情面板",
+      "ok": true,
+      "detail": "{\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "詳情面板完整在畫面內、按鈕 ≥ 44px",
+      "ok": true,
+      "detail": "{\"inView\":true,\"closeOk\":true,\"btnsOk\":true}"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "在詳情面板按裝備：換上並關閉面板",
+      "ok": true,
+      "detail": "▲ 11 → 9"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-landscape-small",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "觸控裝置不顯示鍵盤提示",
+      "ok": true,
+      "detail": "kbd=0"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "背包格子區可以捲動、標頭不動",
+      "ok": true,
+      "detail": "{\"can\":true,\"h\":432,\"sh\":660,\"s\":228,\"head\":0,\"head0\":0}"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "點裝備：彈出詳情面板",
+      "ok": true,
+      "detail": "{\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "詳情面板完整在畫面內、按鈕 ≥ 44px",
+      "ok": true,
+      "detail": "{\"inView\":true,\"closeOk\":true,\"btnsOk\":true}"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "在詳情面板按裝備：換上並關閉面板",
+      "ok": true,
+      "detail": "▲ 11 → 9"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "phone-portrait",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "phone-portrait",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "觸控裝置不顯示鍵盤提示",
+      "ok": true,
+      "detail": "kbd=0"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "背包格子區可以捲動（內容放得下，不需要捲）",
+      "ok": true,
+      "detail": "{\"can\":false,\"h\":510,\"sh\":510}"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "點裝備：彈出詳情面板",
+      "ok": true,
+      "detail": "{\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "詳情面板完整在畫面內、按鈕 ≥ 44px",
+      "ok": true,
+      "detail": "{\"inView\":true,\"closeOk\":true,\"btnsOk\":true}"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "在詳情面板按裝備：換上並關閉面板",
+      "ok": true,
+      "detail": "▲ 11 → 9"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "tablet-landscape",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "desktop",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":89,\"h\":44}"
+    },
+    {
+      "view": "desktop",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "背包格子區可以捲動、標頭不動",
+      "ok": true,
+      "detail": "{\"can\":true,\"h\":550,\"sh\":588,\"s\":38,\"head\":73,\"head0\":73}"
+    },
+    {
+      "view": "desktop",
+      "name": "點裝備：第三欄顯示詳情",
+      "ok": true,
+      "detail": "{\"sheet\":false,\"column\":true,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "desktop",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "desktop",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "desktop",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "沒有內容超出視窗",
+      "ok": true,
+      "detail": " doc=0,0"
+    },
+    {
+      "view": "desktop-small",
+      "name": "按鈕沒有重疊",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "觸控區 ≥ 44px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "文字沒有被截斷",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "關閉鈕在畫面內而且點得到",
+      "ok": true,
+      "detail": "{\"inView\":true,\"clickable\":true,\"w\":89,\"h\":44}"
+    },
+    {
+      "view": "desktop-small",
+      "name": "選單擋住背景遊戲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "背包格子區可以捲動、標頭不動",
+      "ok": true,
+      "detail": "{\"can\":true,\"h\":462,\"sh\":588,\"s\":126,\"head\":27,\"head0\":27}"
+    },
+    {
+      "view": "desktop-small",
+      "name": "點裝備：第三欄顯示詳情",
+      "ok": true,
+      "detail": "{\"sheet\":false,\"column\":true,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}"
+    },
+    {
+      "view": "desktop-small",
+      "name": "詳情有前後屬性比較",
+      "ok": true,
+      "detail": "比較數字 4"
+    },
+    {
+      "view": "desktop-small",
+      "name": "分類「飾品」只顯示飾品、全隊最佳有效",
+      "ok": true,
+      "detail": "7 件，全隊換上了 10 件更好的裝備"
+    },
+    {
+      "view": "desktop-small",
+      "name": "按關閉鈕可以關掉選單",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "view": "desktop-small",
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "log": [
+    "✔ [phone-landscape] 沒有內容超出視窗  doc=0,0",
+    "✔ [phone-landscape] 按鈕沒有重疊 ",
+    "✔ [phone-landscape] 觸控區 ≥ 44px ",
+    "✔ [phone-landscape] 文字沒有被截斷 ",
+    "✔ [phone-landscape] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}",
+    "✔ [phone-landscape] 選單擋住背景遊戲 ",
+    "✔ [phone-landscape] 觸控裝置不顯示鍵盤提示 kbd=0",
+    "✔ [phone-landscape] 背包格子區可以捲動、標頭不動 {\"can\":true,\"h\":260,\"sh\":341,\"s\":81,\"head\":0,\"head0\":0}",
+    "✔ [phone-landscape] 點裝備：彈出詳情面板 {\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [phone-landscape] 詳情有前後屬性比較 比較數字 4",
+    "✔ [phone-landscape] 詳情面板完整在畫面內、按鈕 ≥ 44px {\"inView\":true,\"closeOk\":true,\"btnsOk\":true}",
+    "✔ [phone-landscape] 在詳情面板按裝備：換上並關閉面板 ▲ 11 → 9",
+    "✔ [phone-landscape] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [phone-landscape] 按關閉鈕可以關掉選單 ",
+    "✔ [phone-landscape] 沒有主控台錯誤 ",
+    "✔ [phone-landscape-small] 沒有內容超出視窗  doc=0,0",
+    "✔ [phone-landscape-small] 按鈕沒有重疊 ",
+    "✔ [phone-landscape-small] 觸控區 ≥ 44px ",
+    "✔ [phone-landscape-small] 文字沒有被截斷 ",
+    "✔ [phone-landscape-small] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}",
+    "✔ [phone-landscape-small] 選單擋住背景遊戲 ",
+    "✔ [phone-landscape-small] 觸控裝置不顯示鍵盤提示 kbd=0",
+    "✔ [phone-landscape-small] 背包格子區可以捲動、標頭不動 {\"can\":true,\"h\":195,\"sh\":510,\"s\":102,\"head\":0,\"head0\":0}",
+    "✔ [phone-landscape-small] 點裝備：彈出詳情面板 {\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [phone-landscape-small] 詳情有前後屬性比較 比較數字 4",
+    "✔ [phone-landscape-small] 詳情面板完整在畫面內、按鈕 ≥ 44px {\"inView\":true,\"closeOk\":true,\"btnsOk\":true}",
+    "✔ [phone-landscape-small] 在詳情面板按裝備：換上並關閉面板 ▲ 11 → 9",
+    "✔ [phone-landscape-small] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [phone-landscape-small] 按關閉鈕可以關掉選單 ",
+    "✔ [phone-landscape-small] 沒有主控台錯誤 ",
+    "✔ [phone-portrait] 沒有內容超出視窗  doc=0,0",
+    "✔ [phone-portrait] 按鈕沒有重疊 ",
+    "✔ [phone-portrait] 觸控區 ≥ 44px ",
+    "✔ [phone-portrait] 文字沒有被截斷 ",
+    "✔ [phone-portrait] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}",
+    "✔ [phone-portrait] 選單擋住背景遊戲 ",
+    "✔ [phone-portrait] 觸控裝置不顯示鍵盤提示 kbd=0",
+    "✔ [phone-portrait] 背包格子區可以捲動、標頭不動 {\"can\":true,\"h\":432,\"sh\":660,\"s\":228,\"head\":0,\"head0\":0}",
+    "✔ [phone-portrait] 點裝備：彈出詳情面板 {\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [phone-portrait] 詳情有前後屬性比較 比較數字 4",
+    "✔ [phone-portrait] 詳情面板完整在畫面內、按鈕 ≥ 44px {\"inView\":true,\"closeOk\":true,\"btnsOk\":true}",
+    "✔ [phone-portrait] 在詳情面板按裝備：換上並關閉面板 ▲ 11 → 9",
+    "✔ [phone-portrait] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [phone-portrait] 按關閉鈕可以關掉選單 ",
+    "✔ [phone-portrait] 沒有主控台錯誤 ",
+    "✔ [tablet-landscape] 沒有內容超出視窗  doc=0,0",
+    "✔ [tablet-landscape] 按鈕沒有重疊 ",
+    "✔ [tablet-landscape] 觸控區 ≥ 44px ",
+    "✔ [tablet-landscape] 文字沒有被截斷 ",
+    "✔ [tablet-landscape] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":44,\"h\":44}",
+    "✔ [tablet-landscape] 選單擋住背景遊戲 ",
+    "✔ [tablet-landscape] 觸控裝置不顯示鍵盤提示 kbd=0",
+    "✔ [tablet-landscape] 背包格子區可以捲動（內容放得下，不需要捲） {\"can\":false,\"h\":510,\"sh\":510}",
+    "✔ [tablet-landscape] 點裝備：彈出詳情面板 {\"sheet\":true,\"column\":false,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [tablet-landscape] 詳情有前後屬性比較 比較數字 4",
+    "✔ [tablet-landscape] 詳情面板完整在畫面內、按鈕 ≥ 44px {\"inView\":true,\"closeOk\":true,\"btnsOk\":true}",
+    "✔ [tablet-landscape] 在詳情面板按裝備：換上並關閉面板 ▲ 11 → 9",
+    "✔ [tablet-landscape] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [tablet-landscape] 按關閉鈕可以關掉選單 ",
+    "✔ [tablet-landscape] 沒有主控台錯誤 ",
+    "✔ [desktop] 沒有內容超出視窗  doc=0,0",
+    "✔ [desktop] 按鈕沒有重疊 ",
+    "✔ [desktop] 觸控區 ≥ 44px ",
+    "✔ [desktop] 文字沒有被截斷 ",
+    "✔ [desktop] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":89,\"h\":44}",
+    "✔ [desktop] 選單擋住背景遊戲 ",
+    "✔ [desktop] 背包格子區可以捲動、標頭不動 {\"can\":true,\"h\":550,\"sh\":588,\"s\":38,\"head\":73,\"head0\":73}",
+    "✔ [desktop] 點裝備：第三欄顯示詳情 {\"sheet\":false,\"column\":true,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [desktop] 詳情有前後屬性比較 比較數字 4",
+    "✔ [desktop] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [desktop] 按關閉鈕可以關掉選單 ",
+    "✔ [desktop] 沒有主控台錯誤 ",
+    "✔ [desktop-small] 沒有內容超出視窗  doc=0,0",
+    "✔ [desktop-small] 按鈕沒有重疊 ",
+    "✔ [desktop-small] 觸控區 ≥ 44px ",
+    "✔ [desktop-small] 文字沒有被截斷 ",
+    "✔ [desktop-small] 關閉鈕在畫面內而且點得到 {\"inView\":true,\"clickable\":true,\"w\":89,\"h\":44}",
+    "✔ [desktop-small] 選單擋住背景遊戲 ",
+    "✔ [desktop-small] 背包格子區可以捲動、標頭不動 {\"can\":true,\"h\":462,\"sh\":588,\"s\":126,\"head\":27,\"head0\":27}",
+    "✔ [desktop-small] 點裝備：第三欄顯示詳情 {\"sheet\":false,\"column\":true,\"cmp\":4,\"title\":\"傳說的皮革護甲\"}",
+    "✔ [desktop-small] 詳情有前後屬性比較 比較數字 4",
+    "✔ [desktop-small] 分類「飾品」只顯示飾品、全隊最佳有效 7 件，全隊換上了 10 件更好的裝備",
+    "✔ [desktop-small] 按關閉鈕可以關掉選單 ",
+    "✔ [desktop-small] 沒有主控台錯誤 ",
+    "\n結果：84/84 通過"
+  ]
+}
