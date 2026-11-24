@@ -16,6 +16,7 @@ export default defineConfig(({ command }) => ({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         lab: fileURLToPath(new URL('./skill-lab.html', import.meta.url)),
+        townlab: fileURLToPath(new URL('./town-lab.html', import.meta.url)),
       },
     },
   },

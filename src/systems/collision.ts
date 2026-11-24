@@ -78,7 +78,11 @@ export function cameraClearDistance(
     const x = ox + dx * t
     const y = oy + dy * t
     const z = oz + dz * t
-    const hit = forColliders(x, z, pad, (c) => c.kind === 'box' && y < c.h + pad && x > c.minX - pad && x < c.maxX + pad && z > c.minZ - pad && z < c.maxZ + pad)
+    const hit = forColliders(x, z, pad, (c) =>
+      c.kind === 'box'
+        ? !c.soft && y < c.h + pad && x > c.minX - pad && x < c.maxX + pad && z > c.minZ - pad && z < c.maxZ + pad
+        : !!c.h && y < c.h + pad && Math.hypot(x - c.x, z - c.z) < c.r + pad,
+    )
     if (hit) return Math.max(0.9, t - maxDist / steps)
   }
   return maxDist

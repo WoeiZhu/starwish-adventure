@@ -4,6 +4,7 @@ import { ChibiCharacter } from './ChibiCharacter'
 import { ClipCharacter } from './ClipCharacter'
 import { GlbCharacter } from './GlbCharacter'
 import type { CharacterModelProps } from './types'
+import { CHAR_SCALE } from '../../data/townLayout'
 
 interface BoundaryProps {
   fallback: ReactNode
@@ -36,7 +37,23 @@ export class ModelBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 }
 
+/**
+ * 人物縮放（世界尺寸規範）：新版城鎮時人物是原本的 0.88 倍（1.4 m → 1.23 m）。
+ * 技術美術測試頁會即時改 value。
+ */
+export const charScale = { value: CHAR_SCALE }
+
 export function CharacterModel(props: CharacterModelProps) {
+  const s = charScale.value
+  if (s === 1) return <CharacterModelInner {...props} />
+  return (
+    <group scale={s}>
+      <CharacterModelInner {...props} />
+    </group>
+  )
+}
+
+function CharacterModelInner(props: CharacterModelProps) {
   const clipUrl = props.appearance.clipModelUrl
   const url = props.appearance.modelUrl
   const fallback = <ChibiCharacter {...props} />

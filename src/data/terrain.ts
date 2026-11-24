@@ -2,6 +2,7 @@
 // 各區地標、邊界山壁與區域入口、遠景山脈與遠方地標。
 // 這個檔案只放「形狀資料」，不依賴 world.ts，避免互相引用；樹木過濾與碰撞體在 world.ts 組合。
 import * as THREE from 'three'
+import { ACTIVE_LAYOUT, boxToWorld } from './townLayout'
 
 export interface P2 {
   x: number
@@ -218,10 +219,28 @@ export function outsideWalk(x: number, z: number) {
   const dz = Math.max(WALK.minZ - z, z - WALK.maxZ)
   return dx > 0 && dz > 0 ? Math.hypot(dx, dz) : Math.max(dx, dz)
 }
-/** 地面高度：可行走範圍內永遠是 0；範圍外慢慢隆起成丘陵，看不到地面的盡頭 */
+/**
+ * 新版城鎮在主線世界佔的範圍（南方街道盡頭往南）：這裡面地面整平、不放岩壁與樹，
+ * 城牆、塔、屋頂由 scene/town2 的城外外觀畫出來。原版為 null。
+ */
+export const TOWN_WORLD_BOX = ACTIVE_LAYOUT ? boxToWorld(ACTIVE_LAYOUT, ACTIVE_LAYOUT.footprint) : null
+/** 點離城鎮範圍多遠（範圍內為 0；沒有新版城鎮時為無限大） */
+export function distToTown(x: number, z: number) {
+  const b = TOWN_WORLD_BOX
+  if (!b) return Infinity
+  const dx = Math.max(b.minX - x, 0, x - b.maxX)
+  const dz = Math.max(b.minZ - z, 0, z - b.maxZ)
+  return Math.hypot(dx, dz)
+}
+/** 地面高度：可行走範圍內永遠是 0；範圍外慢慢隆起成丘陵，看不到地面的盡頭（新版城鎮的範圍內整平） */
 export function groundHeight(x: number, z: number) {
   const out = outsideWalk(x, z)
   if (out < 7) return 0
+  const town = Math.min(1, Math.max(0, (distToTown(x, z) - 3) / 14))
+  if (town <= 0) return 0
+  return town * hillHeight(x, z, out)
+}
+function hillHeight(x: number, z: number, out: number) {
   const k = Math.min(1, (out - 7) / 30)
   const n = Math.sin(x * 0.07 + 1.3) * Math.cos(z * 0.06 - 0.4) * 0.5 + 0.5
   // 河流流出地圖的地方保持低窪，河看起來一路流向遠方
@@ -235,6 +254,7 @@ export const CLIFFS: Boulder[] = []
   const tones = ['#a7a6a0', '#b8b3a6', '#9d9b94', '#c4beb0']
   const push = (x: number, z: number, big: number) => {
     if (ENTRANCES.some((g) => Math.hypot(g.x - x, g.z - z) < 6.5)) return
+    if (distToTown(x, z) < 4) return // 新版城鎮的城牆取代這一段岩壁
     if (Math.abs(z - riverZ(x)) < 3.2) return // 河流出口留空，讓河看起來流向遠方
     CLIFFS.push({ x, z, r: 2.2 + rnd() * 1.6 * big, h: (4 + rnd() * 5) * big, rot: rnd() * Math.PI, color: tones[Math.floor(rnd() * tones.length)] })
   }
@@ -275,6 +295,17 @@ export const PEAKS: Peak[] = []
     if (Math.abs(Math.atan2(Math.sin(a - ta), Math.cos(a - ta))) < 0.2) h = Math.min(h, 16)
     PEAKS.push({ x: WORLD_CENTER.x + Math.cos(a) * d * 1.05, z: WORLD_CENTER.z + Math.sin(a) * d, r: 26 + rnd() * 20, h, seed: i * 97 + 13, snow: h > 52 })
   }
+  // 新版城鎮在南邊：山腳不能壓到城牆，往外推到離城鎮 26 m 以外
+  if (TOWN_WORLD_BOX)
+    for (const p of PEAKS) {
+      const dx = p.x - WORLD_CENTER.x
+      const dz = p.z - WORLD_CENTER.z
+      const len = Math.hypot(dx, dz)
+      for (let k = 0; k < 80 && distToTown(p.x, p.z) < p.r + 26; k++) {
+        p.x += (dx / len) * 2
+        p.z += (dz / len) * 2
+      }
+    }
 }
 /** 北方高山上的星見塔、東方的古堡遺跡、西方的世界巨樹 */
 export const VISTA = {

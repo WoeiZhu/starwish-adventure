@@ -1,5 +1,5 @@
 // 疊加介面：對話框、暫停選單、操作說明、提示訊息。
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useGame } from '../game/store'
 import { isTouch } from '../systems/mobile'
 import { TOWN_NAME } from '../data/town'
@@ -169,6 +169,28 @@ export function Toast() {
       {toast.text}
     </div>
   ) : null
+}
+
+/** 進城時的城鎮名稱橫幅（載入完成後出現，3 秒後淡出） */
+export function TownBanner() {
+  const mapId = useGame((s) => s.mapId)
+  const town = useSyncExternalStore(subscribeMap, isMapLoading)
+  const [show, setShow] = useState(0)
+  useEffect(() => {
+    if (mapId === 'overworld' || town) return
+    const id = Date.now()
+    setShow(id)
+    const t = setTimeout(() => setShow((v) => (v === id ? 0 : v)), 3200)
+    return () => clearTimeout(t)
+  }, [mapId, town])
+  if (!show || mapId === 'overworld') return null
+  return (
+    <div className="town-banner" key={show}>
+      <span className="town-banner-en">STARLIGHT TOWN</span>
+      <b>{TOWN_NAME}</b>
+      <span className="town-banner-sub">安全區　·　商店與公會</span>
+    </div>
+  )
 }
 
 /** 讀檔、開局或進出城鎮時：主角周圍的區域（或城鎮模型）還在載入 */

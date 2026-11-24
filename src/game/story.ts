@@ -56,13 +56,13 @@ function townInteractables(): Interactable[] {
     kind: n.model === 'merchant' ? 'merchant' : 'elder',
     x: n.x,
     z: n.z,
-    facing: 0, // 店門都朝 +Z（城門方向），NPC 也面向這邊
+    facing: n.facing, // 原版店門都朝 +Z；新版依配置表
     name: TOWN_NPC_INFO[n.role].name,
     verb: '交談',
     marker: false,
   }))
   for (const d of TOWN_DOORS) {
-    list.push({ id: `town-door-${d.id}`, kind: 'door', x: d.x, z: d.z, facing: 0, name: TOWN_BUILDING_NAME[d.id], verb: '進入', marker: false })
+    list.push({ id: `town-door-${d.id}`, kind: 'door', x: d.x, z: d.z, facing: d.facing, name: TOWN_BUILDING_NAME[d.id], verb: '進入', marker: false })
   }
   return list
 }

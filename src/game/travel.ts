@@ -3,7 +3,7 @@
 //   - 切換時：野外的怪物、掉落物先收起來（回來時放回去），投射物、範圍效果、舊路徑清掉；
 //     隊伍、任務、裝備、背包都不動。
 //   - 進城時記下「返回位置」（城門外），存檔也會記住，讀檔時先載入所在地圖再放上人物。
-import { PORTAL_COOLDOWN_MS, TOWN_EXIT, TOWN_ID, TOWN_NAME, TOWN_PORTAL, TOWN_SPAWN, type MapId } from '../data/town'
+import { PORTAL_COOLDOWN_MS, inTrigger, TOWN_EXIT, TOWN_ID, TOWN_NAME, TOWN_PORTAL, TOWN_SPAWN, type MapId } from '../data/town'
 import { mapState, setMapLoading } from '../world/maps'
 import { isPriming, primeStream, resetStream } from '../world/stream'
 import { combat, hero, placeParty, restoreWorld, stashWorld } from './combat/state'
@@ -71,7 +71,7 @@ export function updatePortals() {
   if (!h || !h.alive) return
   const p = runtime.player
   const t = mapState.id === 'overworld' ? TOWN_PORTAL.trigger : TOWN_EXIT
-  const inside = Math.hypot(p.x - t.x, p.z - t.z) < t.r
+  const inside = inTrigger(t, p.x, p.z)
   if (!travel.armed) {
     if (!inside) travel.armed = true
     return

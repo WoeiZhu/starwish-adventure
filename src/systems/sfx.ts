@@ -26,6 +26,12 @@ function audio() {
   }
 }
 
+/** 背景音樂用：已經能出聲時回傳 AudioContext 與總音量節點 */
+export function audioOut() {
+  const c = audio()
+  return c && master ? { ctx: c, out: master } : null
+}
+
 /** 在點擊當下先建立並喚醒 AudioContext（iPhone 只允許在使用者操作中啟動聲音） */
 export function unlockAudio() {
   audio()

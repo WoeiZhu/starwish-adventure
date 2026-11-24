@@ -1,0 +1,160 @@
+/* 城鎮測試頁：右側面板（手機在下方），上方配置切換，下方鏡頭預設 */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #d6eefa;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+  color: #3b2f45;
+}
+.tl {
+  position: fixed;
+  inset: 0;
+}
+.tl-canvas {
+  position: absolute;
+  inset: 0;
+}
+.tl canvas {
+  touch-action: none;
+}
+@media (min-width: 761px) {
+  .tl.open .tl-canvas {
+    right: 340px;
+  }
+}
+.tl button {
+  font: inherit;
+  cursor: pointer;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 2px solid #eadff0;
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 800;
+  color: #3b2f45;
+}
+.tl button.on {
+  border-color: #ff8fb1;
+  background: #fff0f5;
+  color: #f0668f;
+}
+.tl-top {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tl-title {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 252, 246, 0.94);
+  font-size: 16px;
+}
+.tl-seg {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.94);
+}
+.tl-seg.small {
+  padding: 0;
+  background: none;
+  margin-bottom: 6px;
+}
+.tl-toggle {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  z-index: 3;
+}
+.tl-shots {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+}
+@media (min-width: 761px) {
+  .tl.open .tl-shots {
+    max-width: calc(100% - 370px);
+  }
+}
+.tl-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 340px;
+  overflow-y: auto;
+  padding: 60px 16px 16px;
+  background: rgba(255, 252, 246, 0.97);
+  z-index: 2;
+}
+.tl-panel h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.tl-panel h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.tl-panel section {
+  padding: 10px 0;
+  border-bottom: 1px solid #eadfd2;
+}
+.tl-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 56px;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  margin: 4px 0;
+}
+.tl-row input {
+  width: 100%;
+  accent-color: #ff8a5c;
+}
+.tl-row b {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tl-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #7a6b86;
+}
+.tl-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  min-height: 32px;
+}
+.tl-stats {
+  font-size: 12px;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+  .tl-panel {
+    top: auto;
+    left: 0;
+    width: auto;
+    max-height: 50vh;
+    padding-top: 12px;
+  }
+  .tl-title {
+    display: none;
+  }
+}

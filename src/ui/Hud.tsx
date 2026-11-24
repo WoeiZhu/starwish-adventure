@@ -3,7 +3,7 @@
 // 戰鬥數值存在 combat 單例，靠 store 的 tick（每 0.1 秒）觸發重繪。
 import { useEffect, useState } from 'react'
 import { CLASSES, MAX_LEVEL } from '../data/classes'
-import { TOWN_NAME } from '../data/town'
+import { LAYOUT, TOWN_NAME } from '../data/town'
 import { REGION_NAME } from '../data/world'
 import { skillCooldown } from '../game/combat/actions'
 import { usePotion } from '../game/combat/rewards'
@@ -14,6 +14,7 @@ import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { interactNearest, questInfo } from '../game/story'
 import { canFullscreen, enterAppMode, isFullscreen, isStandalone, isTouch } from '../systems/mobile'
+import { musicEnabled, setMusicEnabled } from '../systems/music'
 import { Joystick } from './TouchControls'
 
 /** 手機上離開全螢幕（例如滑了返回手勢）後，顯示「全螢幕」按鈕讓玩家切回來 */
@@ -51,6 +52,11 @@ export function Hud() {
   const showToast = useGame((s) => s.showToast)
   const quality = useGame((s) => s.quality)
   const setQuality = useGame((s) => s.setQuality)
+  const camMode = useGame((s) => s.camMode)
+  const setCamMode = useGame((s) => s.setCamMode)
+  const [music, setMusic] = useState(musicEnabled)
+  // 城鎮是安全區：隱藏戰鬥按鈕（技能、閃避、藥水、換目標），保留移動、互動與選單
+  const safe = mapId !== 'overworld'
   const [menuOpen, setMenuOpen] = useState(false)
   const [questOpen, setQuestOpen] = useState(true)
   const fullscreen = useFullscreen()
@@ -81,8 +87,10 @@ export function Hud() {
   // 換區域（或進出城鎮）時用提示訊息顯示地名
   const place = mapId === 'overworld' ? REGION_NAME[region] : TOWN_NAME
   useEffect(() => {
+    // 新版城鎮進城時有大的城鎮名稱橫幅，不再重複顯示提示
+    if (LAYOUT && mapId !== 'overworld') return
     showToast(`— ${place} —`)
-  }, [place, showToast])
+  }, [place, showToast, mapId])
 
   const pick = (fn: () => void) => () => {
     setMenuOpen(false)
@@ -174,6 +182,14 @@ export function Hud() {
               ⛶
             </button>
           )}
+          <button
+            className="menu-btn cam-btn"
+            onClick={() => setCamMode(camMode === 'explore' ? 'immersive' : 'explore')}
+            aria-label={camMode === 'explore' ? '鏡頭：探索（切換到沉浸）' : '鏡頭：沉浸（切換到探索）'}
+            title="切換鏡頭（V）"
+          >
+            {camMode === 'explore' ? '探' : '沉'}
+          </button>
           <button className={'menu-btn' + (menuOpen ? ' on' : '')} onClick={() => setMenuOpen((v) => !v)} aria-label="選單">
             ☰{points > 0 && <i className="badge">{points}</i>}
           </button>
@@ -198,6 +214,14 @@ export function Hud() {
             </button>
             <button onClick={() => setQuality(quality === 'high' ? 'saver' : 'high')}>
               畫質 <span className="menu-val">{quality === 'high' ? '高畫質' : '省電'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setMusicEnabled(!music)
+                setMusic(!music)
+              }}
+            >
+              音樂 <span className="menu-val">{music ? '開' : '關'}</span>
             </button>
             <button onClick={pick(togglePause)}>
               {paused ? '繼續' : '暫停'} <kbd>Esc</kbd>
@@ -236,8 +260,8 @@ export function Hud() {
           ) : (
             <div className="hint">{hint}</div>
           ))}
-        <div className="skillbar">
-          {cls.skills.map((sk, i) => {
+        <div className={'skillbar' + (safe ? ' safe' : '')}>
+          {!safe && cls.skills.map((sk, i) => {
             const cd = h.cooldowns[i]
             const total = skillCooldown(h, i)
             const ready = cd <= 0 && h.mp >= sk.mp && h.alive
@@ -254,6 +278,7 @@ export function Hud() {
               </button>
             )
           })}
+          {!safe && (
           <button
             className={'skill dodge' + (runtime.dodge.cd <= 0 ? ' ready' : '')}
             title="閃避（短暫無敵）"
@@ -262,6 +287,8 @@ export function Hud() {
             <kbd>␣</kbd>
             <span>閃避</span>
           </button>
+          )}
+          {!safe && (
           <button
             className={'skill potion' + (potionReady ? ' ready' : '')}
             title="喝藥水：回復 45% 生命，冷卻 8 秒"
@@ -274,7 +301,8 @@ export function Hud() {
             <kbd>Z</kbd>
             <span>藥水{progress.potions}</span>
           </button>
-          {isTouch && (
+          )}
+          {isTouch && !safe && (
             <button className="skill target ready" title="切換鎖定目標" onClick={() => cycleTarget()}>
               <span>換目標</span>
             </button>

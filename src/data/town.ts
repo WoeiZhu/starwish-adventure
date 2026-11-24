@@ -5,9 +5,25 @@ import NAV from '../../public/models/starwish-town-meshy-20261123-v001/navigatio
 import CONFIG from '../../public/models/starwish-town-meshy-20261123-v001/town-config.json'
 import NPCS from '../../public/models/starwish-town-meshy-20261123-v001/npc-placement.json'
 import { modelUrl } from './appearance'
+import {
+  ACTIVE_LAYOUT,
+  blockersOf,
+  boxToWorld,
+  collidersOf,
+  doorOf,
+  gridOf,
+  townToWorld,
+  type Blocker,
+  type Box,
+  type TownBuildingId,
+  type TownNpcRole,
+} from './townLayout'
 import type { Collider, Vec2 } from './world'
 
+export type { TownBuildingId, TownNpcRole } from './townLayout'
 export type MapId = 'overworld' | 'starlight-town-meshy'
+/** 新版城鎮的配置（網址 ?town=b 開啟）；原版為 null */
+export const LAYOUT = ACTIVE_LAYOUT
 export const TOWN_ID = CONFIG.mapId as MapId
 export const TOWN_NAME = '星光鎮'
 
@@ -24,9 +40,21 @@ export const TOWN_GATE_URL = modelUrl(DIR + 'town-gate.web.glb')
 const b2t = (x: number, y: number): Vec2 => ({ x, z: -y })
 
 /** 進城的落點與面向（面向 -Z，也就是看向城鎮裡面） */
-export const TOWN_SPAWN = { x: CONFIG.spawnThree[0], z: CONFIG.spawnThree[2], facing: Math.PI }
-/** 城門出口：主角走進這個圓就回到主線世界 */
-export const TOWN_EXIT = { x: CONFIG.exitTriggerThree.center[0], z: CONFIG.exitTriggerThree.center[2], r: CONFIG.exitTriggerThree.radius }
+export const TOWN_SPAWN = LAYOUT ? { ...LAYOUT.spawn } : { x: CONFIG.spawnThree[0], z: CONFIG.spawnThree[2], facing: Math.PI }
+/** 出入口觸發區：原版是圓；新版是門洞裡的方塊（box），走進去就切換地圖 */
+export interface Trigger {
+  x: number
+  z: number
+  r: number
+  box?: Box
+}
+const boxTrigger = (b: Box): Trigger => ({ x: (b.minX + b.maxX) / 2, z: (b.minZ + b.maxZ) / 2, r: (b.maxX - b.minX) / 2, box: b })
+export const inTrigger = (t: Trigger, x: number, z: number) =>
+  t.box ? x > t.box.minX && x < t.box.maxX && z > t.box.minZ && z < t.box.maxZ : Math.hypot(x - t.x, z - t.z) < t.r
+/** 城門出口：主角走進這裡就回到主線世界 */
+export const TOWN_EXIT: Trigger = LAYOUT
+  ? boxTrigger(LAYOUT.exit)
+  : { x: CONFIG.exitTriggerThree.center[0], z: CONFIG.exitTriggerThree.center[2], r: CONFIG.exitTriggerThree.radius }
 /** 進出地圖後的冷卻（毫秒），而且要先離開出口範圍才會啟用 */
 export const PORTAL_COOLDOWN_MS = CONFIG.exitTriggerThree.cooldownMs
 
@@ -47,20 +75,31 @@ const EP = CONFIG.externalPortal as {
 const portalOk = !!(EP.positionThree && EP.returnPositionThree && EP.gatePositionThree)
 if (!portalOk) console.warn('[town] town-config.json 的 externalPortal 還沒指定，星光鎮入口停用')
 const xyz = (v: number[] | null | undefined) => (v ? { x: v[0], z: v[2] } : { x: 0, z: 0 })
+/**
+ * 新版：入口是門洞內側那一半（本地座標城門往內 2.2 m 的方塊，轉到世界座標），
+ * 主線世界可行走範圍到 z = 37，所以方塊的南緣夾在 37.2。回來時站在城門外。
+ */
+function worldTrigger(): Trigger {
+  const L = LAYOUT!
+  const g = L.gate ?? { x: L.arch!.x, z: L.arch!.z }
+  const local = { minX: L.exit.minX, maxX: L.exit.maxX, minZ: g.z - 2.2, maxZ: g.z + 0.2 }
+  const w = boxToWorld(L, local)
+  return boxTrigger({ ...w, maxZ: Math.min(w.maxZ, 37.2) })
+}
 export const TOWN_PORTAL = {
   sourceMapId: 'overworld' as MapId,
   gateId: 'gate_south',
   ...xyz(EP.gatePositionThree),
   /** 城門模型的旋轉：模型正面是 +Z，轉半圈讓正面朝北 */
   rot: EP.gateRotationY ?? Math.PI,
-  trigger: { ...xyz(EP.positionThree), r: portalOk ? (EP.radius ?? 0.9) : 0 },
-  ret: { ...xyz(EP.returnPositionThree), facing: EP.returnFacingY ?? Math.PI },
+  trigger: LAYOUT ? worldTrigger() : ({ ...xyz(EP.positionThree), r: portalOk ? (EP.radius ?? 0.9) : 0 } as Trigger),
+  ret: LAYOUT ? { x: EP.gatePositionThree![0], z: 30.6, facing: Math.PI } : { ...xyz(EP.returnPositionThree), facing: EP.returnFacingY ?? Math.PI },
   enabled: portalOk,
 }
 
 // ── 尋路網格：Blender 網格（列 = Blender y 由小到大）翻成 Three（列 = z 由小到大） ──
 const G = NAV.grid
-export const TOWN_GRID = (() => {
+const CLASSIC_GRID = (() => {
   const nx = G.nx
   const nz = G.ny
   const blocked = new Uint8Array(nx * nz)
@@ -79,13 +118,15 @@ export const TOWN_GRID = (() => {
 })()
 
 /** 城鎮可移動的外框（再外面就是封閉的城牆／城門外） */
-export const TOWN_BOUNDS = {
-  minX: TOWN_GRID.minX,
-  maxX: TOWN_GRID.minX + TOWN_GRID.nx * TOWN_GRID.cell,
-  minZ: TOWN_GRID.minZ,
-  // 城門外側不讓走太遠：出口圓的外緣再多一點
-  maxZ: TOWN_EXIT.z + TOWN_EXIT.r + 0.3,
-}
+export const TOWN_BOUNDS = LAYOUT
+  ? { ...LAYOUT.bounds }
+  : {
+      minX: CLASSIC_GRID.minX,
+      maxX: CLASSIC_GRID.minX + CLASSIC_GRID.nx * CLASSIC_GRID.cell,
+      minZ: CLASSIC_GRID.minZ,
+      // 城門外側不讓走太遠：出口圓的外緣再多一點
+      maxZ: TOWN_EXIT.z + TOWN_EXIT.r + 0.3,
+    }
 
 /** 建築高度（公尺，鏡頭防穿模用） */
 const HEIGHT: Record<string, number> = {
@@ -97,14 +138,45 @@ const HEIGHT: Record<string, number> = {
   boundary: 1.8,
 }
 
-/** 城鎮碰撞體：navigation.json 的方塊與圓，換成 Three 座標 */
-export const TOWN_COLLIDERS: Collider[] = NAV.colliders.map((c): Collider => {
-  if (c.kind === 'circle') {
-    const p = b2t(c.x!, c.y!)
-    return { kind: 'circle', x: p.x, z: p.z, r: c.r! }
-  }
-  return { kind: 'box', minX: c.minX!, maxX: c.maxX!, minZ: -c.maxY!, maxZ: -c.minY!, h: HEIGHT[c.id] ?? 2 }
-})
+/** 城鎮碰撞體：原版是 navigation.json 的方塊與圓（換成 Three 座標）；新版由配置表算出 */
+export const TOWN_COLLIDERS: Collider[] = LAYOUT
+  ? collidersOf(LAYOUT)
+  : NAV.colliders.map((c): Collider => {
+      if (c.kind === 'circle') {
+        const p = b2t(c.x!, c.y!)
+        return { kind: 'circle', x: p.x, z: p.z, r: c.r! }
+      }
+      return { kind: 'box', minX: c.minX!, maxX: c.maxX!, minZ: -c.maxY!, maxZ: -c.minY!, h: HEIGHT[c.id] ?? 2 }
+    })
+export const TOWN_GRID = LAYOUT ? gridOf(LAYOUT, TOWN_COLLIDERS) : CLASSIC_GRID
+/** 新版：建築（擋住鏡頭時淡出）的範圍 */
+export const TOWN_BLOCKERS: Blocker[] = LAYOUT ? blockersOf(LAYOUT) : []
+
+/**
+ * 新版：主線世界這一側的城牆、塔、城門碰撞（城鎮本地碰撞旋轉 180° 放到南方街道盡頭）。
+ * 只取城牆、塔、城門與城外守衛；建築與擺設在城牆後面，玩家走不到。
+ */
+export const TOWN_SHELL_COLLIDERS: Collider[] = (() => {
+  if (!LAYOUT) return []
+  const L = LAYOUT
+  const shell = collidersOf({
+    ...L,
+    shops: [],
+    houses: [],
+    trees: [],
+    lamps: [],
+    stalls: [],
+    benches: [],
+    beds: [],
+    fountain: null,
+    fences: [],
+    guards: L.guards.filter((g) => g.outside),
+  })
+  return shell.map((c): Collider => {
+    if (c.kind === 'circle') return { ...c, ...townToWorld(L, c.x, c.z) }
+    return { ...c, ...boxToWorld(L, c) }
+  })
+})()
 
 /**
  * 城門整體的範圍（含門洞上方的拱）：鏡頭和主角之間隔著城門時，城門淡出成半透明。
@@ -118,11 +190,17 @@ export interface GateVolume {
   maxY: number
 }
 export const TOWN_GATE_VOLUME: GateVolume = { minX: -5.5, maxX: 5.5, minZ: 14.65, maxZ: 17.35, maxY: 6 }
-export const WORLD_GATE_VOLUME: GateVolume = { minX: TOWN_PORTAL.x - 5.5, maxX: TOWN_PORTAL.x + 5.5, minZ: TOWN_PORTAL.z - 1.3, maxZ: TOWN_PORTAL.z + 1.3, maxY: 6 }
+const GS = LAYOUT?.gate?.s ?? 1
+export const WORLD_GATE_VOLUME: GateVolume = {
+  minX: TOWN_PORTAL.x - 5.5 * GS,
+  maxX: TOWN_PORTAL.x + 5.5 * GS,
+  minZ: TOWN_PORTAL.z - 1.3 * GS,
+  maxZ: TOWN_PORTAL.z + 1.3 * GS,
+  maxY: 6 * GS,
+}
 /** 城鎮 GLB 裡城門用的材質名稱（整座城門合成一個網格） */
 export const TOWN_GATE_MATERIAL = 'town-gate surface'
 
-export type TownBuildingId = 'weapon-shop' | 'general-store' | 'adventurers-guild' | 'town-inn'
 export const TOWN_BUILDING_NAME: Record<TownBuildingId, string> = {
   'weapon-shop': '武器店',
   'general-store': '雜貨店',
@@ -130,17 +208,22 @@ export const TOWN_BUILDING_NAME: Record<TownBuildingId, string> = {
   'town-inn': '旅館',
 }
 /** 四間建築的門口（建築是封閉外觀，沒有可走進去的房間；在門口互動） */
-export const TOWN_DOORS = CONFIG.buildings.map((b) => ({
-  id: b.id as TownBuildingId,
-  x: b.doorApproachThree[0],
-  z: b.doorApproachThree[2],
-}))
+export const TOWN_DOORS: { id: TownBuildingId; x: number; z: number; facing: number }[] = LAYOUT
+  ? LAYOUT.shops.map((s) => ({ id: s.id, ...doorOf(s.piece) }))
+  : CONFIG.buildings.map((b) => ({
+      id: b.id as TownBuildingId,
+      x: b.doorApproachThree[0],
+      z: b.doorApproachThree[2],
+      facing: 0,
+    }))
 
-export type TownNpcRole = 'quest-guide' | 'guild-placeholder' | 'weapon-vendor-placeholder' | 'general-vendor'
 /** 4 位 NPC：沿用既有的 guide-npc / merchant-npc 模型（各兩份） */
-export const TOWN_NPCS = NPCS.actors.map((a) => ({
-  role: a.role as TownNpcRole,
-  model: a.asset === 'merchant-npc.glb' ? ('merchant' as const) : ('guide' as const),
-  x: a.positionThree[0],
-  z: a.positionThree[2],
-}))
+export const TOWN_NPCS: { role: TownNpcRole; model: 'guide' | 'merchant'; x: number; z: number; facing: number }[] = LAYOUT
+  ? LAYOUT.npcs.map((n) => ({ role: n.role, model: n.model, x: n.x, z: n.z, facing: n.rot }))
+  : NPCS.actors.map((a) => ({
+      role: a.role as TownNpcRole,
+      model: a.asset === 'merchant-npc.glb' ? ('merchant' as const) : ('guide' as const),
+      x: a.positionThree[0],
+      z: a.positionThree[2],
+      facing: 0,
+    }))

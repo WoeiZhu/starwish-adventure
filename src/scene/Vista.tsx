@@ -91,7 +91,10 @@ function SkyDome() {
     return g
   }, [])
   useFrame(({ camera }) => {
+    // 天空跟著鏡頭；外層可能有變換（城裡的遠景會轉 180°），換成父層的本地座標
+    const p = ref.current.parent
     ref.current.position.copy(camera.position)
+    if (p) p.worldToLocal(ref.current.position)
   })
   return (
     <mesh ref={ref} geometry={geo} renderOrder={-10}>

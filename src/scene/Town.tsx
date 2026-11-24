@@ -6,7 +6,8 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, useLoader } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { TOWN_ENV_URL, TOWN_EXIT, TOWN_GATE_MATERIAL, TOWN_GATE_VOLUME } from '../data/town'
+import { LAYOUT, TOWN_ENV_URL, TOWN_EXIT, TOWN_GATE_MATERIAL, TOWN_GATE_VOLUME } from '../data/town'
+import { TownInterior } from './town2/TownMaps'
 import { useGame } from '../game/store'
 import { townLoadFailed } from '../game/travel'
 import { inTown, setMapLoading } from '../world/maps'
@@ -62,11 +63,19 @@ function OuterGround() {
 }
 
 /** 地上的出入口標記：城門下一圈淡淡發光的圓 */
-export function PortalRing({ x, z, r }: { x: number; z: number; r: number }) {
+export function PortalRing({ x, z, r, box }: { x: number; z: number; r: number; box?: { minX: number; maxX: number; minZ: number; maxZ: number } }) {
   const mat = useRef<THREE.MeshBasicMaterial>(null!)
   useFrame((state) => {
     mat.current.opacity = 0.32 + Math.sin(state.clock.elapsedTime * 2) * 0.12
   })
+  // 新版的出入口是方塊：畫一個發光的長方形框，清楚標出觸發範圍
+  if (box)
+    return (
+      <mesh position={[x, 0.08, z]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[box.maxX - box.minX, box.maxZ - box.minZ]} />
+        <meshBasicMaterial ref={mat} color="#bfe8ff" transparent opacity={0.35} depthWrite={false} />
+      </mesh>
+    )
   return (
     <mesh position={[x, 0.08, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[r * 0.7, r, 40]} />
@@ -76,6 +85,8 @@ export function PortalRing({ x, z, r }: { x: number; z: number; r: number }) {
 }
 
 export function Town() {
+  // 新版城鎮（?town=b）：依配置表組成的城鎮
+  if (LAYOUT) return <TownInterior />
   return (
     <>
       <LoadBoundary

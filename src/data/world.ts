@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import type { Species } from './enemies'
 import { REGIONS, REGION_NAME, regionAt, type RegionId } from './regions'
-import { TOWN_PORTAL } from './town'
+import { TOWN_PORTAL, TOWN_SHELL_COLLIDERS } from './town'
 import {
   BRIDGES,
   DRAW_LEVER,
@@ -19,6 +19,7 @@ import {
   WALK,
   WINDMILL,
   distToRiver,
+  distToTown,
   mulberry32,
   RIVER,
   RIVER_SAMPLES,
@@ -307,7 +308,7 @@ export const TREES: TreeDef[] = []
     const edge = Math.max(Math.abs(x), Math.abs(z))
     // 地圖邊緣與西側的迷霧森林樹木較密
     if (rng() > (edge > 24 || x < FOREST_EDGE + 1 ? 1 : 0.28)) continue
-    if (inClearing(x, z)) continue
+    if (inClearing(x, z) || distToTown(x, z) < 5) continue
     if (distToRoad(x, z) < 2.6 || inHouseArea(x, z, 3) || nearPoints(x, z, KEEP_CLEAR, 3.5)) continue
     if (nearPoints(x, z, TREES, 3.2)) continue
     TREES.push({
@@ -335,7 +336,7 @@ export const ROCKS: RockDef[] = []
     const x = rand(-36, 36)
     const z = rand(-36, 36)
     if (distToRoad(x, z) < 1 || inHouseArea(x, z, 1.5) || nearPoints(x, z, KEEP_CLEAR, 2.5)) continue
-    if (inClearing(x, z)) continue
+    if (inClearing(x, z) || distToTown(x, z) < 5) continue
     if (nearPoints(x, z, TREES, 1.8) || nearPoints(x, z, ROCKS, 2)) continue
     ROCKS.push({ x, z, s: rand(0.3, 0.95), rot: rand(0, Math.PI * 2) })
   }
@@ -396,7 +397,7 @@ export const SHROOMS: GlowProp[] = []
     const z = vrand(-76, -41)
     const edge = Math.abs(x) > 30 || z < -68
     if (vr() > (edge ? 1 : 0.2)) continue
-    if (inClearing(x, z) || distToRoad(x, z) < 2.6 || nearPoints(x, z, KEEP_CLEAR, 3.5)) continue
+    if (inClearing(x, z) || distToTown(x, z) < 5 || distToRoad(x, z) < 2.6 || nearPoints(x, z, KEEP_CLEAR, 3.5)) continue
     if (nearPoints(x, z, TREES, 3)) continue
     TREES.push({ x, z, s: vrand(0.9, 1.4), kind: vr() < 0.65 ? 'pine' : 'round', color: teal[Math.floor(vr() * teal.length)], rot: vrand(0, Math.PI * 2) })
     added++
@@ -406,7 +407,7 @@ export const SHROOMS: GlowProp[] = []
   while (added < 10 && guard++ < 1000) {
     const x = vrand(-34, 34)
     const z = vrand(-70, -43)
-    if (distToRoad(x, z) < 1 || inClearing(x, z) || nearPoints(x, z, KEEP_CLEAR, 2.5)) continue
+    if (distToRoad(x, z) < 1 || inClearing(x, z) || distToTown(x, z) < 1.5 || nearPoints(x, z, KEEP_CLEAR, 2.5)) continue
     if (nearPoints(x, z, TREES, 1.8) || nearPoints(x, z, ROCKS, 2)) continue
     ROCKS.push({ x, z, s: vrand(0.35, 0.9), rot: vrand(0, Math.PI * 2) })
     added++
@@ -417,7 +418,7 @@ export const SHROOMS: GlowProp[] = []
   while (CRYSTALS.length < 26 && guard++ < 3000) {
     const x = vrand(-35, 35)
     const z = vrand(-71, -42)
-    if (distToRoad(x, z) < 1.4 || inClearing(x, z) || nearPoints(x, z, KEEP_CLEAR, 2.6)) continue
+    if (distToRoad(x, z) < 1.4 || inClearing(x, z) || distToTown(x, z) < 1.5 || nearPoints(x, z, KEEP_CLEAR, 2.6)) continue
     if (nearPoints(x, z, TREES, 1.6) || nearPoints(x, z, CRYSTALS, 4)) continue
     CRYSTALS.push({ x, z, s: vrand(0.5, 1.1), rot: vrand(0, Math.PI), color: gems[Math.floor(vr() * gems.length)] })
   }
@@ -434,7 +435,7 @@ export const SHROOMS: GlowProp[] = []
   while (SHROOMS.length < 18 && guard++ < 3000) {
     const x = vrand(-35, 28)
     const z = vrand(-71, -42)
-    if (distToRoad(x, z) < 1.4 || inClearing(x, z) || nearPoints(x, z, KEEP_CLEAR, 2.4)) continue
+    if (distToRoad(x, z) < 1.4 || inClearing(x, z) || distToTown(x, z) < 1.5 || nearPoints(x, z, KEEP_CLEAR, 2.4)) continue
     if (nearPoints(x, z, TREES, 1.6) || nearPoints(x, z, CRYSTALS, 2) || nearPoints(x, z, SHROOMS, 3.2)) continue
     SHROOMS.push({ x, z, s: vrand(0.6, 1.4), rot: vrand(0, Math.PI * 2), color: caps[Math.floor(vr() * caps.length)] })
   }
@@ -544,6 +545,7 @@ export const BORDER_TREES: Tuft[] = []
     const z = rand(-100, 64)
     const out = outsideBounds(x, z)
     if (out < 6 || out > 25) continue
+    if (distToTown(x, z) < 4) continue // 新版城鎮的城牆與城內
     c.setHSL(rand(0.3, 0.38), rand(0.4, 0.5), rand(0.3, 0.42))
     BORDER_TREES.push({ x, z, s: rand(1.1, 2.2), rot: 0, color: '#' + c.getHexString() })
   }
@@ -551,8 +553,10 @@ export const BORDER_TREES: Tuft[] = []
 
 // ── 碰撞體 ───────────────────────────────────────────
 export type Collider =
-  | { kind: 'circle'; x: number; z: number; r: number }
-  | { kind: 'box'; minX: number; maxX: number; minZ: number; maxZ: number; h: number }
+  /** h：有高度的圓柱（瞭望塔），鏡頭防穿模會擋 */
+  | { kind: 'circle'; x: number; z: number; r: number; h?: number }
+  /** soft：鏡頭不因它拉近（改由建築淡出處理遮擋） */
+  | { kind: 'box'; minX: number; maxX: number; minZ: number; maxZ: number; h: number; soft?: boolean }
 
 export const COLLIDERS: Collider[] = [
   ...HOUSES.map(
@@ -604,8 +608,10 @@ function terrainColliders(): Collider[] {
   circle(PASS_ARCH.x + PASS_ARCH.span / 2, PASS_ARCH.z, 0.5)
   circle(DRAW_LEVER.x, DRAW_LEVER.z, 0.35)
   circle(DRAW_NOTICE.x, DRAW_NOTICE.z, 0.18)
-  // 星光鎮城門（寬 11 m、深 2.6 m）：兩側門樓擋住，只有中間 2.6 m 寬的門洞能走
-  for (const s of TOWN_PORTAL.enabled ? [-1, 1] : []) {
+  // 新版城鎮：城牆、塔、放大的城門（由城鎮配置表算出）
+  out.push(...TOWN_SHELL_COLLIDERS)
+  // 原版星光鎮城門（寬 11 m、深 2.6 m）：兩側門樓擋住，只有中間 2.6 m 寬的門洞能走
+  for (const s of TOWN_PORTAL.enabled && !TOWN_SHELL_COLLIDERS.length ? [-1, 1] : []) {
     const a = TOWN_PORTAL.x + s * 1.3
     const b = TOWN_PORTAL.x + s * 5.5
     out.push({ kind: 'box', minX: Math.min(a, b), maxX: Math.max(a, b), minZ: TOWN_PORTAL.z - 1.3, maxZ: TOWN_PORTAL.z + 1.3, h: 6 })

@@ -13,6 +13,7 @@ import { MoveMarker, Player } from './Player'
 import { SkillVfx, skillVfxRef } from './SkillVfx'
 import { Enemy } from './Enemy'
 import { Town } from './Town'
+import { TownVistaFrame } from './town2/TownMaps'
 import { Vista } from './Vista'
 import { World } from './World'
 
@@ -97,8 +98,11 @@ export function GameScene() {
       <Lighting />
       {/* 同一時間只掛一張地圖：離開的那張會卸下並釋放資源 */}
       {mapId === 'overworld' ? <World /> : <Town />}
-      {/* 天空與遠景山脈兩張地圖共用，一直掛著 */}
-      <Vista />
+      {/* 天空與遠景山脈兩張地圖共用，一直掛著；新版城鎮裡轉到和主線世界一致的方位 */}
+      {/* 一直掛著（換地圖時不重建，避免資源累積），只切換外層的變換 */}
+      <TownVistaFrame inTown={mapId !== 'overworld'}>
+        <Vista />
+      </TownVistaFrame>
       <Portals />
       <Player />
       <CombatLayer />

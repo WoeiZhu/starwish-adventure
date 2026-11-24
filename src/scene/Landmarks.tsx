@@ -5,7 +5,7 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, useLoader } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { TOWN_GATE_URL, TOWN_PORTAL, WORLD_GATE_VOLUME } from '../data/town'
+import { LAYOUT, TOWN_GATE_URL, TOWN_PORTAL, WORLD_GATE_VOLUME } from '../data/town'
 import { useGame } from '../game/store'
 import { LoadBoundary } from './ErrorBoundary'
 import { prepareStatic, useGateFade, withMeshopt } from './gltf'
@@ -336,7 +336,7 @@ export function Landmarks() {
       ))}
       {ENTRANCES.map((g) => (
         <InChunk key={g.id} x={g.x} z={g.z}>
-          {g.id === TOWN_PORTAL.gateId && TOWN_PORTAL.enabled ? <TownGate g={g} /> : <Entrance g={g} />}
+          {g.id === TOWN_PORTAL.gateId && TOWN_PORTAL.enabled ? LAYOUT ? null : <TownGate g={g} /> : <Entrance g={g} />}
         </InChunk>
       ))}
     </>

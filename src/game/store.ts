@@ -91,6 +91,8 @@ interface GameState {
   hero: Profile
   dialog: DialogState | null
   zoom: ZoomLabel
+  /** 鏡頭模式（會記住） */
+  camMode: 'explore' | 'immersive'
   hint: string | null
   toast: { id: number; text: string } | null
   cameraResetTick: number
@@ -128,6 +130,7 @@ interface GameState {
   toggleHelp: () => void
   resetCamera: () => void
   setZoom: (z: ZoomLabel) => void
+  setCamMode: (m: 'explore' | 'immersive') => void
   setHint: (h: string | null) => void
   showToast: (text: string) => void
   advanceDialog: () => void
@@ -155,6 +158,13 @@ export const useGame = create<GameState>()((set, get) => ({
   hero: initialProfile,
   dialog: null,
   zoom: 'mid',
+  camMode: (() => {
+    try {
+      return localStorage.getItem('starwish.cam') === 'explore' ? 'explore' : 'immersive'
+    } catch {
+      return 'immersive'
+    }
+  })(),
   hint: null,
   toast: null,
   cameraResetTick: 0,
@@ -300,6 +310,15 @@ export const useGame = create<GameState>()((set, get) => ({
   },
   toggleHelp: () => set((s) => ({ showHelp: !s.showHelp })),
   resetCamera: () => set((s) => ({ cameraResetTick: s.cameraResetTick + 1 })),
+  setCamMode: (camMode) => {
+    if (get().camMode === camMode) return
+    set({ camMode })
+    try {
+      localStorage.setItem('starwish.cam', camMode)
+    } catch {
+      /* 無痕模式 */
+    }
+  },
   setZoom: (zoom) => {
     if (get().zoom !== zoom) set({ zoom })
   },

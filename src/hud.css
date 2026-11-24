@@ -371,3 +371,70 @@
     bottom: 56px;
   }
 }
+
+/* 鏡頭模式按鈕（探索 / 沉浸） */
+.menu-btn.cam-btn {
+  font-size: 15px;
+  font-weight: 900;
+}
+/* 城鎮（安全區）沒有戰鬥按鈕：技能列只剩互動提示 */
+.skillbar.safe {
+  display: none;
+}
+/* 進城時的城鎮名稱 */
+.town-banner {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 40px 14px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(255, 250, 240, 0.92), rgba(255, 250, 240, 0) 72%);
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+  animation: town-banner 3.2s ease-out both;
+}
+.town-banner b {
+  font-size: 40px;
+  letter-spacing: 0.18em;
+  text-shadow: 0 2px 0 #fff, 0 4px 14px rgba(255, 255, 255, 0.9);
+}
+.town-banner-en {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--pink-deep);
+}
+.town-banner-sub {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+@keyframes town-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  15%,
+  75% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}
+@media (max-height: 460px) {
+  .town-banner {
+    top: 16%;
+  }
+  .town-banner b {
+    font-size: 30px;
+  }
+}

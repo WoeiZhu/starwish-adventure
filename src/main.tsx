@@ -9,6 +9,8 @@ import * as sim from './game/combat/sim'
 import { progress } from './game/progress'
 import * as prog from './game/progress'
 import * as items from './data/items'
+import * as townData from './data/town'
+import * as music from './systems/music'
 import { runtime } from './game/runtime'
 import { useGame } from './game/store'
 import * as story from './game/story'
@@ -25,7 +27,7 @@ import './menu2.css'
 // 開發模式下把遊戲狀態掛到 window，方便在主控台檢查與自動化測試
 if (import.meta.env.DEV) {
   Object.assign(window, {
-    __sw: { combat, cstate, sim, runtime, useGame, progress, prog, items, story, nav, travel, save, mapState, townStats, stream: { ...stream, stats: stream.streamStats } },
+    __sw: { combat, cstate, sim, runtime, useGame, progress, prog, items, townData, music, story, nav, travel, save, mapState, townStats, stream: { ...stream, stats: stream.streamStats } },
   })
 }
 

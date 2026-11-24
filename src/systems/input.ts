@@ -38,6 +38,9 @@ export function installInput() {
       case 'KeyH':
         s.toggleHelp()
         break
+      case 'KeyV':
+        s.setCamMode(s.camMode === 'explore' ? 'immersive' : 'explore')
+        break
       case 'KeyF':
       case 'Enter':
         interactNearest()

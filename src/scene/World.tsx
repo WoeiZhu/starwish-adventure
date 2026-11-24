@@ -8,6 +8,8 @@ import { useFrame } from '@react-three/fiber'
 import { WORLD_CENTER, groundHeight } from '../data/terrain'
 import { GROVE, SPRING, RUINS, RUIN_PILLARS, HOUSES, PLAZA, SIGN, WELL, type HouseDef } from '../data/world'
 import { Landmarks } from './Landmarks'
+import { LAYOUT } from '../data/town'
+import { TownShell } from './town2/TownMaps'
 import { InChunk, StreamedWorld } from './Chunks'
 import { handleGroundClick } from './groundClick'
 import { buildGround } from './terrainMeshes'
@@ -291,6 +293,8 @@ export function World() {
   return (
     <>
       <FarGround />
+      {/* 新版城鎮：南方街道盡頭的城牆、塔、城門與屋頂（不分區塊，遠遠就看得到） */}
+      {LAYOUT && <TownShell />}
       <StreamedWorld onGroundClick={handleGroundClick}>
         <InChunk {...PLAZA}>
           <Plaza />
