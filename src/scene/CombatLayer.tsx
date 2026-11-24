@@ -1,17 +1,22 @@
 // 戰鬥畫面層：驅動戰鬥模擬，並繪製隊友、血條、鎖定圈、投射物、範圍效果與飄字。
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { buildAppearance } from '../data/appearance'
 import type { ClassId } from '../data/classes'
+import { LOOT_SCALE, LOOT_URLS } from '../data/lootModels'
+import { ARROW_LENGTH, ARROW_URL } from '../data/weaponModels'
 import { ENEMY_SLOTS, FLOATER_POOL, allyId, combat, enemyAt, hero, unitById } from '../game/combat/state'
 import { updateCombat } from '../game/combat/sim'
-import { weaponTint } from '../game/gear'
+import { gearLook } from '../game/gear'
 import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { CharacterModel } from './characters/CharacterModel'
 import { CombatFx } from './CombatFx'
+import { LoadBoundary } from './ErrorBoundary'
+import { prepareProp, withMeshopt } from './gltf'
 import { enemyBarTop } from './Enemy'
 import type { CharacterMotion } from './characters/types'
 
@@ -52,7 +57,7 @@ function Ally({ classId }: { classId: ClassId }) {
   const motion = useRef<CharacterMotion>({ speed: 0, attack: 0 })
   const gearVersion = useGame((s) => s.gearVersion)
   const appearance = useMemo(
-    () => buildAppearance('girl', classId, weaponTint(classId)),
+    () => buildAppearance('girl', classId, gearLook(classId)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [classId, gearVersion],
   )
@@ -196,22 +201,49 @@ function TargetRing() {
 const PROJECTILE_POOL = 40
 const ARROW_GEO = new THREE.ConeGeometry(0.08, 1, 6).rotateX(Math.PI / 2)
 const ORB_GEO = new THREE.SphereGeometry(0.22, 12, 10)
+/** 箭矢模型放大一點，遠景也看得到 */
+const ARROW_SCALE = 1.35
 
-function Projectiles() {
+/** 投射物：法術是光球；弓箭手射出武器包的箭（模型載入前或失敗時用圓錐），技能箭再加一顆彩色光球 */
+function Projectiles({ arrow }: { arrow?: THREE.Object3D }) {
   const refs = useRef<(THREE.Mesh | null)[]>([])
+  const arrows = useMemo(
+    () =>
+      arrow
+        ? Array.from({ length: PROJECTILE_POOL }, () => {
+            const g = new THREE.Group()
+            const c = arrow.clone(true)
+            c.position.z = -ARROW_LENGTH / 2 // 原點在箭尾：移到箭的中間
+            g.add(c)
+            g.visible = false
+            return g
+          })
+        : [],
+    [arrow],
+  )
   useFrame(() => {
     const list = combat.projectiles
     for (let i = 0; i < PROJECTILE_POOL; i++) {
       const m = refs.current[i]
       if (!m) continue
       const p = list[i]
-      m.visible = !!p && p.delay <= 0
-      if (!p || !m.visible) continue
-      const arrow = p.owner.classId === 'archer'
-      m.geometry = arrow ? ARROW_GEO : ORB_GEO
+      const shown = !!p && p.delay <= 0
+      const a = arrows[i]
+      const isArrow = shown && p.owner.classId === 'archer'
+      if (a) a.visible = isArrow
+      // 有箭矢模型時，普通箭只畫模型；技能箭（big）另外畫一顆小光球表示屬性顏色
+      m.visible = shown && (!a || !isArrow || p.big)
+      if (!shown) continue
+      const yaw = Math.atan2(p.dirX, p.dirZ)
+      if (a && isArrow) {
+        a.position.set(p.x, 0.75, p.z)
+        a.rotation.y = yaw
+        a.scale.setScalar(ARROW_SCALE * (p.big ? 1.4 : 1))
+      }
+      m.geometry = isArrow && !a ? ARROW_GEO : ORB_GEO
       m.position.set(p.x, 0.75, p.z)
-      m.rotation.y = Math.atan2(p.dirX, p.dirZ)
-      m.scale.setScalar(p.big ? 1.7 : 1)
+      m.rotation.y = yaw
+      m.scale.setScalar(isArrow && a ? 0.55 : p.big ? 1.7 : 1)
       ;(m.material as THREE.MeshBasicMaterial).color.set(p.color)
     }
   })
@@ -222,8 +254,16 @@ function Projectiles() {
           <meshBasicMaterial />
         </mesh>
       ))}
+      {arrows.map((a, i) => (
+        <primitive key={`a${i}`} object={a} />
+      ))}
     </>
   )
+}
+
+function ArrowProjectiles() {
+  const gltf = useLoader(GLTFLoader, ARROW_URL, withMeshopt)
+  return <Projectiles arrow={prepareProp(gltf.scene, false)} />
 }
 
 const ZONE_POOL = 8
@@ -275,9 +315,37 @@ const POTION_GEO = new THREE.SphereGeometry(0.16, 12, 10)
 const BAG_GEO = new THREE.OctahedronGeometry(0.22, 0)
 const BEAM_GEO = new THREE.CylinderGeometry(0.07, 0.16, 2.4, 10, 1, true).translate(0, 1.2, 0)
 
-/** 地上的掉落物：金幣旋轉、藥水與裝備上下浮動，裝備有品質顏色的光柱 */
-function Drops() {
+type DropModels = Record<'coin' | 'potion' | 'pouch' | 'bundle', THREE.Object3D>
+const DROP_MODEL_KEYS = ['coin', 'potion', 'pouch', 'bundle'] as const
+/** 模型底部到中心的高度（已乘上 LOOT_SCALE）：浮動時以中心對齊原本的程序化物件 */
+const DROP_CENTER: Record<(typeof DROP_MODEL_KEYS)[number], number> = { coin: 0.17, potion: 0.18, pouch: 0.18, bundle: 0.2 }
+
+/** 掉落物用哪個模型：金幣、藥水；飾品裝在小布袋，武器與防具是裝備包 */
+function dropModel(d: (typeof combat.drops)[number]) {
+  return d.kind === 'gold' ? 'coin' : d.kind === 'potion' ? 'potion' : d.item?.slot === 'accessory' ? 'pouch' : 'bundle'
+}
+
+/** 地上的掉落物：金幣旋轉、藥水與裝備上下浮動，裝備有品質顏色的光柱。有模型時用模型，載入前用程序化物件 */
+function Drops({ models }: { models?: DropModels }) {
   const refs = useRef<(THREE.Group | null)[]>([])
+  // 每個欄位各複製一份四種模型，用顯示 / 隱藏切換（共用幾何體與材質）
+  const slots = useMemo(
+    () =>
+      models
+        ? Array.from({ length: DROP_POOL }, () =>
+            Object.fromEntries(
+              DROP_MODEL_KEYS.map((k) => {
+                const g = new THREE.Group()
+                g.add(models[k].clone(true))
+                g.scale.setScalar(LOOT_SCALE[k] ?? 1)
+                g.visible = false
+                return [k, g]
+              }),
+            ) as Record<(typeof DROP_MODEL_KEYS)[number], THREE.Group>,
+          )
+        : [],
+    [models],
+  )
   useFrame((state) => {
     const t = state.clock.elapsedTime
     for (let i = 0; i < DROP_POOL; i++) {
@@ -290,13 +358,29 @@ function Drops() {
       const beam = g.children[1] as THREE.Mesh
       const mat = body.material as THREE.MeshToonMaterial
       const pop = Math.min(1, d.age * 4)
+      const y = 0.35 + Math.sin(t * 3 + i) * 0.08 + (1 - pop) * 0.8
+      const spin = t * (d.kind === 'gold' ? 4 : 1.5) + i
       g.position.set(d.x, 0, d.z)
-      body.geometry = d.kind === 'gold' ? COIN_GEO : d.kind === 'potion' ? POTION_GEO : BAG_GEO
-      body.position.y = 0.35 + Math.sin(t * 3 + i) * 0.08 + (1 - pop) * 0.8
-      body.rotation.y = t * (d.kind === 'gold' ? 4 : 1.5) + i
-      body.scale.setScalar(pop)
-      mat.color.set(d.color)
-      mat.emissive.set(d.color)
+      const slot = slots[i]
+      body.visible = !slot
+      if (slot) {
+        const want = dropModel(d)
+        for (const k of DROP_MODEL_KEYS) {
+          const m = slot[k]
+          m.visible = k === want
+          if (k !== want) continue
+          m.position.y = y - DROP_CENTER[k] * pop
+          m.rotation.y = spin
+          m.scale.setScalar((LOOT_SCALE[k] ?? 1) * pop)
+        }
+      } else {
+        body.geometry = d.kind === 'gold' ? COIN_GEO : d.kind === 'potion' ? POTION_GEO : BAG_GEO
+        body.position.y = y
+        body.rotation.y = spin
+        body.scale.setScalar(pop)
+        mat.color.set(d.color)
+        mat.emissive.set(d.color)
+      }
       beam.visible = d.kind === 'item'
       ;(beam.material as THREE.MeshBasicMaterial).color.set(d.color)
     }
@@ -311,9 +395,29 @@ function Drops() {
           <mesh geometry={BEAM_GEO}>
             <meshBasicMaterial transparent opacity={0.35} depthWrite={false} side={THREE.DoubleSide} />
           </mesh>
+          {slots[i] && DROP_MODEL_KEYS.map((k) => <primitive key={k} object={slots[i][k]} />)}
         </group>
       ))}
     </>
+  )
+}
+
+function DropModelsLoader() {
+  const urls = DROP_MODEL_KEYS.map((k) => LOOT_URLS[k])
+  const gltfs = useLoader(GLTFLoader, urls, withMeshopt)
+  const models = useMemo(
+    () => Object.fromEntries(DROP_MODEL_KEYS.map((k, i) => [k, prepareProp(gltfs[i].scene as THREE.Object3D)])) as DropModels,
+    [gltfs],
+  )
+  return <Drops models={models} />
+}
+
+/** 模型載入前和失敗時都退回程序化的版本 */
+function WithFallback({ fallback, children }: { fallback: ReactNode; children: ReactNode }) {
+  return (
+    <LoadBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>{children}</Suspense>
+    </LoadBoundary>
   )
 }
 
@@ -408,9 +512,13 @@ export function CombatLayer() {
       ))}
       <Hazards />
       <TargetRing />
-      <Projectiles />
+      <WithFallback fallback={<Projectiles />}>
+        <ArrowProjectiles />
+      </WithFallback>
       <Zones />
-      <Drops />
+      <WithFallback fallback={<Drops />}>
+        <DropModelsLoader />
+      </WithFallback>
       <CombatFx />
       <Floaters />
     </>

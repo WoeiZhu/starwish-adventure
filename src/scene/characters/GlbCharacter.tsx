@@ -8,7 +8,8 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 import { RUN_SPEED, WALK_SPEED } from '../../game/runtime'
 import { useGame } from '../../game/store'
 import type { CharacterModelProps } from './types'
-import { attachGear, disposeGear } from './weapons'
+import { Gear } from './Gear'
+import { captureHands } from './weapons'
 
 /** 模型原始高度約 1.25，放大到與場景比例一致的 1.4 */
 const TARGET_HEIGHT = 1.4
@@ -73,14 +74,16 @@ export function GlbCharacter({ appearance, motion }: CharacterModelProps) {
       const world = bone.getWorldQuaternion(new THREE.Quaternion())
       rig[name] = { bone, rest: bone.quaternion.clone(), world, worldInv: world.clone().invert() }
     }
-    // 模型本身沒有武器：依職業在手部骨頭掛上程序化武器
-    attachGear(scene, appearance, scale, ARM_DOWN)
+    // 模型本身沒有武器：先記下手部骨頭的靜止朝向，武器由 <Gear> 掛上
+    const hands = captureHands(scene)
     const hips = rig.Hips?.bone
     const hipsRestY = hips?.position.y ?? 0
     // 骨架節點有 0.01 縮放：把世界單位換算成 Hips 的本地單位
     const hipsUnit = hips?.parent ? 1 / hips.parent.getWorldScale(new THREE.Vector3()).y : 1
-    return { scene, scale, offsetY: -box.min.y * scale, rig, hipsRestY, hipsUnit }
-  }, [gltf, appearance])
+    return { scene, scale, offsetY: -box.min.y * scale, rig, hipsRestY, hipsUnit, hands }
+    // 只看人物模型網址：換武器不必重新複製骨架
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gltf])
 
   const anim = useRef({ t: Math.random() * 10, phase: 0, move: 0, run: 0 })
 
@@ -131,10 +134,9 @@ export function GlbCharacter({ appearance, motion }: CharacterModelProps) {
     }
   })
 
-  // 外觀切換時釋放複製出來的骨架
+  // 卸載時釋放複製出來的骨架
   useEffect(
     () => () => {
-      disposeGear(model.scene)
       model.scene.traverse((o) => {
         const sk = o as THREE.SkinnedMesh
         if (sk.isSkinnedMesh) sk.skeleton.dispose()
@@ -143,5 +145,10 @@ export function GlbCharacter({ appearance, motion }: CharacterModelProps) {
     [model],
   )
 
-  return <primitive object={model.scene} scale={model.scale} position={[0, model.offsetY, 0]} />
+  return (
+    <>
+      <primitive object={model.scene} scale={model.scale} position={[0, model.offsetY, 0]} />
+      <Gear hands={model.hands} appearance={appearance} scale={model.scale} armDown={ARM_DOWN} motion={motion} />
+    </>
+  )
 }

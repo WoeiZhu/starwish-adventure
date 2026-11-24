@@ -57,6 +57,24 @@ export function disposeScene(root: THREE.Object3D) {
   for (const t of textures) t.dispose()
 }
 
+/**
+ * 小道具 GLB（武器、箭、掉落物、寶箱）的共用設定：可選投影；沒有環境貼圖時金屬會變黑，一律當作非金屬。
+ * 改的是載入快取裡的原件，所以只做一次；複製出來的物件共用同一份材質。
+ */
+export function prepareProp<T extends THREE.Object3D>(root: T, castShadow = true): T {
+  if (root.userData.propReady) return root
+  root.userData.propReady = true
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    if (!mesh.isMesh) return
+    mesh.castShadow = castShadow
+    for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      if ('metalness' in m) (m as THREE.MeshStandardMaterial).metalness = 0
+    }
+  })
+  return root
+}
+
 /** 環境模型的共用設定：接收陰影、可選投影；沒有環境貼圖時金屬材質會變黑，一律當作非金屬 */
 export function prepareStatic(root: THREE.Object3D, castShadow: boolean) {
   let meshes = 0

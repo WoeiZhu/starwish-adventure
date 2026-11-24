@@ -32,6 +32,8 @@ export interface Item {
   quality: Quality
   level: number
   stats: ItemStats
+  /** 武器店買的武器：武器包的模型 id（data/weaponModels.ts）；掉落的武器沒有，依等級挑模型 */
+  model?: string
 }
 
 const WEAPON_NAMES: Record<ClassId, string[]> = {

@@ -6,7 +6,7 @@ import { buildAppearance } from '../data/appearance'
 import { CLASSES } from '../data/classes'
 import { SPAWN } from '../data/world'
 import { dist, hero, unitById } from '../game/combat/state'
-import { weaponTint } from '../game/gear'
+import { gearLook } from '../game/gear'
 import { PLAYER_RADIUS, RUN_SPEED, WALK_SPEED, runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { resolveCollisions } from '../systems/collision'
@@ -39,7 +39,7 @@ export function Player() {
   const gearVersion = useGame((s) => s.gearVersion)
   // 武器外觀跟著裝備品質變色（gearVersion 在換裝時遞增）
   const appearance = useMemo(
-    () => buildAppearance(gender, classId, weaponTint(classId)),
+    () => buildAppearance(gender, classId, gearLook(classId)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [gender, classId, gearVersion],
   )

@@ -71,7 +71,8 @@ src/
 - [x] **D 故事與探索內容**：單人開局、第一章任務鏈、三個招募事件（含選項）、四個區域（星光村 / 翠綠草原 / 迷霧森林 / 古代石環）、三個寶箱、商人、精英怪與 Boss（紅圈預兆、狂暴、召喚）、章節完成畫面
 - [x] **E 第二章 月光山谷**：地圖往北延伸出新區域、四種新怪物（幼狼撲擊、蘑菇毒霧、魔靈遠程彈幕、靈鹿衝撞與治療）、第二章任務鏈（石碑 → 淨化山谷 → 星晶林 → 月泉 Boss）、兩個新的區域首領
 - [x] **F 地圖系統**：河流與三座橋（東側吊橋是要從山谷放下的捷徑）、北方隘口、步道岔路、各區地標、邊界山壁與封閉入口、遠景山脈與遠方地標；分區塊載入、遠處怪物簡化更新、分區尋路、存檔第 2 版。說明與測試紀錄見 `docs/map-system.md`
-- [x] **F2 星光鎮**：南方街道盡頭的 Meshy 城門通往獨立的城鎮地圖（4 間建築、4 位 NPC、旅館休息、雜貨店）；進出城不彈跳、野外怪物暫存、城內存讀檔（存檔第 3 版）、載入失敗退回城門外。武器店與轉職尚未實作。說明與測試紀錄見 `docs/town-integration.md`
+- [x] **F2 星光鎮**：南方街道盡頭的 Meshy 城門通往獨立的城鎮地圖（4 間建築、4 位 NPC、旅館休息、雜貨店）；進出城不彈跳、野外怪物暫存、城內存讀檔（存檔第 3 版）、載入失敗退回城門外。轉職與委託板尚未實作。說明與測試紀錄見 `docs/town-integration.md`
+- [x] **F3 武器包與掉落物模型**：角色手上換成武器包模型（每職業 3 階，依裝備等級換階；騎士盾牌依防具等級換階）、弓攻擊時拉弦、弓箭手射出箭矢模型、星光鎮武器店開張、掉落物（金幣 / 藥水 / 裝備包 / 飾品袋）與寶箱改用模型（寶箱會開箱並留在原地）、商人旁的藥水擺設。說明與測試紀錄見 `docs/assets-integration.md`
 - [ ] **G 程序生成支線**：洞窟與野外支路（接口已預留在 `src/world/chunks.ts` 的 `GENERATORS`）
 
 ## 調整數值
@@ -89,11 +90,15 @@ src/
 - 精英與 Boss 的能力倍率、隊伍人數對怪物強度的影響：`src/game/combat/state.ts`（`TIER`、`PARTY_SCALE`）
 - 存檔格式：`src/game/save.ts`（localStorage 鍵 `starwish.save.v1`，資料內 version 2；會自動轉換第 1 版）
 - 開發模式下主控台可用 `window.__sw`（combat、sim、runtime、useGame、progress、story、nav、stream、gl）檢查狀態
-- 地圖自動測試：`tools/qa/map-qa.mjs`（無頭 Edge，先 `npm run dev`；在 `tools/qa` 執行一次 `npm install`）
+- 地圖自動測試：`tools/qa/map-qa.mjs`（無頭 Edge，先 `npm run dev`；在 `tools/qa` 執行一次 `npm install`）；城鎮 `town-qa.mjs`、武器與掉落物 `assets-qa.mjs`
+- 武器店商品與售價：`src/game/story.ts` 的 `SHOP_QUALITY`、`SHOP_PRICE_RATE`；各階等級門檻與模型換階規則：`src/data/weaponModels.ts`
+- 單獨看模型：開 dev server 後瀏覽 `http://localhost:5183/tools/qa/preview.html?f=star-coin.web.glb,wooden-chest.web.glb`（`v=side` / `v=top` 換角度）
 
 ## 人物模型
 
 四職業使用 `Character/` 的 GLB 骨架模型，執行時讀取 `public/models/{archer,mage,knight,cleric}.glb`（英文檔名的複本）。更新模型後請重新複製過去；對應表在 `src/data/appearance.ts` 的 `CLASS_MODELS`。
+
+手上的武器與盾牌來自武器包 `public/models/starwish-weapons-20261123-v001/`（對應在 `src/data/weaponModels.ts`），由 `characters/Gear.tsx` 掛到手部骨頭；武器包載入前或失敗時改用 `characters/weapons.ts` 的程序化武器。武器、掉落物、寶箱都載入 `tools/assets/build-web.ps1` 壓縮過的 `.web.glb`。
 
 模型只有靜止姿勢、沒有動畫片段，待機 / 行走 / 跑步由 `GlbCharacter.tsx` 依骨頭名稱（Hips、Spine02、LeftUpLeg、LeftArm…）即時計算。
 

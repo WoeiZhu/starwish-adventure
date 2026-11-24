@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "baseUrlAware": true,
+  "items": [
+    {
+      "id": "sword-01",
+      "label": "旅人短劍",
+      "class": "knight",
+      "tier": 1,
+      "family": "sword",
+      "url": "models/starwish-weapons-20261123-v001/sword-01.glb",
+      "heightMeters": 0.82,
+      "triangles": 5128,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206eb-da18-777d-8997-09025548c80a"
+    },
+    {
+      "id": "sword-02",
+      "label": "星衛騎士劍",
+      "class": "knight",
+      "tier": 2,
+      "family": "sword",
+      "url": "models/starwish-weapons-20261123-v001/sword-02.glb",
+      "heightMeters": 0.82,
+      "triangles": 5060,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206eb-e160-753e-b570-b4ceba57893f"
+    },
+    {
+      "id": "sword-03",
+      "label": "星願聖劍",
+      "class": "knight",
+      "tier": 3,
+      "family": "sword",
+      "url": "models/starwish-weapons-20261123-v001/sword-03.glb",
+      "heightMeters": 0.82,
+      "triangles": 5268,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206eb-e89b-70c6-8430-b7f5c5aa3818"
+    },
+    {
+      "id": "bow-01",
+      "label": "白樺獵弓",
+      "class": "archer",
+      "tier": 1,
+      "family": "bow",
+      "url": "models/starwish-weapons-20261123-v001/bow-01.glb",
+      "heightMeters": 1,
+      "triangles": 5937,
+      "socketBone": "LeftHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [
+        "DrawRelease"
+      ],
+      "handFit": "pending",
+      "taskId": "01a206eb-eee1-748d-91f0-4d1213ce89fb"
+    },
+    {
+      "id": "bow-02",
+      "label": "翠風長弓",
+      "class": "archer",
+      "tier": 2,
+      "family": "bow",
+      "url": "models/starwish-weapons-20261123-v001/bow-02.glb",
+      "heightMeters": 1,
+      "triangles": 6298,
+      "socketBone": "LeftHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [
+        "DrawRelease"
+      ],
+      "handFit": "pending",
+      "taskId": "01a206eb-f732-7511-99e8-dc42e6a8df57"
+    },
+    {
+      "id": "bow-03",
+      "label": "星羽神弓",
+      "class": "archer",
+      "tier": 3,
+      "family": "bow",
+      "url": "models/starwish-weapons-20261123-v001/bow-03.glb",
+      "heightMeters": 1,
+      "triangles": 6301,
+      "socketBone": "LeftHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [
+        "DrawRelease"
+      ],
+      "handFit": "pending",
+      "taskId": "01a206eb-fe8c-7699-89c9-703c8c2579d1"
+    },
+    {
+      "id": "staff-01",
+      "label": "學徒木杖",
+      "class": "mage",
+      "tier": 1,
+      "family": "staff",
+      "url": "models/starwish-weapons-20261123-v001/staff-01.glb",
+      "heightMeters": 1.28,
+      "triangles": 6318,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ec-0550-7313-ba6a-3e5216adff1b"
+    },
+    {
+      "id": "staff-02",
+      "label": "星晶法杖",
+      "class": "mage",
+      "tier": 2,
+      "family": "staff",
+      "url": "models/starwish-weapons-20261123-v001/staff-02.glb",
+      "heightMeters": 1.28,
+      "triangles": 6124,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-5f93-7120-b599-f03e2e4cac1e"
+    },
+    {
+      "id": "staff-03",
+      "label": "星穹大法杖",
+      "class": "mage",
+      "tier": 3,
+      "family": "staff",
+      "url": "models/starwish-weapons-20261123-v001/staff-03.glb",
+      "heightMeters": 1.28,
+      "triangles": 6198,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-66e4-7470-8520-245392080798"
+    },
+    {
+      "id": "wand-01",
+      "label": "祈禱短杖",
+      "class": "cleric",
+      "tier": 1,
+      "family": "wand",
+      "url": "models/starwish-weapons-20261123-v001/wand-01.glb",
+      "heightMeters": 0.55,
+      "triangles": 4217,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-6b93-7273-9cf1-b1e707de6c2c"
+    },
+    {
+      "id": "wand-02",
+      "label": "晨曦權杖",
+      "class": "cleric",
+      "tier": 2,
+      "family": "wand",
+      "url": "models/starwish-weapons-20261123-v001/wand-02.glb",
+      "heightMeters": 0.55,
+      "triangles": 4162,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-7095-73de-b3bd-9112c5c207fc"
+    },
+    {
+      "id": "wand-03",
+      "label": "星耀祝福杖",
+      "class": "cleric",
+      "tier": 3,
+      "family": "wand",
+      "url": "models/starwish-weapons-20261123-v001/wand-03.glb",
+      "heightMeters": 0.55,
+      "triangles": 4237,
+      "socketBone": "RightHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-7889-76a5-9512-47945174802e"
+    },
+    {
+      "id": "shared-shield",
+      "label": "共用星盾",
+      "class": "knight",
+      "tier": null,
+      "family": "shield",
+      "url": "models/starwish-weapons-20261123-v001/shared-shield.glb",
+      "heightMeters": 0.64,
+      "triangles": 4950,
+      "socketBone": "LeftHand",
+      "gripOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axes": {
+        "up": "+Y",
+        "front": "+Z"
+      },
+      "clips": [],
+      "handFit": "pending",
+      "taskId": "01a206ee-80c3-7098-bc66-098dc11d75ec"
+    },
+    {
+      "id": "shield-silver-blue",
+      "baseMeshId": "shared-shield",
+      "url": "models/starwish-weapons-20261123-v001/shield-silver-blue.glb",
+      "socketBone": "LeftHand",
+      "geometryReused": true,
+      "meshyCredits": 0
+    },
+    {
+      "id": "shield-ivory-gold",
+      "baseMeshId": "shared-shield",
+      "url": "models/starwish-weapons-20261123-v001/shield-ivory-gold.glb",
+      "socketBone": "LeftHand",
+      "geometryReused": true,
+      "meshyCredits": 0
+    },
+    {
+      "id": "shared-arrow",
+      "url": "models/starwish-weapons-20261123-v001/shared-arrow.glb",
+      "origin": "ArrowNock",
+      "forward": "+Z",
+      "lengthMeters": 0.745,
+      "meshyCredits": 0
+    }
+  ],
+  "warnings": [
+    "Use existing modelUrl() helper for deployment prefixes",
+    "Per-character orientation, animation sync and collisions pending"
+  ]
+}

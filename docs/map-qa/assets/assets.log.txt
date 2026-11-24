@@ -1,0 +1,27 @@
+✔ archer：四人手上都掛著武器包模型（含騎士盾牌） [{"hand":"LeftHand","meshes":3,"visible":true},{"hand":"RightHand","meshes":3,"visible":true},{"hand":"LeftHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":3,"visible":true}]
+✔ mage：四人手上都掛著武器包模型（含騎士盾牌） [{"hand":"RightHand","meshes":3,"visible":true},{"hand":"LeftHand","meshes":3,"visible":true},{"hand":"LeftHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":3,"visible":true}]
+✔ knight：四人手上都掛著武器包模型（含騎士盾牌） [{"hand":"LeftHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":4,"visible":true},{"hand":"LeftHand","meshes":3,"visible":true},{"hand":"RightHand","meshes":3,"visible":true},{"hand":"RightHand","meshes":3,"visible":true}]
+✔ cleric：四人手上都掛著武器包模型（含騎士盾牌） [{"hand":"RightHand","meshes":3,"visible":true},{"hand":"LeftHand","meshes":3,"visible":true},{"hand":"RightHand","meshes":3,"visible":true},{"hand":"LeftHand","meshes":4,"visible":true},{"hand":"RightHand","meshes":4,"visible":true}]
+✔ 騎士換上第 3 階劍：下載 sword-03 
+✔ 騎士防具 LV30：換成第 3 階盾牌 shield-ivory-gold 
+✔ 弓箭手裝備指定 bow-02（武器店的商品） 
+換裝前後 {"geo":293,"tex":36,"calls":812} {"geo":310,"tex":44,"calls":814} []
+反覆換裝 [{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814}]
+✔ 反覆換裝 6 次資源不增加 [{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814}]
+✔ 村子商人旁邊有藥水擺設（紅藍綠 3 瓶） 
+✔ 弓箭手射出的是箭矢模型 arrows=1
+✔ 攻擊時弓弦有動（DrawRelease） moved=0.3345
+✔ 四種掉落物都用模型顯示 {"visibleLoot":4,"drops":4}
+✔ 寶箱：開啟前顯示模型 models=1
+✔ 寶箱：開啟後模型留在原地 {"n":1,"chests":["c_meadow"]}
+武器店 {"first":["小星的武器","諾娃的武器","雷恩的武器","米婭的武器","離開"],"items":[{"label":"白樺獵弓（優良）","desc":"60 金幣　攻擊 +5"},{"label":"翠風長弓（稀有）","desc":"84 金幣　攻擊 +7","disabled":"需要 LV.12"},{"label":"星羽神弓（史詩）","desc":"108 金幣　攻擊 +9","disabled":"需要 LV.24"},{"label":"看其他人的"},{"label":"離開"}],"goldBefore":3000,"goldAfter":2940,"equipped":{"name":"優良的白樺獵弓","model":"bow-01","level":1}}
+✔ 武器店：列出隊伍四人 ["小星的武器","諾娃的武器","雷恩的武器","米婭的武器","離開"]
+✔ 武器店：弓箭手 3 階商品，高階要等級 [{"label":"白樺獵弓（優良）","desc":"60 金幣　攻擊 +5"},{"label":"翠風長弓（稀有）","desc":"84 金幣　攻擊 +7","disabled":"需要 LV.12"},{"label":"星羽神弓（史詩）","desc":"108 金幣　攻擊 +9","disabled":"需要 LV.24"},{"label":"看其他人的"},{"label":"離開"}]
+✔ 武器店：買下後扣錢並換上 bow-01 {"name":"優良的白樺獵弓","model":"bow-01","level":1}
+✔ 存檔後武器店的武器保留模型 id 優良的白樺獵弓
+✔ 城裡雜貨商人旁邊有藥水擺設（紅藍綠 3 瓶） models=3
+✔ 武器與掉落物只下載 .web.glb []
+下載的武器與掉落物模型 ["starwish-weapons-20261123-v001/shared-arrow.web.glb 6KB","star-coin.web.glb 100KB","potion-bottle.web.glb 118KB","material-pouch.web.glb 141KB","equipment-bundle.web.glb 143KB","potion-bottle-blue.web.glb 118KB","potion-bottle-green.web.glb 118KB","wooden-chest.web.glb 262KB","starwish-weapons-20261123-v001/bow-01.web.glb 126KB","starwish-weapons-20261123-v001/staff-01.web.glb 112KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shared-shield.web.glb 111KB","starwish-weapons-20261123-v001/wand-01.web.glb 103KB","starwish-weapons-20261123-v001/sword-03.web.glb 113KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB","starwish-weapons-20261123-v001/bow-02.web.glb 145KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB"]
+合計 2288 KB
+✔ 沒有主控台錯誤 []
+結果：21/21 通過

@@ -1,16 +1,17 @@
 // 劇情：任務進度、可互動物件（村長、商人、待招募夥伴、寶箱、祭壇、月光石碑、星晶簇、月泉）與事件流程。
 // 第一章在草原、森林、石環招募夥伴並擊敗史萊姆王；第二章前往北方的月光山谷。
 import { CLASSES, type ClassId } from '../data/classes'
-import { makeItem, type Quality } from '../data/items'
+import { QUALITIES, describeStats, itemScore, makeItem, type Quality } from '../data/items'
+import { CLASS_WEAPONS, TIER_MIN_LEVEL, type WeaponModel } from '../data/weaponModels'
 import { DRAW_LEVER, DRAW_NOTICE } from '../data/terrain'
 import { TOWN_BUILDING_NAME, TOWN_DOORS, TOWN_NAME, TOWN_NPCS, type TownBuildingId, type TownNpcRole } from '../data/town'
 import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE } from '../data/world'
 import { sfx } from '../systems/sfx'
 import { inTown } from '../world/maps'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
-import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, spawnEnemy, stashedUnits } from './combat/state'
+import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, refreshParty, spawnEnemy, stashedUnits } from './combat/state'
 import type { Unit } from './combat/types'
-import { C2_HUNT_GOAL, HUNT_GOAL, addItem, progress, storyReached, unlock } from './progress'
+import { C2_HUNT_GOAL, HUNT_GOAL, addItem, equip, equippedItem, progress, storyReached, unlock } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
@@ -66,13 +67,70 @@ function townInteractables(): Interactable[] {
   return list
 }
 
-/** 武器店：之後接上武器包（public/models/starwish-weapons-…）；目前還沒有商品 */
+/** 武器店的商品品質：第 1 階優良、第 2 階稀有、第 3 階史詩 */
+const SHOP_QUALITY: Quality[] = [1, 2, 3]
+/** 售價 = 戰力分數 × 4（背包賣出是 × 0.4） */
+const SHOP_PRICE_RATE = 4
+
+/** 武器店的一件商品：等級跟著要用的人，品質依階級，外觀是武器包的模型 */
+function shopWeapon(classId: ClassId, w: WeaponModel) {
+  const level = progress.members[classId].level
+  const quality = SHOP_QUALITY[w.tier - 1]
+  const item = makeItem('weapon', level, quality, classId)
+  item.name = `${QUALITIES[quality].name}的${w.label}`
+  item.model = w.id
+  return { item, price: Math.round(itemScore(item) * SHOP_PRICE_RATE) }
+}
+
+/** 武器店：先選要幫誰買，再選武器（武器包每個職業 3 階） */
 function weaponShop(speaker: string) {
-  say(speaker, [
-    `歡迎來到${TOWN_NAME}的武器店！`,
-    '新一批的劍、弓、法杖和盾牌還在路上，店裡暫時沒有可以賣的武器。',
-    '（武器店尚未開放：商品與購買功能之後加入）',
-  ])
+  const party = [heroClass(), ...progress.recruited]
+  say(
+    speaker,
+    [`歡迎來到${TOWN_NAME}的武器店！劍、弓、法杖、權杖都有，要幫誰挑？`, `你現在有 ${progress.gold} 金幣。`],
+    [
+      ...party.map(
+        (c): Choice => ({
+          label: `${c === heroClass() ? useGame.getState().hero.name : CLASSES[c].companion}的武器`,
+          desc: `${CLASSES[c].name}　LV.${progress.members[c].level}`,
+          run: () => weaponShopFor(speaker, c),
+        }),
+      ),
+      { label: '離開', run: () => {} },
+    ],
+  )
+}
+
+function weaponShopFor(speaker: string, classId: ClassId) {
+  const lv = progress.members[classId].level
+  const cur = equippedItem(classId, 'weapon')
+  const choices = CLASS_WEAPONS[classId].map((w): Choice => {
+    const { item, price } = shopWeapon(classId, w)
+    const need = TIER_MIN_LEVEL[w.tier - 1]
+    return {
+      label: `${w.label}（${QUALITIES[item.quality].name}）`,
+      desc: `${price} 金幣　${describeStats(item.stats)}`,
+      disabled: lv < need ? `需要 LV.${need}` : progress.gold < price ? '金幣不足' : undefined,
+      run: () => {
+        if (!addItem(item)) return say(speaker, ['你的背包已經滿了，先整理一下再來吧。'])
+        progress.gold -= price
+        // 比身上的好就直接換上
+        const better = !cur || itemScore(item) > itemScore(cur)
+        if (better) equip(classId, item)
+        refreshParty()
+        useGame.getState().bumpGear()
+        sfx.pickup(true)
+        addFeed(`買了 ${item.name}（-${price} 金幣）${better ? '，已經換上' : '，放進背包'}`, QUALITIES[item.quality].color)
+        useGame.getState().saveGame()
+        say(speaker, [better ? `${item.name}很適合你！已經幫你換上了。` : `${item.name}放進背包了，要用的時候在背包裡裝備。`])
+      },
+    }
+  })
+  say(
+    speaker,
+    [`${CLASSES[classId].name}用的武器在這邊。現在拿的是「${cur?.name ?? '基本武器'}」。`],
+    [...choices, { label: '看其他人的', run: () => weaponShop(speaker) }, { label: '離開', run: () => {} }],
+  )
 }
 
 /** 雜貨店：和村子的商人一樣賣生命藥水 */

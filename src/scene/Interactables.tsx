@@ -1,9 +1,12 @@
 // 可互動物件：村長、商人、待招募夥伴、寶箱、祭壇。靠近顯示提示，按 F 或點擊互動。
-import { useMemo, useRef, useState } from 'react'
+import { Suspense, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useLoader, type ThreeEvent } from '@react-three/fiber'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MERCHANT_APPEARANCE, NPC_ELDER_APPEARANCE, buildAppearance } from '../data/appearance'
-import { regionAt } from '../data/world'
+import { LOOT_URLS } from '../data/lootModels'
+import { CHESTS, regionAt, type ChestDef } from '../data/world'
+import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { interactWith, interactables, type Interactable } from '../game/story'
@@ -12,6 +15,9 @@ import { findPath } from '../systems/pathfinding'
 import { inTown } from '../world/maps'
 import { isLoaded } from '../world/stream'
 import { CharacterModel } from './characters/CharacterModel'
+import { ChestModel, type ChestState } from './ChestModel'
+import { LoadBoundary } from './ErrorBoundary'
+import { prepareProp, withMeshopt } from './gltf'
 
 const TALK_RANGE = 2.6
 
@@ -212,6 +218,52 @@ function DoorMat() {
   )
 }
 
+const POTION_SHELF = [
+  { url: LOOT_URLS.potion, x: -0.17 },
+  { url: LOOT_URLS.potionBlue, x: 0.01 },
+  { url: LOOT_URLS.potionGreen, x: 0.19 },
+]
+
+function PotionBottles() {
+  const gltfs = useLoader(
+    GLTFLoader,
+    POTION_SHELF.map((p) => p.url),
+    withMeshopt,
+  )
+  const bottles = useMemo(() => gltfs.map((g) => prepareProp(g.scene).clone(true)), [gltfs])
+  return (
+    <>
+      {bottles.map((b, i) => (
+        <primitive key={i} object={b} position={[POTION_SHELF[i].x, 0.5, 0.02]} rotation={[0, (i - 1) * 0.35, 0]} scale={0.85} />
+      ))}
+    </>
+  )
+}
+
+/** 商人旁邊的木箱，上面擺著紅、藍、綠三瓶藥水（擺設；藥水店只賣生命藥水） */
+function PotionCrate() {
+  return (
+    <group position={[0.95, 0, -0.25]} rotation={[0, -0.35, 0]}>
+      <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.62, 0.5, 0.42]} />
+        <meshToonMaterial color="#b07a46" />
+      </mesh>
+      <mesh position={[0, 0.25, 0.212]}>
+        <boxGeometry args={[0.64, 0.08, 0.01]} />
+        <meshToonMaterial color="#7d5532" />
+      </mesh>
+      <LoadBoundary>
+        <Suspense fallback={null}>
+          <PotionBottles />
+        </Suspense>
+      </LoadBoundary>
+    </group>
+  )
+}
+
+/** 有擺藥水箱的商人：村子的商人、城裡的雜貨商人 */
+const POTION_SELLERS = new Set(['merchant', 'town-npc-general-vendor'])
+
 const MARKER_Y: Partial<Record<Interactable['kind'], number>> = { altar: 2.2, stele: 2.7, grove: 3.2, spring: 1.9, lever: 1.6, notice: 1.8 }
 
 function Item({ it }: { it: Interactable }) {
@@ -255,7 +307,7 @@ function Item({ it }: { it: Interactable }) {
     <group position={[it.x, 0, it.z]} onClick={onClick}>
       <group ref={root} rotation={[0, it.facing, 0]}>
         {person && <CharacterModel appearance={appearance} />}
-        {it.kind === 'chest' && <Chest />}
+        {it.kind === 'chest' && <ChestModel state="closed" fallback={<Chest />} />}
         {it.kind === 'altar' && <Altar active={it.marker} />}
         {it.kind === 'stele' && <Stele active={it.marker} />}
         {it.kind === 'grove' && <GroveCore active={it.marker} />}
@@ -264,14 +316,35 @@ function Item({ it }: { it: Interactable }) {
         {it.kind === 'notice' && <Notice />}
         {it.kind === 'door' && <DoorMat />}
       </group>
+      {POTION_SELLERS.has(it.id) && (
+        <group rotation={[0, it.facing, 0]}>
+          <PotionCrate />
+        </group>
+      )}
       {it.marker && <Marker y={MARKER_Y[it.kind] ?? 1.9} />}
+    </group>
+  )
+}
+
+interface OpenedChest {
+  def: ChestDef
+  state: ChestState
+}
+
+/** 打開過的寶箱留在原地（碰撞也還在），不能再互動 */
+function OpenedChestItem({ c }: { c: OpenedChest }) {
+  return (
+    <group position={[c.def.x, 0, c.def.z]} rotation={[0, c.def.rot, 0]}>
+      <ChestModel state={c.state} />
     </group>
   )
 }
 
 export function Interactables() {
   const [list, setList] = useState<Interactable[]>(() => interactables())
+  const [opened, setOpened] = useState<OpenedChest[]>([])
   const signature = useRef('')
+  const openedSig = useRef('')
   const timer = useRef(0)
 
   useFrame((_, dt) => {
@@ -287,6 +360,20 @@ export function Interactables() {
       if (sig !== signature.current) {
         signature.current = sig
         setList(next)
+      }
+      // 打開過的寶箱：剛在旁邊打開的播放開箱動作，其他（讀檔、走回來）直接是打開的樣子
+      const done = town ? [] : CHESTS.filter((c) => progress.story.chests.includes(c.id) && isLoaded(c.x, c.z))
+      const osig = done.map((c) => c.id).join('|')
+      if (osig !== openedSig.current) {
+        openedSig.current = osig
+        setOpened((prev) =>
+          done.map((def) => ({
+            def,
+            state:
+              prev.find((p) => p.def.id === def.id)?.state ??
+              (Math.hypot(runtime.player.x - def.x, runtime.player.z - def.z) < 5 ? 'opening' : 'open'),
+          })),
+        )
       }
     }
     if (g.phase !== 'playing' || g.paused) return
@@ -311,6 +398,9 @@ export function Interactables() {
     <>
       {list.map((it) => (
         <Item key={it.id} it={it} />
+      ))}
+      {opened.map((c) => (
+        <OpenedChestItem key={c.def.id} c={c} />
       ))}
     </>
   )

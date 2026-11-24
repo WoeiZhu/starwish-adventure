@@ -100,52 +100,102 @@ function orient(dir: V3, front: V3) {
   return new THREE.Quaternion().setFromRotationMatrix(_m.makeBasis(_x, _y, _z))
 }
 
+/** 手部骨頭在靜止姿勢下（模型空間）的朝向與縮放：要在骨架開始動之前取得 */
+export interface HandRest {
+  bone: THREE.Object3D
+  quat: THREE.Quaternion
+  scale: number
+}
+export interface Hands {
+  right?: HandRest
+  left?: HandRest
+}
+
+/** 複製出骨架後、還沒套用任何動作時呼叫（scene 本身不能有位移旋轉） */
+export function captureHands(scene: THREE.Object3D): Hands {
+  scene.updateMatrixWorld(true)
+  const get = (name: string): HandRest | undefined => {
+    const bone = scene.getObjectByName(name)
+    if (!bone) return undefined
+    return { bone, quat: bone.getWorldQuaternion(new THREE.Quaternion()), scale: bone.getWorldScale(new THREE.Vector3()).x || 1 }
+  }
+  return { right: get('RightHand'), left: get('LeftHand') }
+}
+
+/** 掛點：哪隻手、武器在模型空間的朝向（待機手臂放下後）、手臂放下的方向 */
+interface Mount {
+  hand: 'right' | 'left'
+  quat: THREE.Quaternion
+  /** 右手（-X 側）待機時繞 Z 轉 +armDown，左手轉 -armDown */
+  side: 1 | -1
+}
+// 武器的朝向：每把武器的原點是握把，+Y 指向武器前端，+Z 是正面（武器包的 GLB 也照這個規格）
+const MOUNTS: Record<Exclude<Appearance['weapon'], 'none'>, Mount> = {
+  sword: { hand: 'right', quat: orient([-0.55, 0.12, 1], [1, 0.3, 0]), side: 1 },
+  staff: { hand: 'right', quat: orient([-0.05, 1, 0.22], [0, 0, 1]), side: 1 },
+  wand: { hand: 'right', quat: orient([0, 0.75, 0.8], [0, 0, 1]), side: 1 },
+  bow: { hand: 'left', quat: orient([0.05, 1, 0.1], [0, 0, 1]), side: -1 },
+}
+const SHIELD_MOUNT: Mount = { hand: 'left', quat: orient([0, 1, 0], [1, 0, 0.3]), side: -1 }
+
 /**
  * 把武器掛到骨頭上。
- * @param armTilt 待機時手臂繞 Z 軸放下的角度（武器朝向要先反向補償，放下後才會是設計的角度）
+ * 待機時手臂會繞 Z 軸放下：武器朝向先反向補償，手臂放下後才會是設計的角度。
  */
-function attach(bone: THREE.Object3D | undefined, gear: THREE.Object3D, modelQuat: THREE.Quaternion, armTilt: number, modelScale: number) {
-  if (!bone) return
-  const boneQuat = bone.getWorldQuaternion(new THREE.Quaternion())
-  const boneScale = bone.getWorldScale(new THREE.Vector3()).x || 1
-  const comp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -armTilt)
-  gear.quaternion.copy(boneQuat.invert()).multiply(comp).multiply(modelQuat)
+function attach(hands: Hands, mount: Mount, gear: THREE.Object3D, modelScale: number, armDown: number) {
+  const hand = hands[mount.hand]
+  if (!hand) return false
+  const comp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -armDown * mount.side)
+  // 物件原本的旋轉（例如弓的修正）放在最內層：骨頭反轉 × 手臂補償 × 掛點朝向 × 原本旋轉
+  const own = gear.quaternion.clone()
+  gear.quaternion.copy(hand.quat).invert().multiply(comp).multiply(mount.quat).multiply(own)
   // 骨架有 0.01 縮放、模型又會整體放大：換算回世界單位
-  gear.scale.setScalar(1 / (boneScale * modelScale))
-  gear.userData.gear = true
-  bone.add(gear)
+  gear.scale.setScalar(1 / (hand.scale * modelScale))
+  hand.bone.add(gear)
+  return true
 }
 
-/** 依外觀設定在手部骨頭掛上武器；armDown 為待機時手臂放下的弧度 */
-export function attachGear(scene: THREE.Object3D, a: Appearance, modelScale: number, armDown: number) {
-  const right = scene.getObjectByName('RightHand')
-  const left = scene.getObjectByName('LeftHand')
+/** 依外觀設定掛上程序化武器（武器模型載入前或失敗時用）；回傳掛上的物件，卸下時交給 detachGear */
+export function attachProceduralGear(hands: Hands, a: Appearance, modelScale: number, armDown: number) {
+  const out: THREE.Object3D[] = []
   const accent = a.weaponTint ?? a.outfit.accent
-  // 右手（-X 側）待機時繞 Z 轉 +armDown，左手轉 -armDown
-  switch (a.weapon) {
-    case 'sword':
-      attach(right, sword(accent), orient([-0.55, 0.12, 1], [1, 0.3, 0]), armDown, modelScale)
-      break
-    case 'staff':
-      attach(right, staff(accent), orient([-0.05, 1, 0.22], [0, 0, 1]), armDown, modelScale)
-      break
-    case 'wand':
-      attach(right, wand(accent), orient([0, 0.75, 0.8], [0, 0, 1]), armDown, modelScale)
-      break
-    case 'bow':
-      attach(left, bow(accent), orient([0.05, 1, 0.1], [0, 0, 1]), -armDown, modelScale)
-      break
+  const build = { sword, staff, wand, bow } as const
+  if (a.weapon !== 'none') {
+    const g = build[a.weapon](accent)
+    if (attach(hands, MOUNTS[a.weapon], g, modelScale, armDown)) out.push(g)
   }
-  if (a.armor) attach(left, shield(a.outfit.primary, a.outfit.accent), orient([0, 1, 0], [1, 0, 0.3]), -armDown, modelScale)
+  if (a.armor) {
+    const g = shield(a.outfit.primary, a.outfit.accent)
+    if (attach(hands, SHIELD_MOUNT, g, modelScale, armDown)) out.push(g)
+  }
+  for (const g of out) g.userData.ownMaterials = true
+  return out
 }
 
-/** 釋放武器的材質（幾何體為共用，不釋放） */
-export function disposeGear(scene: THREE.Object3D) {
-  scene.traverse((o) => {
-    if (!o.userData.gear) return
-    o.traverse((c) => {
+/** 武器包的弓是 XY 平面、往 -X 鼓起；轉成和程序化弓一樣往 +Z 鼓起 */
+const BOW_FIX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
+
+/**
+ * 掛上武器包的模型（已複製好的場景）；kind 為 'shield' 時掛到左手當盾牌。
+ * 外面包一層：模型自己的根節點變換（和動畫）保持不動，修正旋轉與縮放放在外層。
+ */
+export function attachModelGear(hands: Hands, a: Appearance, gear: THREE.Object3D, kind: 'weapon' | 'shield', modelScale: number, armDown: number) {
+  const mount = kind === 'shield' ? SHIELD_MOUNT : a.weapon === 'none' ? undefined : MOUNTS[a.weapon]
+  if (!mount) return undefined
+  const holder = new THREE.Group()
+  if (kind === 'weapon' && a.weapon === 'bow') holder.quaternion.copy(BOW_FIX)
+  holder.add(gear)
+  return attach(hands, mount, holder, modelScale, armDown) ? holder : undefined
+}
+
+/** 卸下武器；程序化武器的材質是自己建立的，一起釋放（幾何體共用，不釋放） */
+export function detachGear(list: THREE.Object3D[]) {
+  for (const g of list) {
+    g.removeFromParent()
+    if (!g.userData.ownMaterials) continue
+    g.traverse((c) => {
       const mesh = c as THREE.Mesh
       if (mesh.isMesh) (mesh.material as THREE.Material).dispose()
     })
-  })
+  }
 }

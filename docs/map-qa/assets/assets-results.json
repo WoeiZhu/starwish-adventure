@@ -1,0 +1,202 @@
+{
+  "results": [
+    {
+      "name": "archer：四人手上都掛著武器包模型（含騎士盾牌）",
+      "ok": true,
+      "detail": "[{\"hand\":\"LeftHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true}]"
+    },
+    {
+      "name": "mage：四人手上都掛著武器包模型（含騎士盾牌）",
+      "ok": true,
+      "detail": "[{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true}]"
+    },
+    {
+      "name": "knight：四人手上都掛著武器包模型（含騎士盾牌）",
+      "ok": true,
+      "detail": "[{\"hand\":\"LeftHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true}]"
+    },
+    {
+      "name": "cleric：四人手上都掛著武器包模型（含騎士盾牌）",
+      "ok": true,
+      "detail": "[{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":3,\"visible\":true},{\"hand\":\"LeftHand\",\"meshes\":4,\"visible\":true},{\"hand\":\"RightHand\",\"meshes\":4,\"visible\":true}]"
+    },
+    {
+      "name": "騎士換上第 3 階劍：下載 sword-03",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "騎士防具 LV30：換成第 3 階盾牌 shield-ivory-gold",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "弓箭手裝備指定 bow-02（武器店的商品）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "反覆換裝 6 次資源不增加",
+      "ok": true,
+      "detail": "[{\"geo\":318,\"tex\":48,\"calls\":814},{\"geo\":318,\"tex\":48,\"calls\":814}]"
+    },
+    {
+      "name": "村子商人旁邊有藥水擺設（紅藍綠 3 瓶）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "弓箭手射出的是箭矢模型",
+      "ok": true,
+      "detail": "arrows=1"
+    },
+    {
+      "name": "攻擊時弓弦有動（DrawRelease）",
+      "ok": true,
+      "detail": "moved=0.3345"
+    },
+    {
+      "name": "四種掉落物都用模型顯示",
+      "ok": true,
+      "detail": "{\"visibleLoot\":4,\"drops\":4}"
+    },
+    {
+      "name": "寶箱：開啟前顯示模型",
+      "ok": true,
+      "detail": "models=1"
+    },
+    {
+      "name": "寶箱：開啟後模型留在原地",
+      "ok": true,
+      "detail": "{\"n\":1,\"chests\":[\"c_meadow\"]}"
+    },
+    {
+      "name": "武器店：列出隊伍四人",
+      "ok": true,
+      "detail": "[\"小星的武器\",\"諾娃的武器\",\"雷恩的武器\",\"米婭的武器\",\"離開\"]"
+    },
+    {
+      "name": "武器店：弓箭手 3 階商品，高階要等級",
+      "ok": true,
+      "detail": "[{\"label\":\"白樺獵弓（優良）\",\"desc\":\"60 金幣　攻擊 +5\"},{\"label\":\"翠風長弓（稀有）\",\"desc\":\"84 金幣　攻擊 +7\",\"disabled\":\"需要 LV.12\"},{\"label\":\"星羽神弓（史詩）\",\"desc\":\"108 金幣　攻擊 +9\",\"disabled\":\"需要 LV.24\"},{\"label\":\"看其他人的\"},{\"label\":\"離開\"}]"
+    },
+    {
+      "name": "武器店：買下後扣錢並換上 bow-01",
+      "ok": true,
+      "detail": "{\"name\":\"優良的白樺獵弓\",\"model\":\"bow-01\",\"level\":1}"
+    },
+    {
+      "name": "存檔後武器店的武器保留模型 id",
+      "ok": true,
+      "detail": "優良的白樺獵弓"
+    },
+    {
+      "name": "城裡雜貨商人旁邊有藥水擺設（紅藍綠 3 瓶）",
+      "ok": true,
+      "detail": "models=3"
+    },
+    {
+      "name": "武器與掉落物只下載 .web.glb",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": "[]"
+    }
+  ],
+  "models": [
+    {
+      "url": "starwish-weapons-20261123-v001/shared-arrow.web.glb",
+      "status": 200,
+      "kb": 6
+    },
+    {
+      "url": "star-coin.web.glb",
+      "status": 200,
+      "kb": 100
+    },
+    {
+      "url": "potion-bottle.web.glb",
+      "status": 200,
+      "kb": 118
+    },
+    {
+      "url": "material-pouch.web.glb",
+      "status": 200,
+      "kb": 141
+    },
+    {
+      "url": "equipment-bundle.web.glb",
+      "status": 200,
+      "kb": 143
+    },
+    {
+      "url": "potion-bottle-blue.web.glb",
+      "status": 200,
+      "kb": 118
+    },
+    {
+      "url": "potion-bottle-green.web.glb",
+      "status": 200,
+      "kb": 118
+    },
+    {
+      "url": "wooden-chest.web.glb",
+      "status": 200,
+      "kb": 262
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/bow-01.web.glb",
+      "status": 200,
+      "kb": 126
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/staff-01.web.glb",
+      "status": 200,
+      "kb": 112
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/sword-01.web.glb",
+      "status": 200,
+      "kb": 103
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/shared-shield.web.glb",
+      "status": 200,
+      "kb": 111
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/wand-01.web.glb",
+      "status": 200,
+      "kb": 103
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/sword-03.web.glb",
+      "status": 200,
+      "kb": 113
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/shield-ivory-gold.web.glb",
+      "status": 200,
+      "kb": 183
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/bow-02.web.glb",
+      "status": 200,
+      "kb": 145
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/sword-01.web.glb",
+      "status": 200,
+      "kb": 103
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/shield-ivory-gold.web.glb",
+      "status": 200,
+      "kb": 183
+    }
+  ],
+  "totalKb": 2288
+}

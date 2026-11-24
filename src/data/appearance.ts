@@ -1,5 +1,6 @@
 // 外觀設定：性別外觀與職業服裝分開，組合成角色模型的輸入。
 import { CLASSES, type ClassId, type WeaponKind } from './classes'
+import { CLASS_WEAPONS, SHIELD_URLS } from './weaponModels'
 
 export type Gender = 'boy' | 'girl'
 export type Headgear = 'none' | 'witchHat' | 'featherBand' | 'halo' | 'flower'
@@ -18,9 +19,18 @@ export interface Appearance {
   modelUrl?: string
   /** 內含 Idle / Walk / Run 動畫片段的 GLB；有值時優先於 modelUrl，直接播放模型自帶動作 */
   clipModelUrl?: string
-  /** 已裝備武器的品質顏色；有值時武器的裝飾與發光改用此色 */
+  /** 已裝備武器的品質顏色；程序化武器（武器模型載入失敗時）的裝飾與發光改用此色 */
   weaponTint?: string
+  /** 手上的武器模型（武器包 GLB）；沒有或載入失敗時用程序化武器 */
+  weaponModel?: string
+  /** 武器模型的動畫片段（弓的拉弦放箭），攻擊時播放 */
+  weaponClip?: string
+  /** 騎士左手的盾牌模型 */
+  shieldModel?: string
 }
+
+/** 裝備帶來的外觀（game/gear.ts 依身上的裝備算出） */
+export type GearLook = Pick<Appearance, 'weaponTint' | 'weaponModel' | 'weaponClip' | 'shieldModel'>
 
 const GENDER_LOOK: Record<Gender, { hair: string; eye: string; skin: string }> = {
   boy: { hair: '#8a5630', eye: '#3f8fd6', skin: '#ffe0cc' },
@@ -45,7 +55,13 @@ const CLASS_HEADGEAR: Record<ClassId, Headgear> = {
   cleric: 'halo',
 }
 
-export function buildAppearance(gender: Gender, classId: ClassId, weaponTint?: string): Appearance {
+/** 沒有裝備資料時（例如還沒加入的夥伴）：第 1 階武器、第 1 階盾牌 */
+function defaultGear(classId: ClassId): GearLook {
+  const w = CLASS_WEAPONS[classId][0]
+  return { weaponModel: w.url, weaponClip: w.clip, shieldModel: classId === 'knight' ? SHIELD_URLS[0] : undefined }
+}
+
+export function buildAppearance(gender: Gender, classId: ClassId, gear?: GearLook): Appearance {
   const cls = CLASSES[classId]
   return {
     gender,
@@ -56,7 +72,7 @@ export function buildAppearance(gender: Gender, classId: ClassId, weaponTint?: s
     headgear: CLASS_HEADGEAR[classId],
     armor: classId === 'knight',
     modelUrl: CLASS_MODELS[classId],
-    weaponTint,
+    ...(gear ?? defaultGear(classId)),
   }
 }
 
