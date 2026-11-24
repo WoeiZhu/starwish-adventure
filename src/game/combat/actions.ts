@@ -292,7 +292,8 @@ function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number, 
       shake(0.12)
       if (audible(u)) sfx.taunt()
       for (const en of enemies()) {
-        if (dist(u, en) > e.radius) continue
+        // 只拉已經在戰鬥中的怪，不把旁邊營地還沒開打的怪拉過來
+        if (dist(u, en) > e.radius || en.targetId === null) continue
         en.targetId = u.id
         en.tauntBy = u.id
         en.tauntTime = e.duration
@@ -347,7 +348,7 @@ function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number, 
         color: e.color,
         style: e.style,
       })
-      ring(at.x, at.z, e.color, 0.3, e.radius, 0.35)
+      ring(at.x, at.z, e.color, 0.3, e.radius + (mods?.radius[idx] ?? 0), 0.35)
       if (e.style === 'frost') {
         // 冰霜衝擊：冰晶向外炸開
         flash(at.x, 0.6, at.z, '#dff4ff', e.radius * 1.2, 0.25)

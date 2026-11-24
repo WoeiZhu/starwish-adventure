@@ -749,6 +749,9 @@ function zonePulse(z: Zone) {
   }
 }
 
+/** 範圍技能對還沒開打的怪的有效半徑比例 */
+const IDLE_ZONE_REACH = 0.5
+
 function updateZones(dt: number) {
   const list = combat.zones
   for (let i = list.length - 1; i >= 0; i--) {
@@ -760,7 +763,12 @@ function updateZones(dt: number) {
       z.tickTimer += z.tick
       zonePulse(z)
       for (const u of combat.units) {
-        if (!u.alive || Math.hypot(u.x - z.x, u.z - z.z) > z.radius + u.radius) continue
+        if (!u.alive) continue
+        const d = Math.hypot(u.x - z.x, u.z - z.z)
+        // 已經在打的怪：碰到範圍就算。還沒開打的怪（同營地或旁邊營地的）要在範圍中心一半內才算，
+        // 這樣對鎖定的怪放大招，不會把旁邊幾公尺外還沒開打的怪一起拉進來
+        const reach = u.team === 'enemy' && u.targetId === null ? z.radius * IDLE_ZONE_REACH : z.radius + u.radius
+        if (d > reach) continue
         if (u.team === 'enemy') {
           if (z.power) damage(z.owner, u, z.power)
           if (z.slow) u.slow = Math.max(u.slow, z.slow)
