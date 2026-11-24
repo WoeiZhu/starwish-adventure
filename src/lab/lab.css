@@ -1,0 +1,366 @@
+/* 技能特效測試頁：桌機右側面板，手機面板收在下方 */
+:root {
+  --lab-ink: #3b2f45;
+  --lab-soft: #7a6b86;
+  --lab-panel: rgba(255, 252, 247, 0.94);
+  --lab-line: #eadfd2;
+  --lab-accent: #ff8a5c;
+  --lab-accent2: #5d8fe0;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #d6eefa;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
+  color: var(--lab-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.lab {
+  position: fixed;
+  inset: 0;
+}
+.lab canvas {
+  touch-action: none;
+}
+.lab-canvas {
+  position: absolute;
+  inset: 0;
+}
+@media (min-width: 761px) {
+  .lab.panel-open .lab-canvas {
+    right: 372px;
+  }
+}
+.lab button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--lab-line);
+  background: #fff;
+  color: var(--lab-ink);
+  border-radius: 10px;
+  padding: 6px 12px;
+}
+.lab button.on {
+  background: var(--lab-ink);
+  border-color: var(--lab-ink);
+  color: #fff;
+}
+.lab-top {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  pointer-events: none;
+}
+.lab-top > * {
+  pointer-events: auto;
+}
+.lab-title {
+  font-weight: 900;
+  font-size: 18px;
+  background: var(--lab-panel);
+  padding: 6px 14px;
+  border-radius: 12px;
+}
+.lab-classes {
+  display: flex;
+  gap: 6px;
+  background: var(--lab-panel);
+  padding: 4px;
+  border-radius: 12px;
+}
+.lab-classes button {
+  border: none;
+  min-width: 64px;
+  font-weight: 700;
+}
+.lab-cast {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  min-width: 200px;
+  padding: 10px 26px 12px !important;
+  border-radius: 18px !important;
+  border: none !important;
+  background: linear-gradient(180deg, #ff9f6e, #ff7a52) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(255, 122, 82, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.lab-cast span {
+  font-size: 20px;
+  font-weight: 900;
+}
+.lab-cast small {
+  opacity: 0.9;
+}
+.lab-cast i {
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 47, 69, 0.35);
+  transform-origin: left;
+  pointer-events: none;
+}
+.lab-msg {
+  position: absolute;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  background: rgba(59, 47, 69, 0.85);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.lab-toggle {
+  position: absolute;
+  right: 16px;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 3;
+  font-weight: 700;
+}
+.lab-panel {
+  position: absolute;
+  right: 16px;
+  top: 58px;
+  bottom: 16px;
+  width: 340px;
+  overflow-y: auto;
+  background: var(--lab-panel);
+  border-radius: 16px;
+  padding: 4px 16px 12px;
+  box-shadow: 0 8px 28px rgba(59, 47, 69, 0.16);
+  z-index: 2;
+}
+.lab-panel section {
+  border-bottom: 1px solid var(--lab-line);
+  padding: 10px 0;
+}
+.lab-panel h3 {
+  margin: 4px 0 4px;
+  font-size: 18px;
+}
+.lab-panel h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.lab-desc {
+  margin: 2px 0;
+  font-size: 13px;
+  color: var(--lab-soft);
+}
+.lab-note {
+  font-size: 12px;
+  color: var(--lab-soft);
+  margin: 8px 0 0;
+}
+.lab-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lab-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  padding: 4px 6px;
+}
+.lab-small {
+  padding: 2px 10px !important;
+  font-size: 12px;
+}
+.lab-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 64px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 4px 0;
+}
+.lab-row input {
+  width: 100%;
+  accent-color: var(--lab-accent);
+}
+.lab-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--lab-soft);
+}
+.lab-colors {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.lab-colors label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lab-colors input {
+  width: 40px;
+  height: 28px;
+  border: none;
+  padding: 0;
+  background: none;
+}
+.lab-timeline {
+  font-size: 12px;
+}
+.lab-tl-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--lab-soft);
+  margin-left: 44px;
+}
+.lab-tl-body {
+  position: relative;
+}
+.lab-tl-track {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 4px;
+  align-items: center;
+  height: 24px;
+}
+.lab-tl-name {
+  color: var(--lab-soft);
+}
+.lab-tl-lane {
+  position: relative;
+  height: 20px;
+  background: #f4ede4;
+  border-radius: 6px;
+}
+.lab-tl-mark {
+  position: absolute;
+  top: 2px;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: #fff;
+  transform: translateX(-2px);
+}
+.k-anim {
+  background: #8a7bd6;
+}
+.k-vfx {
+  background: #ff8a5c;
+}
+.k-hit {
+  background: #e0485a;
+}
+.k-launch {
+  background: #3d9a6a;
+}
+.k-sfx {
+  background: #5d8fe0;
+}
+.lab-tl-headwrap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 44px;
+  right: 0;
+  pointer-events: none;
+}
+.lab-tl-head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--lab-ink);
+}
+.lab-tl-impact {
+  margin-top: 6px;
+  color: var(--lab-soft);
+}
+.lab-stats {
+  font-size: 12px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.lab-panel a {
+  color: var(--lab-accent2);
+}
+
+/* 手機：面板改成下方抽屜，施放鈕在面板上方 */
+@media (max-width: 760px) {
+  .lab-title {
+    display: none;
+  }
+  .lab-classes button {
+    min-width: 0;
+    padding: 6px 10px;
+  }
+  .lab-toggle {
+    top: auto;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    right: 16px;
+  }
+  .lab-cast {
+    left: 16px;
+    transform: none;
+    min-width: 0;
+    padding: 10px 18px 12px !important;
+  }
+  .lab-msg {
+    left: 16px;
+    transform: none;
+    white-space: normal;
+  }
+  .lab-panel {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: auto;
+    max-height: 52vh;
+    border-radius: 16px 16px 0 0;
+    padding-bottom: 80px;
+  }
+}
+/* 手機橫放：高度很矮時面板放右邊 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lab-panel {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(340px, 46vw);
+    max-height: none;
+    border-radius: 16px 0 0 16px;
+    padding-bottom: 16px;
+  }
+  .lab-toggle {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: auto;
+    right: 16px;
+  }
+  .lab-panel {
+    padding-top: 44px;
+  }
+  .lab.panel-open .lab-canvas {
+    right: min(340px, 46vw);
+  }
+}

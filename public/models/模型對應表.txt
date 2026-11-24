@@ -15,7 +15,8 @@ cleric.glb                   聖者   CLERIC  聖者.glb                     隊
 3. 打包（npm run build）會把這個資料夾一起放進 dist/models/，網頁版不用手動補。
    缺少模型檔時，遊戲會自動改用程序化人物，不會當機，但外觀會不同。
 4. 另有五個內含動畫片段的模型（來源：Starwish_Adventure_9_Characters）：
-   slime.glb（普通怪）、elite-goblin.glb（精英怪）、guardian-boss.glb（Boss）、
+   slime.glb（史萊姆；史萊姆王子、史萊姆王也用它，放大並戴王冠）、elite-goblin.glb（哥布林）、
+   guardian-boss.glb（沒有專屬模型的種族當 Boss 時用）、
    guide-npc.glb（村長）、merchant-npc.glb（商人）。
    怪物對應寫在 src/scene/Enemy.tsx 的 CONFIG，NPC 對應寫在 appearance.ts 的 clipModelUrl。
 

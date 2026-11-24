@@ -2,6 +2,8 @@
 // 這裡只管資料與更新，畫面由 scene/CombatFx.tsx 繪製。
 import * as THREE from 'three'
 import { runtime } from '../runtime'
+import { vfxBus } from '../../vfx/bus'
+import { clearSkillRuns } from './skillRunner'
 
 export interface Particle {
   x: number
@@ -191,4 +193,7 @@ export function updateFx(dt: number) {
 export function clearFx() {
   for (const p of particles) p.life = 0
   for (const s of shapes) s.life = 0
+  // 技能時間軸與技能特效系統也一起清掉（換地圖、重新開始）
+  clearSkillRuns()
+  vfxBus.requestClear()
 }

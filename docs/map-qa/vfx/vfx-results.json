@@ -1,0 +1,350 @@
+{
+  "date": "2026-11-24T02:58:40.529Z",
+  "results": [
+    {
+      "name": "測試頁 knight：命中照時間軸延遲發生",
+      "ok": true,
+      "detail": "197 ms（預期 130～330）"
+    },
+    {
+      "name": "測試頁 knight：用到的特效物件都有出現",
+      "ok": true,
+      "detail": "{\"slashes\":2,\"trails\":0,\"circles\":0,\"orbs\":0,\"rings\":1,\"pillars\":0,\"models\":0,\"particles\":29}"
+    },
+    {
+      "name": "測試頁 archer：命中照時間軸延遲發生",
+      "ok": true,
+      "detail": "420 ms（預期 300～700）"
+    },
+    {
+      "name": "測試頁 archer：用到的特效物件都有出現",
+      "ok": true,
+      "detail": "{\"slashes\":0,\"trails\":1,\"circles\":0,\"orbs\":0,\"rings\":1,\"pillars\":0,\"models\":1,\"particles\":26}"
+    },
+    {
+      "name": "測試頁 mage：命中照時間軸延遲發生",
+      "ok": true,
+      "detail": "826 ms（預期 700～1300）"
+    },
+    {
+      "name": "測試頁 mage：用到的特效物件都有出現",
+      "ok": true,
+      "detail": "{\"slashes\":0,\"trails\":1,\"circles\":1,\"orbs\":1,\"rings\":4,\"pillars\":0,\"models\":0,\"particles\":175}"
+    },
+    {
+      "name": "測試頁 cleric：命中照時間軸延遲發生",
+      "ok": true,
+      "detail": "450 ms（預期 380～700）"
+    },
+    {
+      "name": "測試頁 cleric：用到的特效物件都有出現",
+      "ok": true,
+      "detail": "{\"slashes\":0,\"trails\":0,\"circles\":1,\"orbs\":0,\"rings\":1,\"pillars\":1,\"models\":0,\"particles\":41}"
+    },
+    {
+      "name": "冷卻中不能再放",
+      "ok": true,
+      "detail": "[null,\"冷卻中\"]"
+    },
+    {
+      "name": "超出射程時不施放",
+      "ok": true,
+      "detail": "超出射程"
+    },
+    {
+      "name": "改參數後下一次施放就套用（主色；刀光半徑 = 射程 × 0.85）",
+      "ok": true,
+      "detail": "{\"scale\":2.8899999999999997,\"color\":[1,0,0]}"
+    },
+    {
+      "name": "高畫質壓力測試：粒子與每種物件都沒超過上限",
+      "ok": true,
+      "detail": "{\"knight\":{\"soft\":63,\"add\":297,\"slashes\":16,\"trails\":0,\"circles\":0,\"rings\":9,\"pillars\":0,\"orbs\":0},\"archer\":{\"soft\":118,\"add\":340,\"slashes\":0,\"trails\":19,\"circles\":0,\"rings\":16,\"pillars\":0,\"orbs\":0},\"mage\":{\"soft\":1580,\"add\":987,\"slashes\":0,\"trails\":19,\"circles\":12,\"rings\":24,\"pillars\":0,\"orbs\":19},\"cleric\":{\"soft\":460,\"add\":360,\"slashes\":0,\"trails\":0,\"circles\":12,\"rings\":20,\"pillars\":8,\"orbs\":0}}"
+    },
+    {
+      "name": "高畫質壓力測試：平均 FPS ≥ 50",
+      "ok": true,
+      "detail": "knight 60fps 最慢一幀 18ms；archer 60fps 最慢一幀 19ms；mage 60fps 最慢一幀 18ms；cleric 60fps 最慢一幀 18ms"
+    },
+    {
+      "name": "省電模式：粒子預算降到 600 / 360，物件上限減半",
+      "ok": true,
+      "detail": "{\"knight\":{\"soft\":36,\"add\":163,\"slashes\":8,\"trails\":0,\"circles\":0,\"rings\":9,\"pillars\":0,\"orbs\":0},\"archer\":{\"soft\":62,\"add\":180,\"slashes\":0,\"trails\":16,\"circles\":0,\"rings\":12,\"pillars\":0,\"orbs\":0},\"mage\":{\"soft\":600,\"add\":360,\"slashes\":0,\"trails\":16,\"circles\":6,\"rings\":12,\"pillars\":0,\"orbs\":11},\"cleric\":{\"soft\":240,\"add\":180,\"slashes\":0,\"trails\":0,\"circles\":6,\"rings\":12,\"pillars\":4,\"orbs\":0}}"
+    },
+    {
+      "name": "反覆壓力測試 4 輪：幾何體、貼圖、著色器數量不增加",
+      "ok": true,
+      "detail": "[{\"geo\":94,\"tex\":40,\"programs\":33},{\"geo\":94,\"tex\":40,\"programs\":33}]"
+    },
+    {
+      "name": "手機：預設省電模式，點按鈕可以施放",
+      "ok": true,
+      "detail": "{\"quality\":\"low\",\"casts\":0,\"after\":1}"
+    },
+    {
+      "name": "遊戲 戰士普攻：刀光掃到時才扣血（不是出手瞬間）",
+      "ok": true,
+      "detail": "{\"hitAt\":[192],\"firstProjectile\":-1,\"peak\":{\"slashes\":2,\"trails\":0,\"circles\":0,\"rings\":1,\"pillars\":0,\"orbs\":0,\"particles\":29}}"
+    },
+    {
+      "name": "遊戲 弓箭手普攻：箭有拖尾，飛到才扣血",
+      "ok": true,
+      "detail": "{\"hitAt\":[451],\"firstProjectile\":134,\"peak\":{\"slashes\":0,\"trails\":1,\"circles\":0,\"rings\":1,\"pillars\":0,\"orbs\":0,\"particles\":26}}"
+    },
+    {
+      "name": "遊戲 火球：魔法陣與集氣之後（約 0.4 秒）才發射",
+      "ok": true,
+      "detail": "{\"hitAt\":[714,714],\"firstProjectile\":399,\"peak\":{\"slashes\":0,\"trails\":1,\"circles\":1,\"rings\":2,\"pillars\":0,\"orbs\":1,\"particles\":95}}"
+    },
+    {
+      "name": "遊戲 火球：命中爆炸、波及旁邊的怪物",
+      "ok": true,
+      "detail": "{\"hitAt\":[714,714],\"firstProjectile\":399,\"peak\":{\"slashes\":0,\"trails\":1,\"circles\":1,\"rings\":2,\"pillars\":0,\"orbs\":1,\"particles\":95}}"
+    },
+    {
+      "name": "遊戲 聖者治療：光柱升起後（約 0.45 秒）才回血",
+      "ok": true,
+      "detail": "{\"hitAt\":[446],\"firstProjectile\":-1,\"peak\":{\"slashes\":0,\"trails\":0,\"circles\":1,\"rings\":1,\"pillars\":1,\"orbs\":0,\"particles\":41}}"
+    },
+    {
+      "name": "換地圖時特效全部清掉",
+      "ok": true,
+      "detail": "{\"before\":74,\"after\":0}"
+    },
+    {
+      "name": "沒有主控台錯誤",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "stress": {
+    "high": {
+      "knight": {
+        "fps": 60,
+        "worstFrameMs": 18,
+        "peak": {
+          "soft": 63,
+          "add": 297,
+          "slashes": 16,
+          "trails": 0,
+          "circles": 0,
+          "rings": 9,
+          "pillars": 0,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 1600,
+          "add": 1000
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 1,
+          "circles": 1,
+          "rings": 9,
+          "pillars": 1,
+          "orbs": 1
+        },
+        "dropped": 0,
+        "stolen": 24
+      },
+      "archer": {
+        "fps": 60,
+        "worstFrameMs": 19,
+        "peak": {
+          "soft": 118,
+          "add": 340,
+          "slashes": 0,
+          "trails": 19,
+          "circles": 0,
+          "rings": 16,
+          "pillars": 0,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 1600,
+          "add": 1000
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 1,
+          "rings": 16,
+          "pillars": 1,
+          "orbs": 1
+        },
+        "dropped": 0,
+        "stolen": 24
+      },
+      "mage": {
+        "fps": 60,
+        "worstFrameMs": 18,
+        "peak": {
+          "soft": 1580,
+          "add": 987,
+          "slashes": 0,
+          "trails": 19,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 0,
+          "orbs": 19
+        },
+        "budget": {
+          "soft": 1600,
+          "add": 1000
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 1,
+          "orbs": 20
+        },
+        "dropped": 272,
+        "stolen": 88
+      },
+      "cleric": {
+        "fps": 60,
+        "worstFrameMs": 18,
+        "peak": {
+          "soft": 460,
+          "add": 360,
+          "slashes": 0,
+          "trails": 0,
+          "circles": 12,
+          "rings": 20,
+          "pillars": 8,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 1600,
+          "add": 1000
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 8,
+          "orbs": 20
+        },
+        "dropped": 272,
+        "stolen": 108
+      }
+    },
+    "low": {
+      "knight": {
+        "fps": 60,
+        "worstFrameMs": 18,
+        "peak": {
+          "soft": 36,
+          "add": 163,
+          "slashes": 8,
+          "trails": 0,
+          "circles": 0,
+          "rings": 9,
+          "pillars": 0,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 600,
+          "add": 360
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 8,
+          "orbs": 20
+        },
+        "dropped": 541,
+        "stolen": 204
+      },
+      "archer": {
+        "fps": 60,
+        "worstFrameMs": 17,
+        "peak": {
+          "soft": 62,
+          "add": 180,
+          "slashes": 0,
+          "trails": 16,
+          "circles": 0,
+          "rings": 12,
+          "pillars": 0,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 600,
+          "add": 360
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 8,
+          "orbs": 20
+        },
+        "dropped": 541,
+        "stolen": 216
+      },
+      "mage": {
+        "fps": 60,
+        "worstFrameMs": 17,
+        "peak": {
+          "soft": 600,
+          "add": 360,
+          "slashes": 0,
+          "trails": 16,
+          "circles": 6,
+          "rings": 12,
+          "pillars": 0,
+          "orbs": 11
+        },
+        "budget": {
+          "soft": 600,
+          "add": 360
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 8,
+          "orbs": 20
+        },
+        "dropped": 1043,
+        "stolen": 310
+      },
+      "cleric": {
+        "fps": 60,
+        "worstFrameMs": 17,
+        "peak": {
+          "soft": 240,
+          "add": 180,
+          "slashes": 0,
+          "trails": 0,
+          "circles": 6,
+          "rings": 12,
+          "pillars": 4,
+          "orbs": 0
+        },
+        "budget": {
+          "soft": 600,
+          "add": 360
+        },
+        "created": {
+          "slashes": 16,
+          "trails": 20,
+          "circles": 12,
+          "rings": 24,
+          "pillars": 8,
+          "orbs": 20
+        },
+        "dropped": 1043,
+        "stolen": 348
+      }
+    }
+  }
+}

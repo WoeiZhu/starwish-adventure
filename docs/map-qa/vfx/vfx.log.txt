@@ -1,0 +1,28 @@
+✔ 測試頁 knight：命中照時間軸延遲發生 197 ms（預期 130～330）
+✔ 測試頁 knight：用到的特效物件都有出現 {"slashes":2,"trails":0,"circles":0,"orbs":0,"rings":1,"pillars":0,"models":0,"particles":29}
+✔ 測試頁 archer：命中照時間軸延遲發生 420 ms（預期 300～700）
+✔ 測試頁 archer：用到的特效物件都有出現 {"slashes":0,"trails":1,"circles":0,"orbs":0,"rings":1,"pillars":0,"models":1,"particles":26}
+✔ 測試頁 mage：命中照時間軸延遲發生 826 ms（預期 700～1300）
+✔ 測試頁 mage：用到的特效物件都有出現 {"slashes":0,"trails":1,"circles":1,"orbs":1,"rings":4,"pillars":0,"models":0,"particles":175}
+✔ 測試頁 cleric：命中照時間軸延遲發生 450 ms（預期 380～700）
+✔ 測試頁 cleric：用到的特效物件都有出現 {"slashes":0,"trails":0,"circles":1,"orbs":0,"rings":1,"pillars":1,"models":0,"particles":41}
+✔ 冷卻中不能再放 [null,"冷卻中"]
+✔ 超出射程時不施放 超出射程
+✔ 改參數後下一次施放就套用（主色；刀光半徑 = 射程 × 0.85） {"scale":2.8899999999999997,"color":[1,0,0]}
+壓力測試（高畫質） {"knight":{"fps":60,"worstFrameMs":18,"peak":{"soft":63,"add":297,"slashes":16,"trails":0,"circles":0,"rings":9,"pillars":0,"orbs":0},"budget":{"soft":1600,"add":1000},"created":{"slashes":16,"trails":1,"circles":1,"rings":9,"pillars":1,"orbs":1},"dropped":0,"stolen":24},"archer":{"fps":60,"worstFrameMs":19,"peak":{"soft":118,"add":340,"slashes":0,"trails":19,"circles":0,"rings":16,"pillars":0,"orbs":0},"budget":{"soft":1600,"add":1000},"created":{"slashes":16,"trails":20,"circles":1,"rings":16,"pillars":1,"orbs":1},"dropped":0,"stolen":24},"mage":{"fps":60,"worstFrameMs":18,"peak":{"soft":1580,"add":987,"slashes":0,"trails":19,"circles":12,"rings":24,"pillars":0,"orbs":19},"budget":{"soft":1600,"add":1000},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":1,"orbs":20},"dropped":272,"stolen":88},"cleric":{"fps":60,"worstFrameMs":18,"peak":{"soft":460,"add":360,"slashes":0,"trails":0,"circles":12,"rings":20,"pillars":8,"orbs":0},"budget":{"soft":1600,"add":1000},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":8,"orbs":20},"dropped":272,"stolen":108}}
+✔ 高畫質壓力測試：粒子與每種物件都沒超過上限 {"knight":{"soft":63,"add":297,"slashes":16,"trails":0,"circles":0,"rings":9,"pillars":0,"orbs":0},"archer":{"soft":118,"add":340,"slashes":0,"trails":19,"circles":0,"rings":16,"pillars":0,"orbs":0},"mage":{"soft":1580,"add":987,"slashes":0,"trails":19,"circles":12,"rings":24,"pillars":0,"orbs":19},"cleric":{"soft":460,"add":360,"slashes":0,"trails":0,"circles":12,"rings":20,"pillars":8,"orbs":0}}
+✔ 高畫質壓力測試：平均 FPS ≥ 50 knight 60fps 最慢一幀 18ms；archer 60fps 最慢一幀 19ms；mage 60fps 最慢一幀 18ms；cleric 60fps 最慢一幀 18ms
+壓力測試（省電） {"knight":{"fps":60,"worstFrameMs":18,"peak":{"soft":36,"add":163,"slashes":8,"trails":0,"circles":0,"rings":9,"pillars":0,"orbs":0},"budget":{"soft":600,"add":360},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":8,"orbs":20},"dropped":541,"stolen":204},"archer":{"fps":60,"worstFrameMs":17,"peak":{"soft":62,"add":180,"slashes":0,"trails":16,"circles":0,"rings":12,"pillars":0,"orbs":0},"budget":{"soft":600,"add":360},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":8,"orbs":20},"dropped":541,"stolen":216},"mage":{"fps":60,"worstFrameMs":17,"peak":{"soft":600,"add":360,"slashes":0,"trails":16,"circles":6,"rings":12,"pillars":0,"orbs":11},"budget":{"soft":600,"add":360},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":8,"orbs":20},"dropped":1043,"stolen":310},"cleric":{"fps":60,"worstFrameMs":17,"peak":{"soft":240,"add":180,"slashes":0,"trails":0,"circles":6,"rings":12,"pillars":4,"orbs":0},"budget":{"soft":600,"add":360},"created":{"slashes":16,"trails":20,"circles":12,"rings":24,"pillars":8,"orbs":20},"dropped":1043,"stolen":348}}
+✔ 省電模式：粒子預算降到 600 / 360，物件上限減半 {"knight":{"soft":36,"add":163,"slashes":8,"trails":0,"circles":0,"rings":9,"pillars":0,"orbs":0},"archer":{"soft":62,"add":180,"slashes":0,"trails":16,"circles":0,"rings":12,"pillars":0,"orbs":0},"mage":{"soft":600,"add":360,"slashes":0,"trails":16,"circles":6,"rings":12,"pillars":0,"orbs":11},"cleric":{"soft":240,"add":180,"slashes":0,"trails":0,"circles":6,"rings":12,"pillars":4,"orbs":0}}
+反覆壓力測試的資源 [{"geo":94,"tex":40,"programs":33},{"geo":94,"tex":40,"programs":33},{"geo":94,"tex":40,"programs":33},{"geo":94,"tex":40,"programs":33}]
+✔ 反覆壓力測試 4 輪：幾何體、貼圖、著色器數量不增加 [{"geo":94,"tex":40,"programs":33},{"geo":94,"tex":40,"programs":33}]
+✔ 手機：預設省電模式，點按鈕可以施放 {"quality":"low","casts":0,"after":1}
+✔ 遊戲 戰士普攻：刀光掃到時才扣血（不是出手瞬間） {"hitAt":[192],"firstProjectile":-1,"peak":{"slashes":2,"trails":0,"circles":0,"rings":1,"pillars":0,"orbs":0,"particles":29}}
+✔ 遊戲 弓箭手普攻：箭有拖尾，飛到才扣血 {"hitAt":[451],"firstProjectile":134,"peak":{"slashes":0,"trails":1,"circles":0,"rings":1,"pillars":0,"orbs":0,"particles":26}}
+✔ 遊戲 火球：魔法陣與集氣之後（約 0.4 秒）才發射 {"hitAt":[714,714],"firstProjectile":399,"peak":{"slashes":0,"trails":1,"circles":1,"rings":2,"pillars":0,"orbs":1,"particles":95}}
+✔ 遊戲 火球：命中爆炸、波及旁邊的怪物 {"hitAt":[714,714],"firstProjectile":399,"peak":{"slashes":0,"trails":1,"circles":1,"rings":2,"pillars":0,"orbs":1,"particles":95}}
+✔ 遊戲 聖者治療：光柱升起後（約 0.45 秒）才回血 {"hitAt":[446],"firstProjectile":-1,"peak":{"slashes":0,"trails":0,"circles":1,"rings":1,"pillars":1,"orbs":0,"particles":41}}
+✔ 換地圖時特效全部清掉 {"before":74,"after":0}
+✔ 沒有主控台錯誤 
+
+結果：23/23 通過

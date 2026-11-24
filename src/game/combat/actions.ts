@@ -4,8 +4,12 @@ import { CLASSES, type BuffStat, type SkillEffect } from '../../data/classes'
 import { inSafeZone } from '../../data/world'
 import { sfx } from '../../systems/sfx'
 import { runtime } from '../runtime'
+import { DEMO_SKILLS, type DemoSkillId } from '../../skills/demoSkills'
+import { inArc } from '../../skills/hitTest'
+import { rollDamage } from './damageCalc'
 import { burst, emit, flash, pillar, ring, shake, slash } from './fx'
 import { onEnemyKilled } from './rewards'
+import { playImpact, playSkill } from './skillRunner'
 import { addFloater, combat, dist, removeBuffs, unitById } from './state'
 import type { CastResult, Unit } from './types'
 
@@ -58,18 +62,23 @@ export function kill(u: Unit) {
   }
 }
 
-export function damage(src: Unit, dst: Unit, power: number, heavy = false) {
+/**
+ * 造成傷害：數字由 damageCalc.ts 計算，這裡套用到單位上並給打擊回饋。
+ * ownFx = true：命中特效由技能特效系統（技能時間軸的命中反應）負責，這裡不畫通用的火花與閃光。
+ */
+export function damage(src: Unit, dst: Unit, power: number, heavy = false, ownFx = false) {
   if (!dst.alive) return
   // 安全區內的隊伍打不到野怪（避免站在村裡隔空刷怪）；事件怪物不受限
   if (src.team === 'party' && dst.team === 'enemy' && dst.respawns && inSafeZone(src.x, src.z)) return
   if (dst.invuln > 0) return addFloater(dst, '閃避', '#bfe9ff')
-  let d = atkOf(src) * power - defOf(dst) * 0.5
-  const crit = Math.random() < src.crit
-  if (crit) d *= 1.6
-  d *= 0.9 + Math.random() * 0.2
-  d *= 1 - Math.min(0.9, buffSum(dst, 'guard'))
-  if (dst.vulnTime > 0) d *= 1 + dst.vuln // 破甲
-  d = Math.max(1, Math.round(d))
+  const { amount: d, crit } = rollDamage({
+    atk: atkOf(src),
+    def: defOf(dst),
+    power,
+    critChance: src.crit,
+    guard: buffSum(dst, 'guard'),
+    vuln: dst.vulnTime > 0 ? dst.vuln : 0, // 破甲
+  })
   dst.hp -= d
   dst.hitFlash = 0.18
   addFloater(
@@ -87,9 +96,11 @@ export function damage(src: Unit, dst: Unit, power: number, heavy = false) {
   const kx = dst.x - src.x
   const kz = dst.z - src.z
   const kd = Math.hypot(kx, kz) || 1
-  burst(dst.x, y, dst.z, color, strong ? 14 : 7, strong ? 5 : 3.2, { up: 2.5, size: strong ? 0.12 : 0.085 })
-  burst(dst.x, y, dst.z, '#ffffff', strong ? 5 : 3, 2.2, { up: 1.5, size: 0.06, life: 0.25 })
-  flash(dst.x - (kx / kd) * 0.25, y, dst.z - (kz / kd) * 0.25, strong ? '#ffffff' : color, strong ? 1.1 : 0.65)
+  if (!ownFx) {
+    burst(dst.x, y, dst.z, color, strong ? 14 : 7, strong ? 5 : 3.2, { up: 2.5, size: strong ? 0.12 : 0.085 })
+    burst(dst.x, y, dst.z, '#ffffff', strong ? 5 : 3, 2.2, { up: 1.5, size: 0.06, life: 0.25 })
+    flash(dst.x - (kx / kd) * 0.25, y, dst.z - (kz / kd) * 0.25, strong ? '#ffffff' : color, strong ? 1.1 : 0.65)
+  }
   if (dst.team === 'enemy') {
     const push = Math.min(0.55, 0.14 + power * 0.1) * (crit ? 1.4 : 1)
     dst.x += (kx / kd) * push
@@ -111,12 +122,15 @@ export function damage(src: Unit, dst: Unit, power: number, heavy = false) {
   if (dst.hp <= 0) kill(dst)
 }
 
-export function heal(u: Unit, amount: number) {
+/** 治療；ownFx = true 時光點由技能特效系統負責 */
+export function heal(u: Unit, amount: number, ownFx = false) {
   if (!u.alive) return
   const before = u.hp
   u.hp = Math.min(u.maxHp, u.hp + Math.round(amount))
   if (u.hp <= before) return
   addFloater(u, `+${Math.round(u.hp - before)}`, '#8dffb0')
+  if (audible(u)) sfx.heal()
+  if (ownFx) return
   for (let i = 0; i < 8; i++) {
     const a = Math.random() * Math.PI * 2
     emit(u.x + Math.cos(a) * 0.4, 0.2 + Math.random() * 0.4, u.z + Math.sin(a) * 0.4, '#8dffb0', {
@@ -126,7 +140,6 @@ export function heal(u: Unit, amount: number) {
     })
   }
   ring(u.x, u.z, '#8dffb0', 0.3, 1, 0.4)
-  if (audible(u)) sfx.heal()
 }
 
 function addBuff(u: Unit, stat: BuffStat, amount: number, duration: number) {
@@ -173,8 +186,10 @@ export function enemyShot(u: Unit, t: Unit, power: number, color: string, delay 
   if (audible(u)) sfx.shoot(true)
 }
 
-function spawnProjectile(u: Unit, t: Unit, power: number, delay: number, pierce: boolean, splash: number, big: boolean) {
+function spawnProjectile(u: Unit, t: Unit, power: number, delay: number, pierce: boolean, splash: number, big: boolean, vfx?: DemoSkillId) {
   const d = dist(u, t) || 1
+  // 弓箭手的箭都套用「弓箭射擊」的拖尾與命中特效
+  const fx = vfx ?? (u.classId === 'archer' ? 'archer_shot' : undefined)
   combat.projectiles.push({
     owner: u,
     targetId: pierce ? null : t.id,
@@ -191,7 +206,17 @@ function spawnProjectile(u: Unit, t: Unit, power: number, delay: number, pierce:
     hit: [],
     color: CLASSES[u.classId!].attack.color,
     big,
+    vfx: fx,
   })
+}
+
+/** 戰士斬擊的命中判定：刀光掃到時，目標還在前方扇形內才算打中 */
+function warriorHit(u: Unit, t: Unit) {
+  if (!u.alive || !t.alive) return
+  const sk = DEMO_SKILLS.warrior_slash
+  if (!inArc(u.x, u.z, u.facing, t, u.range + 0.8, sk.hit.arc ?? 160)) return
+  damage(u, t, sk.hit.power, false, true)
+  playImpact('warrior_slash', u, t)
 }
 
 export function basicAttack(u: Unit, t: Unit) {
@@ -199,6 +224,15 @@ export function basicAttack(u: Unit, t: Unit) {
   u.attackAnim = 1
   faceTarget(u, t)
   const color = attackColor(u)
+  // 示範技能：動作、特效、命中照時間軸進行（skills/demoSkills.ts）
+  if (u.team === 'party' && u.classId === 'knight') {
+    playSkill('warrior_slash', u, t, { onHit: () => warriorHit(u, t) })
+    return
+  }
+  if (u.team === 'party' && u.classId === 'archer') {
+    playSkill('archer_shot', u, t, { onLaunch: () => t.alive && spawnProjectile(u, t, 1, 0, false, 0, false) })
+    return
+  }
   if (u.ranged) {
     spawnProjectile(u, t, 1, 0.12, false, 0, false)
     // 出手閃光
@@ -216,14 +250,21 @@ export function basicAttack(u: Unit, t: Unit) {
 const party = () => combat.units.filter((u) => u.team === 'party' && u.alive)
 const enemies = () => combat.units.filter((u) => u.team === 'enemy' && u.alive)
 
-function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number) {
+function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number, skillId: string) {
   // 技能樹加成
   const mods = u.mods
   const mul = mods ? mods.power[idx] : 1
   const healMul = 1 + (mods?.heal ?? 0)
   switch (e.type) {
     case 'projectile':
-      if (t) {
+      if (t && skillId === 'fireball') {
+        // 法師火球：魔法陣與集氣之後才發射（時間軸的 launch）
+        const power = e.power * mul
+        const target = t
+        playSkill('mage_fireball', u, t, {
+          onLaunch: () => target.alive && spawnProjectile(u, target, power, 0, false, e.splash ?? 0, true, 'mage_fireball'),
+        })
+      } else if (t) {
         for (let i = 0; i < e.count; i++) {
           spawnProjectile(u, t, e.power * mul, 0.1 + i * (e.interval ?? 0), !!e.pierce, e.splash ?? 0, e.power >= 2)
         }
@@ -265,6 +306,17 @@ function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number) 
       const targets = e.party
         ? members
         : members.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, 1)
+      if (skillId === 'healing_light') {
+        // 聖者治療：魔法陣 → 光柱 → 回復（時間軸的 hit）
+        for (const m of targets)
+          playSkill('cleric_heal', u, m, {
+            onHit: () => {
+              heal(m, m.maxHp * e.ratio * healMul, true)
+              playImpact('cleric_heal', u, m)
+            },
+          })
+        break
+      }
       for (const m of targets) {
         pillar(m.x, m.z, '#8dffb0', 0.55, 2.6, 0.5)
         heal(m, m.maxHp * e.ratio * healMul)
@@ -343,7 +395,7 @@ export function castSkill(u: Unit, idx: number): CastResult {
     if (audible(u)) sfx.ultimate()
   } else if (audible(u)) sfx.cast()
 
-  for (const e of sk.effects) applyEffect(u, t, e, idx)
+  for (const e of sk.effects) applyEffect(u, t, e, idx, sk.id)
 
   // 技能樹「破甲」：必殺技範圍內的敵人暫時受到更多傷害
   if (sk.ultimate && u.mods && u.mods.vuln > 0) {

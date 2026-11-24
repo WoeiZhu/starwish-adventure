@@ -4,6 +4,7 @@ import type { Species } from '../../data/enemies'
 import type { Item } from '../../data/items'
 import type { Vec2 } from '../../data/world'
 import type { SkillMods } from '../progress'
+import type { DemoSkillId } from '../../skills/demoSkills'
 
 export type Team = 'party' | 'enemy'
 export type UnitKind = 'hero' | 'ally' | 'slime'
@@ -133,6 +134,8 @@ export interface Projectile {
   hit: string[]
   color: string
   big: boolean
+  /** 由技能特效系統畫拖尾與命中反應（demoSkills.ts 的技能 id） */
+  vfx?: DemoSkillId
 }
 
 export interface Zone {

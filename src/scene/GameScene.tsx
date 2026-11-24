@@ -10,6 +10,7 @@ import { CameraRig } from './CameraRig'
 import { CombatLayer } from './CombatLayer'
 import { Interactables } from './Interactables'
 import { MoveMarker, Player } from './Player'
+import { SkillVfx, skillVfxRef } from './SkillVfx'
 import { Enemy } from './Enemy'
 import { Town } from './Town'
 import { Vista } from './Vista'
@@ -74,7 +75,7 @@ function DevHooks() {
   useEffect(() => {
     if (!import.meta.env.DEV) return
     const sw = (window as unknown as { __sw?: Record<string, unknown> }).__sw
-    if (sw) Object.assign(sw, { gl, scene })
+    if (sw) Object.assign(sw, { gl, scene, vfx: skillVfxRef })
   }, [gl, scene])
   return null
 }
@@ -101,6 +102,7 @@ export function GameScene() {
       <Portals />
       <Player />
       <CombatLayer />
+      <SkillVfx />
       <MoveMarker />
       <Interactables />
       {Array.from({ length: ENEMY_SLOTS }, (_, i) => (

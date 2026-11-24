@@ -1,5 +1,6 @@
 // 怪物顯示：每個槽位對應戰鬥模擬中的第 N 隻怪物，依種族與階級換成對應的 GLB 模型並播放自帶動作。
-//   第一章：普通 → 星芽史萊姆 / 小哥布林；精英 → 森林菁英哥布林；Boss → 星核石像
+//   第一章：史萊姆（含精英「迷霧史萊姆王子」與 Boss「史萊姆王」，放大並戴上王冠）；
+//           哥布林 → 小哥布林 / 森林菁英哥布林；其他種族的 Boss → 星核石像
 //   第二章：月影幼狼、孢子蘑菇、星晶魔靈、苔蘚靈鹿（同一個模型依階級放大）
 // 位置、等級、狀態都由 Unit 決定，這裡只負責外觀與動作。載入中或失敗時退回程序化史萊姆。
 import { Suspense, useEffect, useRef, useState } from 'react'
@@ -154,13 +155,14 @@ const CONFIG: Record<Kind, KindConfig> = {
   },
 }
 
-/** 外觀模型：第一章的精英是大哥布林、Boss 是石像；其餘依種族 */
+/** 外觀模型：依種族；史萊姆的精英與 Boss 也是史萊姆（放大＋王冠） */
 function kindOf(u: Unit): Kind {
   switch (u.species) {
     case 'wolf':
     case 'mushroom':
     case 'crystal':
     case 'stag':
+    case 'slime':
       return u.species
   }
   if (u.tier === 'boss') return 'guardian'
@@ -172,6 +174,8 @@ function kindOf(u: Unit): Kind {
 const GOBLIN_NORMAL_SCALE = 0.72
 /** 第二章的怪物：同一個模型當精英、Boss 時放大的倍率 */
 const TIER_SCALE = { normal: 1, elite: 1.4, boss: 2 }
+/** 史萊姆王子、史萊姆王的放大倍率（史萊姆本身很矮） */
+const SLIME_TIER_SCALE = { normal: 1, elite: 1.7, boss: 2.5 }
 
 /** 等級越高怪物越大（與 state.ts 的 setEnemyLevel 同一公式）；再乘上種族與階級的體型 */
 function levelFactor(u: Unit, kind: Kind) {
@@ -179,6 +183,7 @@ function levelFactor(u: Unit, kind: Kind) {
   // 第二章的營地從 6 級起跳：從 6 級開始才慢慢變大，避免幼狼長得比主角還大
   if (CONFIG[kind].tierScale) k = (1 + Math.max(0, u.baseLevel - 6) * 0.05) * TIER_SCALE[u.tier]
   if (u.tier === 'normal' && u.species === 'goblin') k *= GOBLIN_NORMAL_SCALE
+  if (kind === 'slime') k *= SLIME_TIER_SCALE[u.tier]
   return k
 }
 
@@ -189,10 +194,40 @@ export function enemyBarTop(u: Unit) {
   return c.height * levelFactor(u, kind) + c.barGap
 }
 
+// ── 王冠：史萊姆王（大王冠）與史萊姆王子（小王冠），掛在史萊姆會跳動的節點上，跟著一起彈 ──
+const CROWN_GOLD = new THREE.MeshToonMaterial({ color: '#ffcf3f', emissive: '#7a4a00', emissiveIntensity: 0.25 })
+const CROWN_GEM = new THREE.MeshToonMaterial({ color: '#ff5d8f', emissive: '#ff5d8f', emissiveIntensity: 0.35 })
+const CROWN_BAND = new THREE.CylinderGeometry(1, 1.06, 0.5, 20, 1, true)
+const CROWN_SPIKE = new THREE.ConeGeometry(0.2, 0.55, 8)
+const CROWN_BALL = new THREE.SphereGeometry(0.09, 10, 8)
+const CROWN_GEM_GEO = new THREE.OctahedronGeometry(0.16)
+
+function makeCrown(points: number) {
+  const g = new THREE.Group()
+  const band = new THREE.Mesh(CROWN_BAND, CROWN_GOLD)
+  band.material.side = THREE.DoubleSide
+  g.add(band)
+  for (let i = 0; i < points; i++) {
+    const a = (i / points) * Math.PI * 2
+    const spike = new THREE.Mesh(CROWN_SPIKE, CROWN_GOLD)
+    spike.position.set(Math.sin(a), 0.5, Math.cos(a))
+    const ball = new THREE.Mesh(CROWN_BALL, CROWN_GOLD)
+    ball.position.set(Math.sin(a), 0.8, Math.cos(a))
+    g.add(spike, ball)
+  }
+  const gem = new THREE.Mesh(CROWN_GEM_GEO, CROWN_GEM)
+  gem.position.set(0, 0, 1.04)
+  gem.scale.set(1, 1.3, 0.5)
+  g.add(gem)
+  for (const c of g.children) c.castShadow = true
+  return g
+}
+
 const WHITE = new THREE.Color('#ffffff')
 const BLACK = new THREE.Color('#000000')
 const RAGE = new THREE.Color('#ff3b3b')
-const TINT_AMOUNT = 0.5
+/** 染色比例：精英與 Boss 染得比較深，一眼看得出是不同的個體 */
+const TINT_AMOUNT = { normal: 0.5, elite: 0.75, boss: 0.85 }
 
 function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
   const cfg = CONFIG[kind]
@@ -219,6 +254,38 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
       if (o) o.visible = false
     }
   }, [m, cfg])
+
+  // 史萊姆：在會跳動的節點上掛王冠（精英小、Boss 大），每幀依階級顯示
+  const crowns = useRef<{ king: THREE.Group; prince: THREE.Group } | null>(null)
+  useEffect(() => {
+    if (kind !== 'slime') return
+    const motion = m.scene.getObjectByName('SlimeMotion')
+    const mesh = motion?.children.find((c) => (c as THREE.Mesh).isMesh) as THREE.Mesh | undefined
+    if (!motion || !mesh) return
+    mesh.geometry.computeBoundingBox()
+    const box = mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrix)
+    const w = Math.max(box.max.x - box.min.x, box.max.z - box.min.z)
+    const top = box.max.y
+    const cx = (box.min.x + box.max.x) / 2
+    const cz = (box.min.z + box.max.z) / 2
+    const place = (c: THREE.Group, r: number) => {
+      c.scale.setScalar(w * r)
+      // 王冠底部稍微陷進頭頂，往後傾一點
+      c.position.set(cx, top - w * r * 0.15, cz - w * 0.04)
+      c.rotation.x = -0.18
+      c.visible = false
+      motion.add(c)
+      return c
+    }
+    const king = place(makeCrown(5), 0.2)
+    const prince = place(makeCrown(4), 0.14)
+    crowns.current = { king, prince }
+    return () => {
+      king.removeFromParent()
+      prince.removeFromParent()
+      crowns.current = null
+    }
+  }, [m, kind])
 
   const play = (name: string, fade = 0.2, once = false) => {
     const s = st.current
@@ -293,6 +360,10 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     root.current.position.set(u.x, 0, u.z)
     root.current.rotation.y = u.facing
     root.current.scale.setScalar(s.shown * levelFactor(u, kind))
+    if (crowns.current) {
+      crowns.current.king.visible = u.tier === 'boss'
+      crowns.current.prince.visible = u.tier === 'elite'
+    }
 
     if (alive) {
       // 特技（撲擊、放毒、衝撞、治療）：模擬端把 actionSeq 加 1
@@ -364,12 +435,13 @@ function EnemyView({ slot, kind }: { slot: number; kind: Kind }) {
     const flashing = u.hitFlash > 0
     const emissive = flashing ? WHITE : u.enraged ? RAGE : BLACK
     const intensity = flashing ? 0.7 : u.enraged ? 0.35 : 0
-    const retint = cfg.tint && s.color !== u.color
-    if (retint) s.color = u.color
+    const tintKey = u.color + u.tier
+    const retint = cfg.tint && s.color !== tintKey
+    if (retint) s.color = tintKey
     for (const mat of m.materials) {
       mat.emissive.copy(emissive)
       mat.emissiveIntensity = intensity
-      if (retint) mat.color.copy(WHITE).lerp(new THREE.Color(u.color), TINT_AMOUNT)
+      if (retint) mat.color.copy(WHITE).lerp(new THREE.Color(u.color), TINT_AMOUNT[u.tier])
     }
   })
 

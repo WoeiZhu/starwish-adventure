@@ -227,7 +227,8 @@ function Projectiles({ arrow }: { arrow?: THREE.Object3D }) {
       const m = refs.current[i]
       if (!m) continue
       const p = list[i]
-      const shown = !!p && p.delay <= 0
+      // 火球的本體由技能特效系統（SkillVfx）畫
+      const shown = !!p && p.delay <= 0 && p.vfx !== 'mage_fireball'
       const a = arrows[i]
       const isArrow = shown && p.owner.classId === 'archer'
       if (a) a.visible = isArrow

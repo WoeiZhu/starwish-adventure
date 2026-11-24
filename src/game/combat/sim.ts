@@ -13,6 +13,7 @@ import { AI } from '../../world/config'
 import { BUFF_COLOR, basicAttack, castSkill, damage, enemyShot, faceTarget, hasBuff, heal } from './actions'
 import { burst, emit, flash, pillar, ring, shake, updateFx } from './fx'
 import { updateDrops } from './rewards'
+import { playImpact, updateSkillRuns } from './skillRunner'
 import { areaBossUnlocked } from '../story'
 import {
   FORMATION,
@@ -650,10 +651,12 @@ function updateProjectiles(dt: number) {
       continue
     }
     const step = p.speed * dt
-    // 拖尾：箭是細長光痕，法球是發光粒子
+    // 拖尾：技能特效系統負責的投射物由 scene/SkillVfx.tsx 畫；其他的箭是細長光痕，法球是發光粒子
     const arrow = p.owner.classId === 'archer'
-    emit(p.x, 0.75, p.z, p.color, { life: arrow ? 0.16 : 0.3, size: (arrow ? 0.07 : 0.13) * (p.big ? 1.6 : 1), vy: arrow ? 0 : 0.6 })
-    if (!arrow) emit(p.x + (Math.random() - 0.5) * 0.3, 0.75 + (Math.random() - 0.5) * 0.3, p.z + (Math.random() - 0.5) * 0.3, '#ffffff', { life: 0.2, size: 0.05 })
+    if (!p.vfx) {
+      emit(p.x, 0.75, p.z, p.color, { life: arrow ? 0.16 : 0.3, size: (arrow ? 0.07 : 0.13) * (p.big ? 1.6 : 1), vy: arrow ? 0 : 0.6 })
+      if (!arrow) emit(p.x + (Math.random() - 0.5) * 0.3, 0.75 + (Math.random() - 0.5) * 0.3, p.z + (Math.random() - 0.5) * 0.3, '#ffffff', { life: 0.2, size: 0.05 })
+    }
     if (p.pierce) {
       p.x += p.dirX * step
       p.z += p.dirZ * step
@@ -662,7 +665,8 @@ function updateProjectiles(dt: number) {
         if (e.team !== 'enemy' || !e.alive || p.hit.includes(e.id)) continue
         if (Math.hypot(e.x - p.x, e.z - p.z) < e.radius + 0.45) {
           p.hit.push(e.id)
-          damage(p.owner, e, p.power)
+          damage(p.owner, e, p.power, false, !!p.vfx)
+          if (p.vfx) playImpact(p.vfx, p.owner, e)
         }
       }
       if (p.travelled > 13) list.splice(i, 1)
@@ -677,18 +681,25 @@ function updateProjectiles(dt: number) {
     const dz = t.z - p.z
     const d = Math.hypot(dx, dz)
     if (d <= step + t.radius) {
-      damage(p.owner, t, p.power, p.big)
+      // 命中判定在這裡；有技能特效的投射物，命中反應（爆炸、火花、音效）交給技能時間軸
+      const own = !!p.vfx
+      const hx = t.x
+      const hz = t.z
+      damage(p.owner, t, p.power, p.big, own)
       if (p.splash > 0) {
-        // 爆炸：火光、衝擊波與碎屑
-        flash(t.x, 0.6, t.z, '#ffd08a', p.splash * 1.3, 0.22)
-        ring(t.x, t.z, p.color, 0.3, p.splash, 0.35)
-        burst(t.x, 0.5, t.z, p.color, 26, 6, { up: 4, size: 0.13, life: 0.6 })
-        shake(0.2)
-        sfx.explode()
+        if (!own) {
+          // 爆炸：火光、衝擊波與碎屑
+          flash(t.x, 0.6, t.z, '#ffd08a', p.splash * 1.3, 0.22)
+          ring(t.x, t.z, p.color, 0.3, p.splash, 0.35)
+          burst(t.x, 0.5, t.z, p.color, 26, 6, { up: 4, size: 0.13, life: 0.6 })
+          shake(0.2)
+          sfx.explode()
+        }
         for (const e of combat.units) {
-          if (e.team === 'enemy' && e.alive && e !== t && dist(e, t) < p.splash) damage(p.owner, e, p.power * 0.6)
+          if (e.team === 'enemy' && e.alive && e !== t && dist(e, t) < p.splash) damage(p.owner, e, p.power * 0.6, false, own)
         }
       }
+      if (p.vfx) playImpact(p.vfx, p.owner, { x: hx, z: hz })
       list.splice(i, 1)
     } else {
       p.dirX = dx / d
@@ -847,6 +858,7 @@ export function updateCombat(dt: number) {
   heroUpdate(h, engaged, dt)
   if (!h.alive && c.heroDown > 3) respawnHero(h)
   separate()
+  updateSkillRuns(dt)
   updateProjectiles(dt)
   updateZones(dt)
 

@@ -55,7 +55,10 @@ npm run dev
 src/
   data/      資料層：職業表、外觀設定、地圖佈局與碰撞體（資料驅動）
   game/      規則層：Zustand 狀態（store）、每幀資料（runtime）
-    combat/  戰鬥：state（單位與投射物）、actions（傷害 / 技能）、sim（每幀更新、怪物與隊友 AI）
+    combat/  戰鬥：state（單位與投射物）、actions（傷害 / 技能）、sim（每幀更新、怪物與隊友 AI）、damageCalc（傷害公式）、skillRunner（技能時間軸）
+  skills/    示範技能資料（demoSkills：時間軸、命中方式、特效參數）與命中判定（hitTest）
+  vfx/       技能特效系統（只管畫面）：VfxWorld（物件池）、粒子層、著色器、特效片段（cues）、時間軸播放器
+  lab/       技能特效測試頁（skill-lab.html）
   systems/   輸入、碰撞、分區 A* 尋路（與畫面無關，可單獨測試）
   world/     地圖串流：區塊設定（config）、區塊內容與程序生成接口（chunks）、載入／卸載管理（stream）、碰撞空間索引、目前地圖（maps）
   scene/     3D 場景層：World、Town（星光鎮）、Chunks（分區塊畫地面與草木）、Landmarks（地標）、Vista（遠景）、Player、CameraRig、CombatLayer
@@ -73,6 +76,7 @@ src/
 - [x] **F 地圖系統**：河流與三座橋（東側吊橋是要從山谷放下的捷徑）、北方隘口、步道岔路、各區地標、邊界山壁與封閉入口、遠景山脈與遠方地標；分區塊載入、遠處怪物簡化更新、分區尋路、存檔第 2 版。說明與測試紀錄見 `docs/map-system.md`
 - [x] **F2 星光鎮**：南方街道盡頭的 Meshy 城門通往獨立的城鎮地圖（4 間建築、4 位 NPC、旅館休息、雜貨店）；進出城不彈跳、野外怪物暫存、城內存讀檔（存檔第 3 版）、載入失敗退回城門外。轉職與委託板尚未實作。說明與測試紀錄見 `docs/town-integration.md`
 - [x] **F3 武器包與掉落物模型**：角色手上換成武器包模型（每職業 3 階，依裝備等級換階；騎士盾牌依防具等級換階）、弓攻擊時拉弦、弓箭手射出箭矢模型、星光鎮武器店開張、掉落物（金幣 / 藥水 / 裝備包 / 飾品袋）與寶箱改用模型（寶箱會開箱並留在原地）、商人旁的藥水擺設。說明與測試紀錄見 `docs/assets-integration.md`
+- [x] **F4 技能特效系統**：粒子、發光著色器、刀光、飛行拖尾、魔法陣、爆炸；動作 / 特效 / 命中 / 傷害分開，用時間軸同步；示範技能戰士斬擊、弓箭射擊、法師火球、聖者治療已接進遊戲；物件池與高畫質 / 省電預算；獨立測試頁 `skill-lab.html`。說明與測試紀錄見 `docs/skill-vfx.md`
 - [ ] **G 程序生成支線**：洞窟與野外支路（接口已預留在 `src/world/chunks.ts` 的 `GENERATORS`）
 
 ## 調整數值
@@ -90,7 +94,8 @@ src/
 - 精英與 Boss 的能力倍率、隊伍人數對怪物強度的影響：`src/game/combat/state.ts`（`TIER`、`PARTY_SCALE`）
 - 存檔格式：`src/game/save.ts`（localStorage 鍵 `starwish.save.v1`，資料內 version 2；會自動轉換第 1 版）
 - 開發模式下主控台可用 `window.__sw`（combat、sim、runtime、useGame、progress、story、nav、stream、gl）檢查狀態
-- 地圖自動測試：`tools/qa/map-qa.mjs`（無頭 Edge，先 `npm run dev`；在 `tools/qa` 執行一次 `npm install`）；城鎮 `town-qa.mjs`、武器與掉落物 `assets-qa.mjs`
+- 地圖自動測試：`tools/qa/map-qa.mjs`（無頭 Edge，先 `npm run dev`；在 `tools/qa` 執行一次 `npm install`）；城鎮 `town-qa.mjs`、武器與掉落物 `assets-qa.mjs`、技能特效 `vfx-qa.mjs`
+- 技能特效：參數與時間軸在 `src/skills/demoSkills.ts`，特效片段在 `src/vfx/cues.ts`，畫質預算在 `src/vfx/quality.ts`；測試頁 `http://localhost:5183/skill-lab.html`（網頁版：`skill-lab.html`）
 - 武器店商品與售價：`src/game/story.ts` 的 `SHOP_QUALITY`、`SHOP_PRICE_RATE`；各階等級門檻與模型換階規則：`src/data/weaponModels.ts`
 - 單獨看模型：開 dev server 後瀏覽 `http://localhost:5183/tools/qa/preview.html?f=star-coin.web.glb,wooden-chest.web.glb`（`v=side` / `v=top` 換角度）
 

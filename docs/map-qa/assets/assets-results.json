@@ -38,7 +38,7 @@
     {
       "name": "反覆換裝 6 次資源不增加",
       "ok": true,
-      "detail": "[{\"geo\":318,\"tex\":48,\"calls\":814},{\"geo\":318,\"tex\":48,\"calls\":814}]"
+      "detail": "[{\"geo\":320,\"tex\":48,\"calls\":814},{\"geo\":320,\"tex\":48,\"calls\":813}]"
     },
     {
       "name": "村子商人旁邊有藥水擺設（紅藍綠 3 瓶）",
@@ -53,7 +53,7 @@
     {
       "name": "攻擊時弓弦有動（DrawRelease）",
       "ok": true,
-      "detail": "moved=0.3345"
+      "detail": "moved=0.1889"
     },
     {
       "name": "四種掉落物都用模型顯示",
@@ -178,14 +178,14 @@
       "kb": 113
     },
     {
-      "url": "starwish-weapons-20261123-v001/shield-ivory-gold.web.glb",
-      "status": 200,
-      "kb": 183
-    },
-    {
       "url": "starwish-weapons-20261123-v001/bow-02.web.glb",
       "status": 200,
       "kb": 145
+    },
+    {
+      "url": "starwish-weapons-20261123-v001/shield-ivory-gold.web.glb",
+      "status": 200,
+      "kb": 183
     },
     {
       "url": "starwish-weapons-20261123-v001/sword-01.web.glb",

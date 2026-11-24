@@ -5,12 +5,12 @@
 ✔ 騎士換上第 3 階劍：下載 sword-03 
 ✔ 騎士防具 LV30：換成第 3 階盾牌 shield-ivory-gold 
 ✔ 弓箭手裝備指定 bow-02（武器店的商品） 
-換裝前後 {"geo":293,"tex":36,"calls":812} {"geo":310,"tex":44,"calls":814} []
-反覆換裝 [{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814}]
-✔ 反覆換裝 6 次資源不增加 [{"geo":318,"tex":48,"calls":814},{"geo":318,"tex":48,"calls":814}]
+換裝前後 {"geo":301,"tex":36,"calls":812} {"geo":312,"tex":44,"calls":814} []
+反覆換裝 [{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":813}]
+✔ 反覆換裝 6 次資源不增加 [{"geo":320,"tex":48,"calls":814},{"geo":320,"tex":48,"calls":813}]
 ✔ 村子商人旁邊有藥水擺設（紅藍綠 3 瓶） 
 ✔ 弓箭手射出的是箭矢模型 arrows=1
-✔ 攻擊時弓弦有動（DrawRelease） moved=0.3345
+✔ 攻擊時弓弦有動（DrawRelease） moved=0.1889
 ✔ 四種掉落物都用模型顯示 {"visibleLoot":4,"drops":4}
 ✔ 寶箱：開啟前顯示模型 models=1
 ✔ 寶箱：開啟後模型留在原地 {"n":1,"chests":["c_meadow"]}
@@ -21,7 +21,7 @@
 ✔ 存檔後武器店的武器保留模型 id 優良的白樺獵弓
 ✔ 城裡雜貨商人旁邊有藥水擺設（紅藍綠 3 瓶） models=3
 ✔ 武器與掉落物只下載 .web.glb []
-下載的武器與掉落物模型 ["starwish-weapons-20261123-v001/shared-arrow.web.glb 6KB","star-coin.web.glb 100KB","potion-bottle.web.glb 118KB","material-pouch.web.glb 141KB","equipment-bundle.web.glb 143KB","potion-bottle-blue.web.glb 118KB","potion-bottle-green.web.glb 118KB","wooden-chest.web.glb 262KB","starwish-weapons-20261123-v001/bow-01.web.glb 126KB","starwish-weapons-20261123-v001/staff-01.web.glb 112KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shared-shield.web.glb 111KB","starwish-weapons-20261123-v001/wand-01.web.glb 103KB","starwish-weapons-20261123-v001/sword-03.web.glb 113KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB","starwish-weapons-20261123-v001/bow-02.web.glb 145KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB"]
+下載的武器與掉落物模型 ["starwish-weapons-20261123-v001/shared-arrow.web.glb 6KB","star-coin.web.glb 100KB","potion-bottle.web.glb 118KB","material-pouch.web.glb 141KB","equipment-bundle.web.glb 143KB","potion-bottle-blue.web.glb 118KB","potion-bottle-green.web.glb 118KB","wooden-chest.web.glb 262KB","starwish-weapons-20261123-v001/bow-01.web.glb 126KB","starwish-weapons-20261123-v001/staff-01.web.glb 112KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shared-shield.web.glb 111KB","starwish-weapons-20261123-v001/wand-01.web.glb 103KB","starwish-weapons-20261123-v001/sword-03.web.glb 113KB","starwish-weapons-20261123-v001/bow-02.web.glb 145KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB","starwish-weapons-20261123-v001/sword-01.web.glb 103KB","starwish-weapons-20261123-v001/shield-ivory-gold.web.glb 183KB"]
 合計 2288 KB
 ✔ 沒有主控台錯誤 []
 結果：21/21 通過
