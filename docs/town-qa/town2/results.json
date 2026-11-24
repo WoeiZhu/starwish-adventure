@@ -48,7 +48,7 @@
     {
       "name": "出城：回到城門外、面向北方、戰鬥按鈕恢復、音樂換回草原",
       "ok": true,
-      "detail": "{\"x\":0.2,\"z\":30.6,\"facing\":3.14,\"skill\":true,\"music\":\"field\",\"ms\":6111}"
+      "detail": "{\"x\":0.2,\"z\":30.6,\"facing\":3.14,\"skill\":true,\"music\":\"field\",\"ms\":6155}"
     },
     {
       "name": "出城後不會被彈回城裡",
@@ -82,21 +82,21 @@
     }
   ],
   "log": [
-    "城外遠望 {\"fps\":61,\"worstMs\":20,\"calls\":580,\"tris\":1405678,\"geos\":207,\"tex\":44}",
-    "接近城門 {\"fps\":61,\"worstMs\":20,\"calls\":580,\"tris\":1606914,\"geos\":214,\"tex\":49} {\"yaw\":3.14}",
+    "城外遠望 {\"fps\":60,\"worstMs\":20,\"calls\":580,\"tris\":1405678,\"geos\":206,\"tex\":44}",
+    "接近城門 {\"fps\":61,\"worstMs\":19,\"calls\":580,\"tris\":1606914,\"geos\":213,\"tex\":49} {\"yaw\":3.14}",
     "✔ 進城：換到城鎮地圖、落點在城門內側 {\"map\":\"starlight-town-meshy\",\"x\":0,\"z\":15.06,\"facing\":3.14,\"skillbarHidden\":true,\"banner\":true,\"music\":\"town\"}",
     "✔ 出入口方向一致：主線世界往南走進城門，城裡面向城內（-Z） facing=3.14",
     "✔ 城內隱藏戰鬥按鈕、顯示城鎮名稱 ",
     "✔ 背景音樂切換成城鎮曲 town",
-    "進城載入 3703 ms {\"fps\":61,\"worstMs\":19,\"calls\":261,\"tris\":1026341,\"geos\":154,\"tex\":66}",
+    "進城載入 3668 ms {\"fps\":60,\"worstMs\":19,\"calls\":261,\"tris\":1026341,\"geos\":154,\"tex\":66}",
     "✔ 城牆、商店、城門兩側擋住，門洞可以走 {\"wall\":true,\"shop\":true,\"gateSide\":true,\"passage\":true}",
     "✔ 四間建築門口、四位 NPC 都有路走到 [[\"door:weapon-shop\",true],[\"door:general-store\",true],[\"door:adventurers-guild\",true],[\"door:town-inn\",true],[\"npc:quest-guide\",true],[\"npc:guild-placeholder\",true],[\"npc:weapon-vendor-placeholder\",true],[\"npc:general-vendor\",true]]",
     "✔ 走到中央廣場 {\"arrived\":true,\"d\":0.14}",
     "廣場 {\"fps\":61,\"worstMs\":19,\"calls\":128,\"tris\":936325,\"geos\":158,\"tex\":69}",
     "✔ 走到武器店門口 {\"arrived\":true,\"d\":0.14}",
     "✔ 和武器商人交談：鏡頭自動拉近 {\"before\":7.5,\"dialog\":true,\"camDist\":5.01}",
-    "高角度 {\"fps\":61,\"worstMs\":19,\"calls\":134,\"tris\":885295,\"geos\":165,\"tex\":69}",
-    "✔ 出城：回到城門外、面向北方、戰鬥按鈕恢復、音樂換回草原 {\"x\":0.2,\"z\":30.6,\"facing\":3.14,\"skill\":true,\"music\":\"field\",\"ms\":6111}",
+    "高角度 {\"fps\":60,\"worstMs\":18,\"calls\":134,\"tris\":885295,\"geos\":165,\"tex\":69}",
+    "✔ 出城：回到城門外、面向北方、戰鬥按鈕恢復、音樂換回草原 {\"x\":0.2,\"z\":30.6,\"facing\":3.14,\"skill\":true,\"music\":\"field\",\"ms\":6155}",
     "✔ 出城後不會被彈回城裡 ",
     "✔ 主線世界：城牆擋住，只能從城門進城 ",
     "✔ 反覆進出 5 輪：幾何體與貼圖沒有累積 [{\"geo\":165,\"tex\":65},{\"geo\":165,\"tex\":65},{\"geo\":165,\"tex\":65},{\"geo\":165,\"tex\":65},{\"geo\":165,\"tex\":65}]",

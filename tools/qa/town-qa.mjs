@@ -10,7 +10,8 @@ const [, , label = 'town', arg = ''] = process.argv
 const mobile = arg === 'mobile'
 const OUT = fileURLToPath(new URL(`../../docs/map-qa/${label}/`, import.meta.url))
 mkdirSync(OUT, { recursive: true })
-const URL_ = process.env.QA_URL ?? 'http://localhost:5183/'
+// 原版城鎮（新版是預設，原版要加 ?town=classic）
+const URL_ = (process.env.QA_URL ?? 'http://localhost:5183/') + '?town=classic'
 
 const browser = await chromium.launch({
   channel: 'msedge',

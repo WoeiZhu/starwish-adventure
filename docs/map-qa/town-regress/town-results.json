@@ -3,7 +3,7 @@
     {
       "name": "從村子走到南方城門前",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":5547}"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":5540}"
     },
     {
       "name": "進城：換到 starlight-town-meshy",
@@ -28,7 +28,7 @@
     {
       "name": "走到 town-npc-quest-guide",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6689} 隊友距離 2.2,2.9,3.4"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6697} 隊友距離 2.2,2.9,3.4"
     },
     {
       "name": "互動 town-npc-quest-guide",
@@ -38,12 +38,12 @@
     {
       "name": "從 town-npc-quest-guide 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6711}"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6710}"
     },
     {
       "name": "走到 town-npc-guild-placeholder",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6232} 隊友距離 3,2.7,3.7"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6229} 隊友距離 3,2.7,3.7"
     },
     {
       "name": "互動 town-npc-guild-placeholder",
@@ -53,12 +53,12 @@
     {
       "name": "從 town-npc-guild-placeholder 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6221}"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6231}"
     },
     {
       "name": "走到 town-npc-weapon-vendor-placeholder",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3428} 隊友距離 2.7,2.8,3.7"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3409} 隊友距離 2.7,2.8,3.7"
     },
     {
       "name": "互動 town-npc-weapon-vendor-placeholder",
@@ -68,12 +68,12 @@
     {
       "name": "從 town-npc-weapon-vendor-placeholder 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3270}"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3269}"
     },
     {
       "name": "走到 town-npc-general-vendor",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3128} 隊友距離 2.7,2.7,3.6"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3121} 隊友距離 2.8,2.7,3.7"
     },
     {
       "name": "互動 town-npc-general-vendor",
@@ -83,12 +83,12 @@
     {
       "name": "從 town-npc-general-vendor 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":3112}"
+      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3122}"
     },
     {
       "name": "走到 town-door-weapon-shop",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3116} 隊友距離 2.8,2.9,3.6"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3113} 隊友距離 2.8,2.8,3.7"
     },
     {
       "name": "互動 town-door-weapon-shop",
@@ -98,12 +98,12 @@
     {
       "name": "從 town-door-weapon-shop 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3111}"
+      "detail": "{\"arrived\":true,\"d\":0.14,\"ms\":3116}"
     },
     {
       "name": "走到 town-door-general-store",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":3111} 隊友距離 2.7,2.5,3.6"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":3113} 隊友距離 2.7,2.5,3.6"
     },
     {
       "name": "互動 town-door-general-store",
@@ -113,12 +113,12 @@
     {
       "name": "從 town-door-general-store 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3108}"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":3113}"
     },
     {
       "name": "走到 town-door-adventurers-guild",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6689} 隊友距離 3,2.5,3.6"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":6695} 隊友距離 3,2.5,3.6"
     },
     {
       "name": "互動 town-door-adventurers-guild",
@@ -128,12 +128,12 @@
     {
       "name": "從 town-door-adventurers-guild 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6722}"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":6702}"
     },
     {
       "name": "走到 town-door-town-inn",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":5291} 隊友距離 2.5,2.6,3.6"
+      "detail": "{\"arrived\":true,\"d\":0.12,\"ms\":5301} 隊友距離 2.5,2.6,3.6"
     },
     {
       "name": "互動 town-door-town-inn",
@@ -143,7 +143,7 @@
     {
       "name": "從 town-door-town-inn 走回城門內",
       "ok": true,
-      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":5287}"
+      "detail": "{\"arrived\":true,\"d\":0.13,\"ms\":5292}"
     },
     {
       "name": "旅館：付 10 金幣全隊回滿",
@@ -178,7 +178,7 @@
     {
       "name": "城內存檔：記下 mapId 與返回位置",
       "ok": true,
-      "detail": "{\"v\":3,\"map\":\"starlight-town-meshy\",\"pos\":{\"x\":-2.919230539952181,\"z\":8.085211780350448},\"ret\":{\"x\":0.2,\"z\":33.2,\"facing\":3.141592653589793},\"region\":\"meadow\"}"
+      "detail": "{\"v\":3,\"map\":\"starlight-town-meshy\",\"pos\":{\"x\":-2.9194048469356932,\"z\":8.085027886482843},\"ret\":{\"x\":0.2,\"z\":33.2,\"facing\":3.141592653589793},\"region\":\"meadow\"}"
     },
     {
       "name": "回標題：回到主線世界",
@@ -188,7 +188,7 @@
     {
       "name": "繼續：先載入城鎮再放人物",
       "ok": true,
-      "detail": "載入 436 ms，位置 (-2.92, 8.09)"
+      "detail": "載入 449 ms，位置 (-2.92, 8.09)"
     },
     {
       "name": "城內讀檔後不會被彈出",
@@ -198,7 +198,7 @@
     {
       "name": "出城：回到城門外 (0.2, 33.2)",
       "ok": true,
-      "detail": "(0.2, 33.2) 載入 {\"walkMs\":2266,\"loadMs\":148}"
+      "detail": "(0.2, 33.2) 載入 {\"walkMs\":2250,\"loadMs\":149}"
     },
     {
       "name": "出城：野外怪物放回來",
@@ -208,7 +208,7 @@
     {
       "name": "出城後站著 3 秒不會再被吸進城",
       "ok": true,
-      "detail": "{\"map\":\"overworld\",\"storeMap\":\"overworld\",\"loading\":false,\"priming\":false,\"x\":0.2,\"z\":33.2,\"enemies\":66,\"allyGap\":[2.4,4.6,2.6],\"switches\":2}"
+      "detail": "{\"map\":\"overworld\",\"storeMap\":\"overworld\",\"loading\":false,\"priming\":false,\"x\":0.2,\"z\":33.2,\"enemies\":66,\"allyGap\":[1.6,4.3,2.3],\"switches\":2}"
     },
     {
       "name": "被事件怪追的時候不能進城",
@@ -218,22 +218,22 @@
     {
       "name": "一般野怪追著時可以進城",
       "ok": true,
-      "detail": "{\"walkMs\":1238,\"loadMs\":427}"
+      "detail": "{\"walkMs\":1238,\"loadMs\":400}"
     },
     {
       "name": "出城後野怪不再追擊、回到營地",
       "ok": true,
-      "detail": "{\"target\":\"ally-mage\",\"d\":1.5}"
+      "detail": "{\"target\":null,\"d\":4.2}"
     },
     {
       "name": "反覆進出沒有累積幾何體",
       "ok": true,
-      "detail": "第 2 輪 218 → 第 5 輪 219"
+      "detail": "第 2 輪 211 → 第 5 輪 212"
     },
     {
       "name": "反覆進出沒有累積貼圖",
       "ok": true,
-      "detail": "城內貼圖 第 2 輪 85 → 第 5 輪 85"
+      "detail": "城內貼圖 第 2 輪 84 → 第 5 輪 84"
     },
     {
       "name": "第 2 版存檔：當作在野外、進度保留",
@@ -253,103 +253,103 @@
     {
       "name": "載入失敗後再進城可以正常載入",
       "ok": true,
-      "detail": "{\"walkMs\":1238,\"loadMs\":412}"
+      "detail": "{\"walkMs\":1249,\"loadMs\":397}"
     }
   ],
   "mem": [
     {
       "loop": 1,
-      "enterMs": 415,
+      "enterMs": 418,
       "exitMs": 148,
       "town": {
-        "geo": 175,
-        "tex": 85,
-        "calls": 197,
-        "tris": 1811418,
-        "heapMB": 187
+        "geo": 169,
+        "tex": 84,
+        "calls": 196,
+        "tris": 1811354,
+        "heapMB": 176
       },
       "world": {
-        "geo": 218,
-        "tex": 70,
-        "calls": 766,
-        "tris": 2091602,
-        "heapMB": 147
+        "geo": 211,
+        "tex": 69,
+        "calls": 513,
+        "tris": 1354014,
+        "heapMB": 164
       }
     },
     {
       "loop": 2,
-      "enterMs": 416,
+      "enterMs": 411,
       "exitMs": 145,
       "town": {
-        "geo": 175,
-        "tex": 85,
+        "geo": 169,
+        "tex": 84,
         "calls": 197,
         "tris": 1811418,
-        "heapMB": 187
+        "heapMB": 186
       },
       "world": {
-        "geo": 218,
-        "tex": 70,
-        "calls": 771,
-        "tris": 2091840,
-        "heapMB": 149
+        "geo": 211,
+        "tex": 68,
+        "calls": 546,
+        "tris": 1325276,
+        "heapMB": 177
       }
     },
     {
       "loop": 3,
       "enterMs": 413,
-      "exitMs": 149,
+      "exitMs": 143,
       "town": {
-        "geo": 175,
-        "tex": 85,
-        "calls": 197,
-        "tris": 1811418,
-        "heapMB": 180
+        "geo": 169,
+        "tex": 83,
+        "calls": 196,
+        "tris": 1811354,
+        "heapMB": 175
       },
       "world": {
-        "geo": 217,
-        "tex": 70,
-        "calls": 781,
-        "tris": 2119098,
-        "heapMB": 158
+        "geo": 212,
+        "tex": 68,
+        "calls": 542,
+        "tris": 1325154,
+        "heapMB": 179
       }
     },
     {
       "loop": 4,
-      "enterMs": 414,
-      "exitMs": 136,
+      "enterMs": 419,
+      "exitMs": 133,
       "town": {
-        "geo": 175,
-        "tex": 85,
+        "geo": 169,
+        "tex": 84,
+        "calls": 196,
+        "tris": 1811354,
+        "heapMB": 176
+      },
+      "world": {
+        "geo": 215,
+        "tex": 68,
+        "calls": 540,
+        "tris": 1324810,
+        "heapMB": 178
+      }
+    },
+    {
+      "loop": 5,
+      "enterMs": 416,
+      "exitMs": 139,
+      "town": {
+        "geo": 169,
+        "tex": 84,
         "calls": 197,
         "tris": 1811418,
         "heapMB": 187
       },
       "world": {
-        "geo": 218,
-        "tex": 70,
-        "calls": 777,
-        "tris": 2117568,
-        "heapMB": 148
-      }
-    },
-    {
-      "loop": 5,
-      "enterMs": 414,
-      "exitMs": 133,
-      "town": {
-        "geo": 175,
-        "tex": 85,
-        "calls": 196,
-        "tris": 1811354,
-        "heapMB": 186
-      },
-      "world": {
-        "geo": 219,
-        "tex": 69,
-        "calls": 782,
-        "tris": 2049073,
-        "heapMB": 144
+        "geo": 212,
+        "tex": 68,
+        "calls": 536,
+        "tris": 1324668,
+        "heapMB": 175
       }
     }
   ],

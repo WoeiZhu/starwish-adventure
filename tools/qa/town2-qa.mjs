@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url'
 const [, , label = 'town2'] = process.argv
 const OUT = fileURLToPath(new URL(`../../docs/town-qa/${label}/`, import.meta.url))
 mkdirSync(OUT, { recursive: true })
-const URL_ = (process.env.QA_URL ?? 'http://localhost:5183/') + '?town=b'
+const URL_ = process.env.QA_URL ?? 'http://localhost:5183/' // 新版是預設
 const results = []
 const log = []
 const say = (...a) => {

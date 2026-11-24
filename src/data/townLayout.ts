@@ -31,21 +31,21 @@ export const CHAR_HEIGHT_BASE = 1.4
 
 export type TownVariant = 'classic' | 'A' | 'B'
 
-/** 用哪一版城鎮：網址 ?town=b / ?town=a / ?town=classic（會記住）；預設是原版 */
+/**
+ * 用哪一版城鎮：預設是方案 B（城牆式城鎮）。
+ * 開發測試可以在網址加 ?town=a / ?town=classic 暫時切換（只影響這次開啟，不會記住）。
+ */
 function readVariant(): TownVariant {
   try {
+    // 舊版會把網址參數記在瀏覽器裡；現在一律以預設為準，清掉舊的紀錄
+    localStorage.removeItem('starwish.town')
     const q = new URLSearchParams(location.search).get('town')?.toLowerCase()
-    const pick: TownVariant | null = q === 'b' || q === 'v2' ? 'B' : q === 'a' ? 'A' : q === 'classic' ? 'classic' : null
-    if (pick) {
-      localStorage.setItem('starwish.town', pick)
-      return pick
-    }
-    const saved = localStorage.getItem('starwish.town')
-    if (saved === 'A' || saved === 'B' || saved === 'classic') return saved
+    if (q === 'a') return 'A'
+    if (q === 'classic') return 'classic'
   } catch {
     /* 沒有 window / localStorage（測試環境） */
   }
-  return 'classic'
+  return 'B'
 }
 export const TOWN_VARIANT: TownVariant = typeof window === 'undefined' ? 'classic' : readVariant()
 export const NEW_TOWN = TOWN_VARIANT !== 'classic'
