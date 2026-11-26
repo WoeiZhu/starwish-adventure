@@ -33,7 +33,7 @@ function useFullscreen() {
   return fs
 }
 
-const BUFF_TEXT = { atkSpeed: '攻速↑', atk: '攻擊↑', def: '防禦↑', maxHp: '生命↑', guard: '壁壘' } as const
+const BUFF_TEXT = { atkSpeed: '攻速↑', atk: '攻擊↑', def: '防禦↑', maxHp: '生命↑', guard: '壁壘', crit: '暴擊↑', moveSpeed: '移速↑' } as const
 const FEED_SECONDS = 7
 const QUEST_OPEN_MS = 9000
 

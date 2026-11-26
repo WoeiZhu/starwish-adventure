@@ -74,6 +74,8 @@ export const progress = {
   kills: 0,
   /** 已招募的隊友職業（依加入順序）；主角不在其中 */
   recruited: [] as ClassId[],
+  /** 名單上休息中（不出戰、不拿經驗）的隊友；其餘的 recruited 出戰 */
+  bench: [] as ClassId[],
   story: newStory(),
   /** 已解鎖的地圖捷徑（例如放下的吊橋 id）；寶箱另外記在 story.chests */
   unlocks: [] as string[],
@@ -94,6 +96,7 @@ export function resetProgress() {
   progress.potions = 3
   progress.kills = 0
   progress.recruited = []
+  progress.bench = []
   progress.story = newStory()
   progress.unlocks = []
   refreshGates(progress.unlocks)

@@ -21,6 +21,8 @@ export interface Appearance {
   clipModelUrl?: string
   /** clipModelUrl 模型的顯示高度（公尺，預設 1.4）；帶長槍的衛兵比一般人高 */
   clipHeight?: number
+  /** clipModelUrl 模型裡要隱藏的節點（例如動作自帶的飛行藥瓶） */
+  clipHide?: string[]
   /** 已裝備武器的品質顏色；程序化武器（武器模型載入失敗時）的裝飾與發光改用此色 */
   weaponTint?: string
   /** 手上的武器模型（武器包 GLB）；沒有或載入失敗時用程序化武器 */
@@ -42,8 +44,8 @@ const GENDER_LOOK: Record<Gender, { hair: string; eye: string; skin: string }> =
 /** public/models 裡的模型網址；加上部署的基底路徑，放在 GitHub Pages 子路徑下也找得到 */
 export const modelUrl = (file: string) => `${import.meta.env.BASE_URL}models/${file}`
 
-/** 各職業的 GLB 模型（public/models），來源為 Character/ 資料夾 */
-export const CLASS_MODELS: Record<ClassId, string> = {
+/** 各職業的 GLB 模型（public/models），來源為 Character/ 資料夾；第二章夥伴改用 classes.ts 的 clipModel */
+export const CLASS_MODELS: Partial<Record<ClassId, string>> = {
   archer: modelUrl('archer.web.glb'),
   mage: modelUrl('mage.web.glb'),
   knight: modelUrl('knight.web.glb'),
@@ -55,6 +57,8 @@ const CLASS_HEADGEAR: Record<ClassId, Headgear> = {
   mage: 'witchHat',
   knight: 'none',
   cleric: 'halo',
+  assassin: 'none',
+  apothecary: 'none',
 }
 
 /** 沒有裝備資料時（例如還沒加入的夥伴）：第 1 階武器、第 1 階盾牌 */
@@ -74,6 +78,9 @@ export function buildAppearance(gender: Gender, classId: ClassId, gear?: GearLoo
     headgear: CLASS_HEADGEAR[classId],
     armor: classId === 'knight',
     modelUrl: CLASS_MODELS[classId],
+    // 第二章夥伴：模型自帶動作與武器（性別外觀不適用）
+    clipModelUrl: cls.clipModel && modelUrl(cls.clipModel.file),
+    clipHide: cls.clipModel?.hide,
     ...(gear ?? defaultGear(classId)),
   }
 }

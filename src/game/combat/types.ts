@@ -98,6 +98,11 @@ export interface Unit {
   vulnTime: number
   tauntBy: string | null
   tauntTime: number
+  /** 中毒：剩餘秒數、每次（每秒）扣的血、下一次扣血倒數、下毒的人 */
+  poisonTime: number
+  poisonDmg: number
+  poisonTick: number
+  poisonBy: Unit | null
 
   /** 畫面用：移動速度、攻擊動作（1→0）、受擊閃白（秒） */
   speed: number
@@ -152,6 +157,27 @@ export interface Zone {
   slow: number
   color: string
   style: ZoneStyle
+}
+
+/** 藥師的毒孢子：地上長出的大蘑菇，time 到 delay 時爆炸 */
+export interface Spore {
+  owner: Unit
+  x: number
+  z: number
+  time: number
+  delay: number
+  radius: number
+  power: number
+  /** 爆炸後的中毒（每秒傷害倍率、秒數） */
+  dps: number
+  duration: number
+}
+
+/** 延後執行的技能段落（二連擊的第二下、藥瓶落地、瞬閃落地）；施放者倒下或被暈眩就取消 */
+export interface Later {
+  owner: Unit
+  time: number
+  run: () => void
 }
 
 export interface Floater {

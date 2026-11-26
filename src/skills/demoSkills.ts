@@ -175,8 +175,8 @@ export const DEMO_SKILLS: Record<DemoSkillId, DemoSkill> = {
 
 export const DEMO_ORDER: DemoSkillId[] = ['warrior_slash', 'archer_shot', 'mage_fireball', 'cleric_heal']
 
-/** 每個職業在測試頁預設的技能 */
-export const SKILL_OF_CLASS: Record<ClassId, DemoSkillId> = {
+/** 每個職業在測試頁預設的技能（測試頁只有可當主角的四職業） */
+export const SKILL_OF_CLASS: Partial<Record<ClassId, DemoSkillId>> = {
   knight: 'warrior_slash',
   archer: 'archer_shot',
   mage: 'mage_fireball',

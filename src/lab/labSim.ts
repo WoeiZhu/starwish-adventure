@@ -118,7 +118,7 @@ export function resetParams(id: DemoSkillId) {
 
 export function selectClass(c: ClassId) {
   lab.classId = c
-  lab.skillId = SKILL_OF_CLASS[c]
+  lab.skillId = SKILL_OF_CLASS[c] ?? lab.skillId
   lab.cooldown = 0
 }
 

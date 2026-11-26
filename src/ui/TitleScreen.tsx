@@ -1,5 +1,5 @@
 // 開局角色創建：名字、男孩 / 女孩外觀、四職業。左側 3D 人物即時預覽。
-import { CLASSES, CLASS_ORDER } from '../data/classes'
+import { CLASSES, HERO_CLASSES as CLASS_ORDER } from '../data/classes'
 import { useGame } from '../game/store'
 import { enterAppMode } from '../systems/mobile'
 

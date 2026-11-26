@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { buildAppearance } from '../data/appearance'
 import { CLASSES } from '../data/classes'
 import { SPAWN } from '../data/world'
+import { moveMul } from '../game/combat/actions'
 import { dist, hero, unitById } from '../game/combat/state'
 import { cutscene } from '../game/cutscene'
 import { gearLook } from '../game/gear'
@@ -160,6 +161,13 @@ export function Player() {
       runtime.path = null
     }
 
+    // 藥師的疾行藥劑：移動速度提升（翻滾不受影響）
+    if (dodge.time <= 0 && want > 0) {
+      const k = moveMul(h)
+      want *= k
+      vx *= k
+      vz *= k
+    }
     const ox = p.x
     const oz = p.z
     if (want > 0) {

@@ -134,6 +134,11 @@ export const EVENT_SPOTS = {
   forest: { x: -27, z: 6 },
   ruins: { x: 21, z: -12.5 },
 }
+/** 第二章的兩位夥伴（月光山谷）：藥師在蘑菇群附近採藥、暗殺者在西側追蹤狼群 */
+export const VALLEY_SPOTS = {
+  herb: { x: 6, z: -51 },
+  shadow: { x: -17, z: -51 },
+}
 export interface ChestDef {
   id: string
   x: number
@@ -274,6 +279,8 @@ const CLEARINGS: { x: number; z: number; r: number }[] = [
   { ...EVENT_SPOTS.meadow, r: 5 },
   { ...EVENT_SPOTS.forest, r: 5.5 },
   { ...EVENT_SPOTS.ruins, r: 3 },
+  { ...VALLEY_SPOTS.herb, r: 3.5 },
+  { ...VALLEY_SPOTS.shadow, r: 3.5 },
   { ...MERCHANT, r: 2.5 },
   ...CHESTS.map((c) => ({ x: c.x, z: c.z, r: 2.6 })),
   ...CAMPS.map((c) => ({ x: c.x, z: c.z, r: 4.2 })),

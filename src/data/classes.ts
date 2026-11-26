@@ -1,14 +1,26 @@
-// 四職業資料表（資料驅動）：能力值、普攻、技能效果都在這裡，戰鬥系統只負責執行。
-export type ClassId = 'archer' | 'mage' | 'knight' | 'cleric'
+// 職業資料表（資料驅動）：能力值、普攻、技能效果都在這裡，戰鬥系統只負責執行。
+// 前四個職業可以當主角；暗殺者、藥師是第二章才加入的夥伴（不能當主角）。
+export type ClassId = 'archer' | 'mage' | 'knight' | 'cleric' | 'assassin' | 'apothecary'
 export type WeaponKind = 'bow' | 'staff' | 'sword' | 'wand' | 'none'
 export type ZoneStyle = 'rain' | 'meteor' | 'frost' | 'holy'
-export type BuffStat = 'atkSpeed' | 'atk' | 'def' | 'maxHp' | 'guard'
+/** crit 為暴擊率絕對值（0.2 = +20%）；moveSpeed 為移動速度比例 */
+export type BuffStat = 'atkSpeed' | 'atk' | 'def' | 'maxHp' | 'guard' | 'crit' | 'moveSpeed'
 
 /** 技能效果：一個技能可以由多個效果組成 */
 export type SkillEffect =
   /** 朝目標發射投射物；pierce = 直線穿透，splash = 命中後的擴散半徑 */
   | { type: 'projectile'; count: number; power: number; interval?: number; pierce?: boolean; splash?: number }
   | { type: 'melee'; power: number; stun?: number }
+  /** 連擊：對目標連續近戰 hits 次，每下間隔 interval 秒 */
+  | { type: 'combo'; hits: number; power: number; interval: number }
+  /** 迴旋：以自己為中心，打中半徑內所有敵人一次 */
+  | { type: 'spin'; radius: number; power: number }
+  /** 中毒：delay 秒後（藥瓶飛到）讓目標周圍 radius 內的敵人中毒；dps = 每秒傷害（攻擊力倍率） */
+  | { type: 'poison'; radius: number; dps: number; duration: number; delay: number }
+  /** 瞬閃：躍起後落在目標身邊，對落點周圍造成傷害並暈眩 */
+  | { type: 'blink'; power: number; radius: number; stun: number }
+  /** 毒孢子：在目標位置長出一顆大蘑菇，delay 秒後爆炸（傷害＋中毒） */
+  | { type: 'spore'; delay: number; radius: number; power: number; dps: number; duration: number }
   /** 強制範圍內敵人攻擊施放者 */
   | { type: 'taunt'; radius: number; duration: number }
   /** 治療：ratio 為最大 HP 比例；party = 全隊，否則治療血量比例最低的隊友 */
@@ -56,11 +68,15 @@ export interface ClassDef {
   attack: { range: number; interval: number; ranged: boolean; crit: number; color: string }
   colors: { primary: string; secondary: string; accent: string }
   weapon: WeaponKind
+  /** 自帶動作片段的模型（第二章夥伴）：file 相對 public/models；hide = 要隱藏的模型節點 */
+  clipModel?: { file: string; hide?: string[] }
+  /** 治療技能播放的動作片段（模型有 Heal 動作時） */
+  healClip?: string
 }
 
 const BUFF_TIME = 8
-const BUFF_CD = 30
-const ULT_CD = 45
+const BUFF_CD = 25
+const ULT_CD = 35
 
 export const CLASSES: Record<ClassId, ClassDef> = {
   archer: {
@@ -75,7 +91,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'rapid_shot',
         name: '連射',
-        cooldown: 5,
+        cooldown: 4,
         mp: 8,
         needsTarget: true,
         range: 10,
@@ -84,7 +100,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'pierce_arrow',
         name: '穿透箭',
-        cooldown: 8,
+        cooldown: 7,
         mp: 12,
         needsTarget: true,
         range: 11,
@@ -127,7 +143,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'fireball',
         name: '火球',
-        cooldown: 4,
+        cooldown: 3,
         mp: 10,
         needsTarget: true,
         range: 10,
@@ -136,7 +152,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'frost_blast',
         name: '冰霜衝擊',
-        cooldown: 9,
+        cooldown: 7,
         mp: 15,
         needsTarget: true,
         range: 10,
@@ -181,7 +197,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'shield_bash',
         name: '盾擊',
-        cooldown: 6,
+        cooldown: 5,
         mp: 5,
         needsTarget: true,
         range: 2,
@@ -190,7 +206,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'taunt',
         name: '挑釁',
-        cooldown: 8,
+        cooldown: 7,
         mp: 5,
         needsTarget: false,
         range: 0,
@@ -236,7 +252,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
       {
         id: 'holy_light',
         name: '聖光術',
-        cooldown: 5,
+        cooldown: 4,
         mp: 8,
         needsTarget: true,
         range: 9,
@@ -278,7 +294,120 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     colors: { primary: '#fff4e2', secondary: '#8fc7f2', accent: '#f2c14e' },
     weapon: 'wand',
   },
+  assassin: {
+    id: 'assassin',
+    name: '暗殺者',
+    en: 'ASSASSIN',
+    companion: '索恩',
+    role: '近距離爆發',
+    desc: '高暴擊、連擊、瞬間切入',
+    buff: { name: '影葉之心', desc: '全隊暴擊率 +20%' },
+    skills: [
+      {
+        id: 'double_strike',
+        name: '二連擊',
+        cooldown: 4,
+        mp: 8,
+        needsTarget: true,
+        range: 2.2,
+        effects: [{ type: 'combo', hits: 2, power: 1.15, interval: 0.22 }],
+      },
+      {
+        id: 'blade_spin',
+        name: '旋刃',
+        cooldown: 7,
+        mp: 12,
+        needsTarget: false,
+        range: 0,
+        effects: [{ type: 'spin', radius: 2.6, power: 1.5 }],
+      },
+      {
+        id: 'shadow_heart',
+        name: '影葉之心',
+        cooldown: BUFF_CD,
+        mp: 10,
+        needsTarget: false,
+        range: 0,
+        effects: [{ type: 'buff', stat: 'crit', amount: 0.2, duration: BUFF_TIME, party: true }],
+      },
+      {
+        id: 'shadow_blink',
+        name: '瞬閃',
+        ultimate: true,
+        cooldown: ULT_CD,
+        mp: 25,
+        needsTarget: true,
+        range: 11,
+        effects: [{ type: 'blink', power: 3.4, radius: 2.4, stun: 1.2 }],
+      },
+    ],
+    base: { hp: 95, mp: 45, atk: 15, def: 6 },
+    attack: { range: 1.5, interval: 0.75, ranged: false, crit: 0.25, color: '#c9f27a' },
+    colors: { primary: '#3f6b4f', secondary: '#5a3d2b', accent: '#c9f27a' },
+    weapon: 'none',
+    clipModel: { file: 'starwish-characters-20261126-v002/A02/character-game.web.glb' },
+  },
+  apothecary: {
+    id: 'apothecary',
+    name: '藥師',
+    en: 'APOTHECARY',
+    companion: '莉拉',
+    role: '毒素與輔助',
+    desc: '持續中毒、範圍爆發、補血加速',
+    buff: { name: '疾行藥劑', desc: '全隊移動速度 +35%' },
+    skills: [
+      {
+        id: 'toxic_spread',
+        name: '毒性擴散',
+        cooldown: 4,
+        mp: 10,
+        needsTarget: true,
+        range: 9,
+        effects: [{ type: 'poison', radius: 2.4, dps: 0.45, duration: 6, delay: 0.45 }],
+      },
+      {
+        id: 'healing_potion',
+        name: '治療藥水',
+        cooldown: 7,
+        mp: 12,
+        needsTarget: false,
+        range: 0,
+        effects: [{ type: 'heal', ratio: 0.28 }],
+      },
+      {
+        id: 'swift_draught',
+        name: '疾行藥劑',
+        cooldown: BUFF_CD,
+        mp: 12,
+        needsTarget: false,
+        range: 0,
+        effects: [{ type: 'buff', stat: 'moveSpeed', amount: 0.35, duration: BUFF_TIME, party: true }],
+      },
+      {
+        id: 'spore_bomb',
+        name: '毒孢子',
+        ultimate: true,
+        cooldown: ULT_CD,
+        mp: 30,
+        needsTarget: true,
+        range: 10,
+        effects: [{ type: 'spore', delay: 1.2, radius: 3.4, power: 3, dps: 0.5, duration: 5 }],
+      },
+    ],
+    base: { hp: 90, mp: 85, atk: 12, def: 5 },
+    attack: { range: 8, interval: 1.3, ranged: true, crit: 0.05, color: '#a6e05a' },
+    colors: { primary: '#7a9a5c', secondary: '#6b3d5e', accent: '#a6e05a' },
+    weapon: 'none',
+    // 模型的丟藥瓶動作自帶飛行藥瓶：改由遊戲的投射物表現，避免畫兩次
+    clipModel: { file: 'starwish-characters-20261126-v002/A04/character-game.web.glb', hide: ['AttackProjectile', 'AnimatedProjectile'] },
+    healClip: 'Heal',
+  },
 }
 
-export const CLASS_ORDER: ClassId[] = ['archer', 'mage', 'knight', 'cleric']
+/** 可以當主角的職業（標題畫面、第一章的三位夥伴） */
+export const HERO_CLASSES: ClassId[] = ['archer', 'mage', 'knight', 'cleric']
+/** 全部職業（成長資料、存檔、背包篩選） */
+export const CLASS_ORDER: ClassId[] = [...HERO_CLASSES, 'assassin', 'apothecary']
+/** 出戰人數上限（主角以外） */
+export const MAX_ACTIVE = 3
 export const MAX_LEVEL = 50

@@ -12,7 +12,9 @@ export interface WeaponModel {
   label: string
   classId: ClassId
   tier: 1 | 2 | 3
-  family: 'sword' | 'bow' | 'staff' | 'wand'
+  /** baked = 角色模型自帶武器（暗殺者的雙刀、藥師的藥瓶），沒有另外的武器模型 */
+  family: 'sword' | 'bow' | 'staff' | 'wand' | 'baked'
+  /** 空字串 = 沒有武器模型 */
   url: string
   /** 有動畫片段的武器（弓：拉弦放箭） */
   clip?: string
@@ -39,10 +41,22 @@ export const WEAPON_MODELS: WeaponModel[] = ITEMS.flatMap((i) => {
   return [{ id: i.id, label: i.label ?? i.id, classId, tier: i.tier as 1 | 2 | 3, family, url: web(i.url), clip: i.clips?.[0] }]
 })
 
+/** 模型自帶武器的職業：武器店照樣賣三階（只有數值與名稱，外觀不變） */
+const BAKED: Partial<Record<ClassId, [string, string, string]>> = {
+  assassin: ['影葉雙刀', '月刃雙刀', '星痕雙刃'],
+  apothecary: ['翠綠藥典', '星露藥瓶', '月光藥典'],
+}
+
 /** 各職業的武器，依階級排序（索引 0 = 第 1 階） */
-export const CLASS_WEAPONS = Object.fromEntries(
-  CLASS_IDS.map((c) => [c, WEAPON_MODELS.filter((w) => w.classId === c).sort((a, b) => a.tier - b.tier)]),
-) as Record<ClassId, WeaponModel[]>
+export const CLASS_WEAPONS = {
+  ...Object.fromEntries(CLASS_IDS.map((c) => [c, WEAPON_MODELS.filter((w) => w.classId === c).sort((a, b) => a.tier - b.tier)])),
+  ...Object.fromEntries(
+    Object.entries(BAKED).map(([c, names]) => [
+      c,
+      names!.map((label, i): WeaponModel => ({ id: `${c}-${i + 1}`, label, classId: c as ClassId, tier: (i + 1) as 1 | 2 | 3, family: 'baked', url: '' })),
+    ]),
+  ),
+} as Record<ClassId, WeaponModel[]>
 
 const url = (id: string) => web(ITEMS.find((i) => i.id === id)!.url)
 /** 騎士的盾牌：第 1～3 階 */

@@ -10,8 +10,9 @@ import { rollDamage } from './damageCalc'
 import { burst, emit, flash, pillar, ring, shake, slash } from './fx'
 import { onEnemyKilled } from './rewards'
 import { playImpact, playSkill } from './skillRunner'
+import { resolveCollisions } from '../../systems/collision'
 import { addFloater, combat, dist, removeBuffs, unitById } from './state'
-import type { CastResult, Unit } from './types'
+import type { CastResult, Spore, Unit } from './types'
 
 export const BUFF_COLOR: Record<BuffStat, string> = {
   atkSpeed: '#9dff8a',
@@ -19,14 +20,81 @@ export const BUFF_COLOR: Record<BuffStat, string> = {
   def: '#8ab6ff',
   maxHp: '#ffe27a',
   guard: '#bfe0ff',
+  crit: '#ffd84a',
+  moveSpeed: '#7ff0d8',
 }
 const ENEMY_HIT = '#ff6b6b'
+const POISON = '#9be15d'
 
 const buffSum = (u: Unit, stat: BuffStat) => u.buffs.reduce((s, b) => (b.stat === stat ? s + b.amount : s), 0)
 export const atkOf = (u: Unit) => u.atk * (1 + buffSum(u, 'atk'))
 export const defOf = (u: Unit) => u.def * (1 + buffSum(u, 'def'))
 export const intervalOf = (u: Unit) => u.interval / (1 + buffSum(u, 'atkSpeed'))
+/** 暴擊率：本身＋暗殺者的「影葉之心」 */
+export const critOf = (u: Unit) => Math.min(0.9, u.crit + buffSum(u, 'crit'))
+/** 移動速度倍率：藥師的「疾行藥劑」 */
+export const moveMul = (u: Unit) => 1 + buffSum(u, 'moveSpeed')
 export const hasBuff = (u: Unit, stat: BuffStat) => u.buffs.some((b) => b.stat === stat)
+
+/** 延後執行（技能的第二段）；施放者倒下或被暈眩時由 sim.ts 取消 */
+export function later(owner: Unit, time: number, run: () => void) {
+  combat.later.push({ owner, time, run })
+}
+
+/**
+ * 中毒：perSec = 每秒扣的血（施放當下的攻擊力算好）。重複中毒取較強的、時間取較長的，不疊加。
+ * 被下毒的怪若還沒有目標，會轉頭攻擊下毒的人。
+ */
+export function applyPoison(src: Unit, dst: Unit, perSec: number, duration: number) {
+  if (!dst.alive || dst.team === src.team) return
+  const fresh = dst.poisonTime <= 0
+  dst.poisonDmg = fresh ? perSec : Math.max(dst.poisonDmg, perSec)
+  dst.poisonTime = Math.max(dst.poisonTime, duration)
+  dst.poisonBy = src
+  if (fresh) {
+    dst.poisonTick = 1
+    addFloater(dst, '中毒', POISON, false, 1.5)
+  }
+  if (dst.team === 'enemy' && !dst.targetId && dst.tauntTime <= 0 && src.alive) {
+    dst.targetId = src.id
+    dst.ai.returning = false
+  }
+}
+
+/** 每幀：中毒的單位每秒扣一次血（無視防禦），冒綠色泡泡 */
+export function tickPoison(u: Unit, dt: number) {
+  if (u.poisonTime <= 0 || !u.alive) return
+  u.poisonTime -= dt
+  u.poisonTick -= dt
+  if (Math.random() < dt * 6) emit(u.x + (Math.random() - 0.5) * 0.6, 0.5 + Math.random() * 0.5, u.z + (Math.random() - 0.5) * 0.6, POISON, { vy: 1.2, life: 0.6, size: 0.07 })
+  if (u.poisonTick <= 0) {
+    u.poisonTick += 1
+    const d = Math.max(1, Math.round(u.poisonDmg * (u.vulnTime > 0 ? 1 + u.vuln : 1)))
+    u.hp -= d
+    u.hitFlash = 0.1
+    addFloater(u, `${d}`, POISON, false, 1.2)
+    if (u.hp <= 0) kill(u)
+  }
+  if (u.poisonTime <= 0) clearPoison(u)
+}
+
+function clearPoison(u: Unit) {
+  u.poisonTime = 0
+  u.poisonDmg = 0
+  u.poisonBy = null
+}
+
+/** 毒性擴散：中毒的怪被打倒時，毒會傳給身邊正在戰鬥的怪 */
+function spreadPoison(u: Unit) {
+  const by = u.poisonBy
+  if (!by || u.poisonTime <= 0) return
+  for (const e of combat.units) {
+    if (e === u || e.team !== 'enemy' || !e.alive || e.targetId === null || e.poisonTime > 0 || dist(e, u) > 3.2) continue
+    applyPoison(by, e, u.poisonDmg, Math.max(3, u.poisonTime))
+    emit(e.x, 0.8, e.z, POISON, { vy: 2, life: 0.5, size: 0.12 })
+  }
+  ring(u.x, u.z, POISON, 0.3, 3.2, 0.45)
+}
 const attackColor = (u: Unit) => (u.classId ? CLASSES[u.classId].attack.color : ENEMY_HIT)
 /** 離主角太遠的事件不出聲 */
 const audible = (u: { x: number; z: number }) => Math.hypot(u.x - runtime.player.x, u.z - runtime.player.z) < 24
@@ -46,6 +114,8 @@ export function kill(u: Unit) {
   u.stun = 0
   u.slow = 0
   removeBuffs(u)
+  if (u.team === 'enemy') spreadPoison(u)
+  clearPoison(u)
   if (u.team === 'enemy') {
     onEnemyKilled(u)
     addFloater(u, '擊敗！', '#ffe27a', true, 1.4)
@@ -75,7 +145,7 @@ export function damage(src: Unit, dst: Unit, power: number, heavy = false, ownFx
     atk: atkOf(src),
     def: defOf(dst),
     power,
-    critChance: src.crit,
+    critChance: critOf(src),
     guard: buffSum(dst, 'guard'),
     vuln: dst.vulnTime > 0 ? dst.vuln : 0, // 破甲
   })
@@ -234,7 +304,8 @@ export function basicAttack(u: Unit, t: Unit) {
     return
   }
   if (u.ranged) {
-    spawnProjectile(u, t, 1, 0.12, false, 0, false)
+    // 藥師的丟藥瓶動作比較長：藥瓶在出手那一刻（約 0.5 秒）才飛出去
+    spawnProjectile(u, t, 1, u.classId === 'apothecary' ? 0.5 : 0.12, false, 0, false)
     // 出手閃光
     flash(u.x + Math.sin(u.facing) * 0.5, 0.85, u.z + Math.cos(u.facing) * 0.5, color, 0.5, 0.12)
     if (audible(u)) sfx.shoot(u.classId !== 'archer')
@@ -307,6 +378,12 @@ function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number, 
       const targets = e.party
         ? members
         : members.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, 1)
+      // 模型有治療動作（藥師舉起藥瓶）就播放
+      const clip = u.classId ? CLASSES[u.classId].healClip : undefined
+      if (clip) {
+        u.actionClip = clip
+        u.actionSeq++
+      }
       if (skillId === 'healing_light') {
         // 聖者治療：魔法陣 → 光柱 → 回復（時間軸的 hit）
         for (const m of targets)
@@ -358,13 +435,144 @@ function applyEffect(u: Unit, t: Unit | undefined, e: SkillEffect, idx: number, 
       }
       break
     }
+    case 'combo':
+      if (t) {
+        // 二連擊：雙刀左右各一下
+        for (let i = 0; i < e.hits; i++) {
+          const last = i === e.hits - 1
+          later(u, 0.08 + i * e.interval, () => {
+            if (!t.alive || dist(u, t) > u.range + t.radius + 1.2) return
+            faceTarget(u, t)
+            slash(u.x, u.z, u.facing + (i % 2 ? 0.5 : -0.5), i % 2 ? '#c9f27a' : '#ffffff', 2, 0.2)
+            if (audible(u)) sfx.slash()
+            damage(u, t, e.power * mul, last)
+          })
+        }
+      }
+      break
+    case 'spin': {
+      // 旋刃：以自己為中心一圈刀光，打中範圍內所有在戰鬥中的怪（還沒開打的怪要更靠近才算）
+      const r = e.radius + (mods?.radius[idx] ?? 0)
+      for (let k = 0; k < 4; k++) slash(u.x, u.z, u.facing + (k * Math.PI) / 2, k % 2 ? '#c9f27a' : '#ffffff', r * 0.9, 0.24)
+      ring(u.x, u.z, '#c9f27a', 0.4, r, 0.35)
+      burst(u.x, 0.6, u.z, '#7fbf5a', 22, 5, { up: 2, gravity: 4, size: 0.1, life: 0.6 })
+      if (audible(u)) sfx.slash()
+      for (const en of enemies()) {
+        const reach = en.targetId === null ? r * 0.5 : r + en.radius
+        if (dist(u, en) <= reach) damage(u, en, e.power * mul, true)
+      }
+      break
+    }
+    case 'poison':
+      if (t) {
+        // 毒性擴散：丟出毒藥瓶，落地後讓周圍的怪中毒
+        const r = e.radius + (mods?.radius[idx] ?? 0)
+        const perSec = atkOf(u) * e.dps * mul
+        spawnProjectile(u, t, 0.5 * mul, 0.1, false, 0, true)
+        later(u, e.delay, () => {
+          const at = { x: t.x, z: t.z }
+          ring(at.x, at.z, POISON, 0.3, r, 0.45)
+          burst(at.x, 0.5, at.z, POISON, 30, 4.5, { up: 3, gravity: 4, size: 0.13, life: 0.8 })
+          flash(at.x, 0.6, at.z, '#d8ffb0', r, 0.2)
+          if (audible(at)) sfx.explode()
+          for (const en of enemies()) {
+            const reach = en.targetId === null && en !== t ? r * 0.5 : r + en.radius
+            if (dist(at, en) <= reach) applyPoison(u, en, perSec, e.duration)
+          }
+        })
+      }
+      break
+    case 'blink':
+      if (t) {
+        // 瞬閃：躍起消失（無敵），落在目標身邊，對落點周圍重擊並暈眩
+        const r = e.radius + (mods?.radius[idx] ?? 0)
+        u.invuln = Math.max(u.invuln, 0.6)
+        for (let k = 0; k < 14; k++) emit(u.x, 0.3 + k * 0.35, u.z, k % 2 ? '#c9f27a' : '#2f4a3a', { vy: 9, life: 0.25, size: 0.18, streak: true })
+        burst(u.x, 0.4, u.z, '#3f6b4f', 18, 4, { up: 6, gravity: 3, size: 0.12, life: 0.5 })
+        later(u, 0.32, () => {
+          if (!t.alive) return
+          // 落點：目標與施放者之間、貼著目標
+          const dx = u.x - t.x
+          const dz = u.z - t.z
+          const d = Math.hypot(dx, dz) || 1
+          const gap = t.radius + 0.6
+          const p = { x: t.x + (dx / d) * gap, z: t.z + (dz / d) * gap }
+          resolveCollisions(p, u.radius)
+          u.x = p.x
+          u.z = p.z
+          if (u.kind === 'hero') {
+            runtime.player.x = p.x
+            runtime.player.z = p.z
+            runtime.path = null
+            runtime.approach = false
+          }
+          faceTarget(u, t)
+          u.attackAnim = 1
+          for (let k = 0; k < 12; k++) emit(p.x + (Math.random() - 0.5) * 0.4, 6 - k * 0.45, p.z + (Math.random() - 0.5) * 0.4, '#e9ffd0', { vy: -26, life: 0.22, size: 0.16, streak: true })
+          flash(t.x, 0.7, t.z, '#ffffff', r * 1.2, 0.25)
+          ring(t.x, t.z, '#c9f27a', 0.3, r, 0.45)
+          ring(t.x, t.z, '#ffffff', 0.2, r * 0.6, 0.3)
+          burst(t.x, 0.4, t.z, '#c9f27a', 34, 7, { up: 5, gravity: 10, size: 0.13, life: 0.7 })
+          shake(u.kind === 'hero' ? 0.4 : 0.2)
+          combat.hitStop = Math.max(combat.hitStop, 0.08)
+          if (audible(u)) sfx.explode()
+          for (const en of enemies()) {
+            const reach = en === t ? Infinity : en.targetId === null ? r * 0.5 : r + en.radius
+            if (dist(t, en) > reach) continue
+            damage(u, en, e.power * mul * (en === t ? 1 : 0.6), true)
+            if (en.alive) {
+              en.stun = Math.max(en.stun, e.stun)
+              addFloater(en, '暈眩', '#ffe27a', false, 1.5)
+            }
+          }
+        })
+      }
+      break
+    case 'spore':
+      if (t) {
+        // 毒孢子：在目標位置長出大蘑菇，倒數後爆炸（sim.ts 的 updateSpores）
+        const r = e.radius + (mods?.radius[idx] ?? 0)
+        combat.spores.push({
+          owner: u,
+          x: t.x,
+          z: t.z,
+          time: 0,
+          delay: e.delay,
+          radius: r,
+          power: e.power * mul,
+          dps: atkOf(u) * e.dps * mul,
+          duration: e.duration,
+        })
+        ring(t.x, t.z, POISON, 0.3, r, 0.6)
+        burst(t.x, 0.2, t.z, '#b07ad8', 16, 3, { up: 3, gravity: 3, size: 0.1, life: 0.7 })
+      }
+      break
+  }
+}
+
+/** 毒孢子爆炸：範圍傷害＋中毒 */
+export function sporeBurst(s: Spore) {
+  const u = s.owner
+  flash(s.x, 0.9, s.z, '#e6c8ff', s.radius * 1.3, 0.3)
+  ring(s.x, s.z, '#b07ad8', 0.4, s.radius, 0.5)
+  ring(s.x, s.z, POISON, 0.3, s.radius * 1.15, 0.7)
+  burst(s.x, 0.9, s.z, '#b07ad8', 40, 7, { up: 6, gravity: 6, size: 0.16, life: 0.9 })
+  burst(s.x, 0.6, s.z, POISON, 30, 5, { up: 3, gravity: 2, size: 0.14, life: 1.1 })
+  shake(0.3)
+  if (audible(s)) sfx.explode()
+  for (const en of enemies()) {
+    const reach = en.targetId === null ? s.radius * 0.5 : s.radius + en.radius
+    if (dist(s, en) > reach) continue
+    damage(u, en, s.power, true)
+    applyPoison(u, en, s.dps, s.duration)
   }
 }
 
 /** 技能實際冷卻秒數（扣掉技能樹的冷卻縮減） */
 export function skillCooldown(u: Unit, idx: number) {
   const base = CLASSES[u.classId!].skills[idx].cooldown
-  return Math.max(1, base - (u.mods?.cooldown[idx] ?? 0))
+  // 技能樹縮短冷卻：最多縮到原本的 30%（避免必殺技點滿後幾乎沒有冷卻）
+  return Math.max(1, base * 0.3, base - (u.mods?.cooldown[idx] ?? 0))
 }
 
 /** 施放第 idx 個技能（0–3）。主角與隊友 AI 共用。 */

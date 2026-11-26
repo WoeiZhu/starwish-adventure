@@ -979,3 +979,70 @@ html.menu-open .hud {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── 隊伍：出戰名單（6 選 4：主角＋3 位出戰） ── */
+.menu-body.party-wrap {
+  flex-direction: column;
+  gap: 12px;
+}
+.party-cols {
+  display: flex;
+  gap: 20px;
+}
+.squad h3 {
+  margin: 0 0 8px;
+}
+.squad h3 small {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.squad-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.squad-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 3px 10px 3px 4px;
+  border: 2px dashed var(--m-line);
+  border-radius: 999px;
+  background: #f6f3f8;
+  opacity: 0.75;
+}
+.squad-card.on {
+  border-style: solid;
+  border-color: #5fc46a;
+  background: #effbf0;
+  opacity: 1;
+}
+.squad-state {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e6dcec;
+  font-size: 12px;
+  font-weight: 900;
+}
+.squad-card.on .squad-state {
+  background: #5fc46a;
+  color: #fff;
+}
+.ms-member.rest {
+  opacity: 0.6;
+}
+@media (max-width: 760px), (max-height: 560px) and (orientation: landscape) {
+  .party-cols {
+    gap: 12px;
+  }
+  .squad h3 small {
+    display: block;
+    margin: 2px 0 0;
+  }
+  .squad-card {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "passed": 45,
+  "total": 45,
+  "results": [
+    {
+      "name": "兩個入隊地點都在可走的地面上",
+      "ok": true,
+      "detail": "{\"herb\":0,\"shadow\":0}"
+    },
+    {
+      "name": "第二章調查石碑前：兩位都還沒出現",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "淨化山谷開始：藥師出現、暗殺者還沒",
+      "ok": true,
+      "detail": "[\"companion-apothecary\"]"
+    },
+    {
+      "name": "任務欄有藥師的支線提示",
+      "ok": true,
+      "detail": "月影幼狼 0/4、孢子蘑菇 0/4｜幼狼會撲擊，蘑菇的綠色毒霧要快點離開｜（支線）山谷中央的蘑菇群附近，好像有人在呼救"
+    },
+    {
+      "name": "找到侵蝕源頭：兩位都出現",
+      "ok": true,
+      "detail": "[\"companion-apothecary\",\"companion-assassin\"]"
+    },
+    {
+      "name": "藥師對話有「幫她擊退蘑菇」選項",
+      "ok": true,
+      "detail": "[\"幫她擊退蘑菇\",\"暫時離開\"]"
+    },
+    {
+      "name": "事件：出現 3 隻孢子蘑菇",
+      "ok": true,
+      "detail": "[\"mushroom\",\"mushroom\",\"mushroom\"]"
+    },
+    {
+      "name": "打完之前還沒加入",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "打倒蘑菇後藥師加入名單",
+      "ok": true,
+      "detail": "{\"rec\":[\"archer\",\"mage\",\"cleric\",\"apothecary\"],\"bench\":[\"apothecary\"],\"size\":4}"
+    },
+    {
+      "name": "出戰已滿（3 位）：藥師先休息，出戰人數仍是 4",
+      "ok": true,
+      "detail": "{\"rec\":[\"archer\",\"mage\",\"cleric\",\"apothecary\"],\"bench\":[\"apothecary\"],\"size\":4}"
+    },
+    {
+      "name": "換人：藥師出戰、聖者休息",
+      "ok": true,
+      "detail": "{\"err\":null,\"allies\":[\"archer\",\"mage\",\"apothecary\"],\"bench\":[\"cleric\"]}"
+    },
+    {
+      "name": "超過 3 位出戰會被擋下",
+      "ok": true,
+      "detail": "最多 3 位隊友出戰"
+    },
+    {
+      "name": "打倒怪物：出戰的藥師拿到經驗、休息的聖者沒有",
+      "ok": true,
+      "detail": "{\"cleric\":0,\"apothecary\":1000010}"
+    },
+    {
+      "name": "戰鬥中不能換人",
+      "ok": true,
+      "detail": "戰鬥中不能換人"
+    },
+    {
+      "name": "選單「隊伍」有出戰名單：4 位夥伴、3 位出戰",
+      "ok": true,
+      "detail": "[\"3艾琳弓箭手出戰\",\"3諾娃法師出戰\",\"2米婭聖者休息\",\"3莉拉藥師出戰\"]"
+    },
+    {
+      "name": "頭像列含休息中的聖者（可以配點、換裝）",
+      "ok": true,
+      "detail": "[\"3測試戰士2\",\"3艾琳弓箭手2\",\"3諾娃法師2\",\"3莉拉藥師2\",\"2米婭聖者・休息1\"]"
+    },
+    {
+      "name": "出戰已滿時點休息的人：提示先讓一位休息",
+      "ok": true,
+      "detail": "\"最多 3 位隊友出戰，先讓一位休息\""
+    },
+    {
+      "name": "在選單點兩下完成換人（弓箭手休息、聖者出戰）",
+      "ok": true,
+      "detail": "[\"mage\",\"cleric\",\"apothecary\"]"
+    },
+    {
+      "name": "手機橫拿：出戰名單不超出畫面",
+      "ok": true,
+      "detail": "{\"right\":826,\"w\":844}"
+    },
+    {
+      "name": "存檔保留招募名單與休息名單",
+      "ok": true,
+      "detail": "{\"rec\":[\"archer\",\"mage\",\"cleric\",\"apothecary\"],\"bench\":[\"archer\"]}"
+    },
+    {
+      "name": "沒有休息名單的存檔：多出來的人自動休息（最後加入的先休息）",
+      "ok": true,
+      "detail": "{\"bench\":[\"assassin\",\"apothecary\"],\"active\":[\"archer\",\"mage\",\"cleric\"]}"
+    },
+    {
+      "name": "毒性擴散施放成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "毒性擴散：目標與旁邊的怪都中毒",
+      "ok": true,
+      "detail": "{\"p1\":5.557300000071525,\"p2\":5.557300000071525}"
+    },
+    {
+      "name": "中毒每秒扣血",
+      "ok": true,
+      "detail": "4974 → 4948"
+    },
+    {
+      "name": "毒性擴散：中毒的怪倒下，毒傳給身邊戰鬥中的怪",
+      "ok": true,
+      "detail": "3.4433560000514962"
+    },
+    {
+      "name": "治療藥水：補血並播放 Heal 動作",
+      "ok": true,
+      "detail": "{\"r\":\"ok\",\"clip\":\"Heal\",\"seq\":1,\"ratio\":0.59}"
+    },
+    {
+      "name": "毒孢子施放成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "毒孢子：範圍內的怪在爆炸前被減速",
+      "ok": true,
+      "detail": "0.3"
+    },
+    {
+      "name": "毒孢子：地上長出蘑菇（倒數中）",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "毒孢子：倒數結束爆炸，造成傷害並中毒",
+      "ok": true,
+      "detail": "{\"before3\":5000,\"hp\":4963,\"poison\":4.3247639999818785}"
+    },
+    {
+      "name": "疾行藥劑：全隊移動速度 ×1.35",
+      "ok": true,
+      "detail": "{\"r\":\"ok\",\"hero\":1.35,\"mage\":1.35}"
+    },
+    {
+      "name": "疾行藥劑：主角實際跑速提高（1 秒 > 6.5 m）",
+      "ok": true,
+      "detail": "8.52 m"
+    },
+    {
+      "name": "暗殺者事件：狼群首領（精英）＋2 隻幼狼",
+      "ok": true,
+      "detail": "[\"elite\",\"normal\",\"normal\"]"
+    },
+    {
+      "name": "暗殺者加入：名單 5 人（6 人隊伍含主角）",
+      "ok": true,
+      "detail": "{\"rec\":[\"archer\",\"mage\",\"cleric\",\"apothecary\",\"assassin\"],\"bench\":[\"archer\",\"assassin\"]}"
+    },
+    {
+      "name": "二連擊施放成功",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "二連擊：分兩下打中",
+      "ok": true,
+      "detail": "[84,312]"
+    },
+    {
+      "name": "旋刃：身邊 3 隻都被打中",
+      "ok": true,
+      "detail": "{\"r\":\"ok\",\"hit\":3}"
+    },
+    {
+      "name": "影葉之心：全隊暴擊率 +20%",
+      "ok": true,
+      "detail": "{\"r\":\"ok\",\"before\":0.05,\"after\":0.25}"
+    },
+    {
+      "name": "瞬閃：落到目標身邊（8 m → 2 m 內，含擊退）",
+      "ok": true,
+      "detail": "{\"before\":8,\"after\":1.72}"
+    },
+    {
+      "name": "瞬閃：落地造成傷害並暈眩",
+      "ok": true,
+      "detail": "{\"hp0\":5000,\"d\":1.72,\"hp\":4906,\"stun\":1}"
+    },
+    {
+      "name": "暗殺者 AI 有用技能（至少 2 種）",
+      "ok": true,
+      "detail": "[true,true,false,true]"
+    },
+    {
+      "name": "藥師 AI 有用技能並讓怪中毒",
+      "ok": true,
+      "detail": "{\"sin\":[true,true,false,true],\"apo\":[false,true,true,true],\"poisoned\":4}"
+    },
+    {
+      "name": "兩個新職業都有 12 格技能樹",
+      "ok": true,
+      "detail": "{\"assassin\":12,\"apothecary\":12}"
+    },
+    {
+      "name": "載入壓縮過的 A02／A04 模型（.web.glb）",
+      "ok": true,
+      "detail": "[\"A04/character-game.web.glb\",\"A02/character-game.web.glb\"]"
+    },
+    {
+      "name": "主控台沒有錯誤",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

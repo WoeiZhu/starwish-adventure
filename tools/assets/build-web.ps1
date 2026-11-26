@@ -14,8 +14,8 @@ $jobs = @(
   # 舊角色與怪物：原檔每個 4～5 MB（2048 貼圖，載入後約 22 MB 顯存），壓成約 0.3 MB
   @{ dir = '.'; files = 'archer','mage','knight','cleric','guide-npc','merchant-npc','elite-goblin','guardian-boss','moss-stag'; size = 1024 },
   @{ dir = '.'; files = 'slime','moon-wolf','spore-mushroom','star-crystal'; size = 512 },
-  # 新角色（v002）：城門衛兵、新怪物（鐵牙野豬、月翼蝠、砂鱗蜥兵、裂岩甲蟹）。原檔 3.4～13.6 MB
-  @{ dir = 'starwish-characters-20261126-v002'; files = 'G01\character-game','M01\character-game','M02\character-game','M03\character-game','M04\character-game'; size = 1024 }
+  # 新角色（v002）：城門衛兵、新怪物（鐵牙野豬、月翼蝠、砂鱗蜥兵、裂岩甲蟹）、第二章夥伴（暗殺者 A02、藥師 A04）。原檔 3.4～13.6 MB
+  @{ dir = 'starwish-characters-20261126-v002'; files = 'G01\character-game','M01\character-game','M02\character-game','M03\character-game','M04\character-game','A02\character-game','A04\character-game'; size = 1024 }
 )
 
 foreach ($job in $jobs) {

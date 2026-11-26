@@ -6,9 +6,9 @@ import { QUALITIES, type Item, type Slot } from '../../data/items'
 const INK = '#4a3b52'
 const S = { stroke: INK, strokeWidth: 2.6, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const }
 
-type Kind = 'bow' | 'staff' | 'sword' | 'wand' | 'armor' | 'ring' | 'amulet' | 'heart' | 'earring' | 'gem' | 'potion'
+type Kind = 'bow' | 'staff' | 'sword' | 'wand' | 'daggers' | 'flask' | 'armor' | 'ring' | 'amulet' | 'heart' | 'earring' | 'gem' | 'potion'
 
-const WEAPON_KIND: Record<ClassId, Kind> = { archer: 'bow', mage: 'staff', knight: 'sword', cleric: 'wand' }
+const WEAPON_KIND: Record<ClassId, Kind> = { archer: 'bow', mage: 'staff', knight: 'sword', cleric: 'wand', assassin: 'daggers', apothecary: 'flask' }
 
 /** 飾品的外觀：依它加的屬性 */
 function accessoryKind(item: Item): Kind {
@@ -72,6 +72,31 @@ function Shape({ kind, accent, light }: { kind: Kind; accent: string; light: str
             {...S}
           />
           <circle cx={31} cy={16} r={2.2} fill={light} />
+        </>
+      )
+    case 'daggers':
+      // 交叉的兩把短刀
+      return (
+        <>
+          <path d="M10 8 L14 6 L30 28 L27 31 Z" fill={light} {...S} />
+          <path d="M38 8 L34 6 L18 28 L21 31 Z" fill={light} {...S} />
+          <path d="M25 30 L33 38" {...S} strokeWidth={5} />
+          <path d="M25 30 L33 38" stroke={accent} strokeWidth={2.2} strokeLinecap="round" />
+          <path d="M23 30 L15 38" {...S} strokeWidth={5} />
+          <path d="M23 30 L15 38" stroke={accent} strokeWidth={2.2} strokeLinecap="round" />
+          <circle cx={35} cy={40} r={2.6} fill={accent} {...S} strokeWidth={1.8} />
+          <circle cx={13} cy={40} r={2.6} fill={accent} {...S} strokeWidth={1.8} />
+        </>
+      )
+    case 'flask':
+      // 圓底藥瓶，冒著泡泡
+      return (
+        <>
+          <path d="M20 8 L28 8 L28 18 C36 21 39 27 39 32 C39 39 33 43 24 43 C15 43 9 39 9 32 C9 27 12 21 20 18 Z" fill="#fff" {...S} />
+          <path d="M11.4 31 C16 28 32 34 36.6 31 C37 38 32 41 24 41 C16 41 11 38 11.4 31 Z" fill={accent} />
+          <circle cx={20} cy={26} r={2} fill={light} stroke={INK} strokeWidth={1.2} />
+          <circle cx={27} cy={22} r={1.4} fill={light} stroke={INK} strokeWidth={1.1} />
+          <path d="M18 8 L30 8" {...S} strokeWidth={4} stroke="#c98a55" />
         </>
       )
     case 'armor':

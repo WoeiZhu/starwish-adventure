@@ -41,6 +41,8 @@ const WEAPON_NAMES: Record<ClassId, string[]> = {
   mage: ['學徒法杖', '紅玉法杖', '秘銀法杖', '星願之杖'],
   knight: ['鐵製長劍', '騎士闊劍', '蒼藍之刃', '星輝聖劍'],
   cleric: ['祈禱短杖', '聖光權杖', '祝福之杖', '晨曦聖杖'],
+  assassin: ['鐵製短刀', '影葉雙刀', '月刃雙刀', '星痕雙刃'],
+  apothecary: ['學徒藥瓶', '翠綠藥典', '星露藥瓶', '月光藥典'],
 }
 const ARMOR_NAMES = ['旅人布衣', '皮革護甲', '鍛鐵胸甲', '星紋戰衣']
 const ACCESSORIES: { name: string; stat: keyof ItemStats }[] = [

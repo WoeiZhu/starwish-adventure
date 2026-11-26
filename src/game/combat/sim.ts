@@ -10,7 +10,7 @@ import { useGame } from '../store'
 import { moveAxis } from '../../systems/input'
 import { sfx } from '../../systems/sfx'
 import { AI } from '../../world/config'
-import { BUFF_COLOR, basicAttack, castSkill, damage, enemyShot, faceTarget, hasBuff, heal } from './actions'
+import { BUFF_COLOR, basicAttack, castSkill, damage, enemyShot, faceTarget, hasBuff, heal, moveMul, sporeBurst, tickPoison } from './actions'
 import { burst, emit, flash, pillar, ring, shake, updateFx } from './fx'
 import { updateDrops } from './rewards'
 import { playImpact, updateSkillRuns } from './skillRunner'
@@ -58,6 +58,7 @@ function moveToward(u: Unit, tx: number, tz: number, speed: number, dt: number) 
 /** 隊友移動：平常直走，被擋住或距離遠時改用 A* 路徑 */
 function navTo(u: Unit, tx: number, tz: number, speed: number, dt: number) {
   const ai = u.ai
+  if (u.team === 'party') speed *= moveMul(u) // 疾行藥劑
   ai.repath -= dt
   const d = Math.hypot(tx - u.x, tz - u.z)
   if ((d > 9 || ai.blocked > 0.35) && ai.repath <= 0) {
@@ -102,6 +103,44 @@ function tickTimers(u: Unit, dt: number) {
   for (let i = u.buffs.length - 1; i >= 0; i--) {
     u.buffs[i].time -= dt
     if (u.buffs[i].time <= 0) expireBuff(u, i)
+  }
+  tickPoison(u, dt)
+}
+
+/** 延後執行的技能段落：施放者倒下或被暈眩就取消 */
+function updateLater(dt: number) {
+  const list = combat.later
+  for (let i = list.length - 1; i >= 0; i--) {
+    const l = list[i]
+    if (!l.owner.alive || l.owner.stun > 0) {
+      list.splice(i, 1)
+      continue
+    }
+    l.time -= dt
+    if (l.time > 0) continue
+    list.splice(i, 1)
+    l.run()
+  }
+}
+
+/** 毒孢子：蘑菇長大時冒孢子，倒數結束爆炸 */
+function updateSpores(dt: number) {
+  const list = combat.spores
+  for (let i = list.length - 1; i >= 0; i--) {
+    const s = list[i]
+    s.time += dt
+    // 孢子黏住範圍內的怪：減速，才不會在爆炸前就走出範圍
+    for (const e of combat.units) {
+      if (e.team === 'enemy' && e.alive && Math.hypot(e.x - s.x, e.z - s.z) < s.radius + e.radius) e.slow = Math.max(e.slow, 0.3)
+    }
+    if (Math.random() < dt * 18) {
+      const a = Math.random() * Math.PI * 2
+      emit(s.x + Math.cos(a) * 0.5, 0.9 + Math.random() * 0.6, s.z + Math.sin(a) * 0.5, Math.random() < 0.5 ? '#b07ad8' : '#9be15d', { vy: 1.5, life: 0.8, size: 0.08 })
+    }
+    if (s.time >= s.delay) {
+      list.splice(i, 1)
+      sporeBurst(s)
+    }
   }
 }
 
@@ -523,6 +562,23 @@ function allySkills(u: Unit, t: Unit, engaged: Unit[], party: Unit[]) {
       cast(SKILL.first)
       return
     }
+    case 'assassin': {
+      // 強敵（精英、Boss）或群怪時瞬閃切入；身邊 2 隻以上用旋刃；開打先給全隊暴擊
+      const strong = t.tier !== 'normal' && t.hp / t.maxHp > 0.25
+      if ((strong || many) && cast(SKILL.ult)) return
+      if (!hasBuff(u, 'crit') && cast(SKILL.buff)) return
+      if (engaged.filter((e) => dist(e, u) < 2.8).length >= 2 && cast(SKILL.second)) return
+      cast(SKILL.first)
+      return
+    }
+    case 'apothecary': {
+      // 補血優先；群怪放毒孢子；目標沒中毒就丟毒；有空再給全隊加速
+      if (lowRatio < 0.6 && cast(SKILL.second)) return
+      if (many && cast(SKILL.ult)) return
+      if (t.poisonTime <= 0 && cast(SKILL.first)) return
+      if (!hasBuff(u, 'moveSpeed') && engaged.length >= 2) cast(SKILL.buff)
+      return
+    }
   }
 }
 
@@ -885,8 +941,10 @@ export function updateCombat(dt: number) {
   if (!h.alive && c.heroDown > 3) respawnHero(h)
   separate()
   updateSkillRuns(dt)
+  updateLater(dt)
   updateProjectiles(dt)
   updateZones(dt)
+  updateSpores(dt)
 
   // 增益光環：身上有增益的隊友持續冒出對應顏色的光點
   auraTimer += dt

@@ -7,10 +7,9 @@ import { buildAppearance } from '../data/appearance'
 import type { ClassId } from '../data/classes'
 import { LOOT_SCALE, LOOT_URLS } from '../data/lootModels'
 import { ARROW_LENGTH, ARROW_URL } from '../data/weaponModels'
-import { ENEMY_SLOTS, FLOATER_POOL, allyId, combat, enemyAt, hero, unitById } from '../game/combat/state'
+import { ENEMY_SLOTS, FLOATER_POOL, activeCompanions, allyId, combat, enemyAt, hero, unitById } from '../game/combat/state'
 import { updateCombat } from '../game/combat/sim'
 import { gearLook } from '../game/gear'
-import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { CharacterModel } from './characters/CharacterModel'
@@ -73,11 +72,17 @@ function Ally({ classId }: { classId: ClassId }) {
     group.current.rotation.y = u.facing
     motion.current.speed = u.alive ? u.speed : 0
     motion.current.attack = u.attackAnim
-    const lie = u.alive ? 0 : -Math.PI / 2
+    motion.current.attackTime = Math.min(0.9, u.interval * 0.95)
+    motion.current.actionClip = u.actionClip
+    motion.current.actionSeq = u.actionSeq
+    motion.current.dead = !u.alive
+    // 自帶動作的模型（第二章夥伴）倒下時播 Death 動作；其他模型整個躺平
+    const clip = !!appearance.clipModelUrl
+    const lie = u.alive || clip ? 0 : -Math.PI / 2
     body.current.rotation.x += (lie - body.current.rotation.x) * (1 - Math.exp(-dt * 10))
-    body.current.position.y = u.alive ? 0 : 0.25
-    // 出招時近戰往前踏、遠程略為後座
-    body.current.position.z = Math.sin(u.attackAnim * Math.PI) * (u.ranged ? -0.1 : 0.35)
+    body.current.position.y = u.alive || clip ? 0 : 0.25
+    // 出招時近戰往前踏、遠程略為後座（自帶動作的模型動作裡已經有）
+    body.current.position.z = clip ? 0 : Math.sin(u.attackAnim * Math.PI) * (u.ranged ? -0.1 : 0.35)
   })
 
   return (
@@ -493,11 +498,59 @@ function Floaters() {
   )
 }
 
+const SPORE_POOL = 4
+const SPORE_STEM = new THREE.CylinderGeometry(0.22, 0.32, 0.7, 10)
+const SPORE_CAP = new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2)
+const SPORE_DOT = new THREE.SphereGeometry(0.12, 8, 6)
+const DOTS = [0, 1.3, 2.6, 3.9, 5.2].map((a, i) => [Math.cos(a) * 0.5, 0.42 + (i % 2) * 0.12, Math.sin(a) * 0.5] as const)
+
+/** 藥師的毒孢子：地上冒出一顆紫色大蘑菇，越接近爆炸長得越大、抖得越快 */
+function Spores() {
+  const refs = useRef<(THREE.Group | null)[]>([])
+  const capMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#a86ad0', emissive: '#6a2a90', emissiveIntensity: 0.4, roughness: 0.6 }), [])
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    let maxK = 0
+    for (let i = 0; i < SPORE_POOL; i++) {
+      const g = refs.current[i]
+      if (!g) continue
+      const s = combat.spores[i]
+      g.visible = !!s
+      if (!s) continue
+      const k = Math.min(1, s.time / s.delay)
+      maxK = Math.max(maxK, k)
+      const grow = Math.min(1, s.time / 0.35) * (0.8 + k * 0.5)
+      const wob = 1 + Math.sin(t * (10 + k * 30)) * 0.06 * k
+      g.position.set(s.x, 0, s.z)
+      g.scale.set(grow * wob, grow / wob, grow * wob)
+    }
+    capMat.emissiveIntensity = 0.4 + maxK * 1.2
+  })
+  return (
+    <>
+      {Array.from({ length: SPORE_POOL }, (_, i) => (
+        <group key={i} ref={(g) => void (refs.current[i] = g)} visible={false}>
+          <mesh geometry={SPORE_STEM} position={[0, 0.35, 0]} castShadow>
+            <meshStandardMaterial color="#f3e6d0" roughness={0.8} />
+          </mesh>
+          <mesh geometry={SPORE_CAP} material={capMat} position={[0, 0.62, 0]} scale={[1, 0.75, 1]} castShadow />
+          {DOTS.map((p, j) => (
+            <mesh key={j} geometry={SPORE_DOT} position={[p[0], 0.62 + p[1], p[2]]}>
+              <meshStandardMaterial color="#f8f0ff" emissive="#d8ffb0" emissiveIntensity={0.6} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </>
+  )
+}
+
 export function CombatLayer() {
   const partyVersion = useGame((s) => s.partyVersion)
   // 隊友名單依招募進度變動（partyVersion 在招募、開新局、讀檔時遞增）
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const allies = useMemo(() => [...progress.recruited], [partyVersion])
+  // 只畫出戰中的隊友（休息中的不載入模型）
+  const allies = useMemo(() => activeCompanions(), [partyVersion])
   return (
     <>
       <CombatDriver />
@@ -517,6 +570,7 @@ export function CombatLayer() {
         <ArrowProjectiles />
       </WithFallback>
       <Zones />
+      <Spores />
       <WithFallback fallback={<Drops />}>
         <DropModelsLoader />
       </WithFallback>

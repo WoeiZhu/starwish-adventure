@@ -1,12 +1,12 @@
 // 戰鬥狀態單例：每幀變動，不進 Zustand。units[0] 永遠是主角。
-import { CLASSES, CLASS_ORDER, type ClassId } from '../../data/classes'
+import { CLASSES, HERO_CLASSES, MAX_ACTIVE, type ClassId } from '../../data/classes'
 import { ENEMY, SPECIES, scaledEnemyLevel, slimeStats, type Species } from '../../data/enemies'
 import { MONSTERS, SPAWN, type AreaBossDef, type MonsterDef } from '../../data/world'
 import { computeStats, progress } from '../progress'
 import { RUN_SPEED } from '../runtime'
 import { clearFx } from './fx'
 import { AI } from '../../world/config'
-import type { Drop, EnemyTier, FeedLine, Floater, Hazard, Projectile, Unit, UnitKind, Zone } from './types'
+import type { Drop, EnemyTier, FeedLine, Floater, Hazard, Later, Projectile, Spore, Unit, UnitKind, Zone } from './types'
 
 export const FLOATER_POOL = 28
 
@@ -14,6 +14,10 @@ export const combat = {
   units: [] as Unit[],
   projectiles: [] as Projectile[],
   zones: [] as Zone[],
+  /** 藥師的毒孢子（倒數中的大蘑菇） */
+  spores: [] as Spore[],
+  /** 延後執行的技能段落 */
+  later: [] as Later[],
   /** 怪物的範圍重擊警示 */
   hazards: [] as Hazard[],
   /** 地上的掉落物（金幣、藥水、裝備） */
@@ -101,6 +105,10 @@ function baseUnit(id: string, kind: UnitKind, name: string, x: number, z: number
     vulnTime: 0,
     tauntBy: null,
     tauntTime: 0,
+    poisonTime: 0,
+    poisonDmg: 0,
+    poisonTick: 0,
+    poisonBy: null,
     speed: 0,
     moved: 0,
     attackAnim: 0,
@@ -158,8 +166,11 @@ function partyUnit(id: string, kind: UnitKind, name: string, classId: ClassId, x
   return u
 }
 
-/** 隊伍人數（含主角） */
-export const partySize = () => 1 + progress.recruited.length
+/** 出戰中的隊友（招募名單扣掉休息中的），依加入順序 */
+export const activeCompanions = () => progress.recruited.filter((c) => !progress.bench.includes(c))
+
+/** 隊伍人數（含主角；只算出戰的） */
+export const partySize = () => 1 + activeCompanions().length
 
 /** 隊伍越少人，怪物越弱：讓單人開局也打得贏 */
 const PARTY_SCALE = [
@@ -228,25 +239,62 @@ export function spawnEnemy(o: {
 }
 let enemySeq = 0
 
-/** 招募隊友：加入名單、在主角身邊生成、等級跟主角一樣 */
+/**
+ * 招募隊友：加入名單、等級跟主角一樣。出戰人數未滿就在主角身邊生成；滿了就先在名單上休息。
+ * 回傳 true = 直接出戰
+ */
 export function recruitAlly(classId: ClassId) {
-  if (progress.recruited.includes(classId)) return
+  if (progress.recruited.includes(classId)) return false
   const h = combat.units[0]
   const m = progress.members[classId]
   if (m.level < h.level) {
     m.level = h.level
     m.exp = 0
   }
-  const slot = FORMATION[progress.recruited.length % FORMATION.length]
+  const fight = activeCompanions().length < MAX_ACTIVE
   progress.recruited.push(classId)
+  if (!fight) {
+    progress.bench.push(classId)
+    return false
+  }
+  spawnAlly(classId)
+  return true
+}
+
+/** 在主角身邊放上一位出戰的隊友 */
+function spawnAlly(classId: ClassId) {
+  const h = combat.units[0]
+  const slot = FORMATION[(combat.units.filter((u) => u.kind === 'ally').length) % FORMATION.length]
   const u = partyUnit(allyId(classId), 'ally', CLASSES[classId].companion, classId, h.x + slot.x, h.z + slot.z)
   // 插在怪物之前，保持「隊伍在前、怪物在後」的順序
   const firstEnemy = combat.units.findIndex((x) => x.team === 'enemy')
   combat.units.splice(firstEnemy < 0 ? combat.units.length : firstEnemy, 0, u)
-  // 隊伍變強了：沒在戰鬥的野怪跟著調整
+  rescaleIdleEnemies()
+}
+
+/** 隊伍人數變了：沒在戰鬥的野怪跟著調整強度 */
+function rescaleIdleEnemies() {
   for (const e of combat.units) {
     if (e.team === 'enemy' && e.respawns && e.alive && !e.targetId) setEnemyLevel(e, e.level)
   }
+}
+
+/**
+ * 出戰名單：active 是要出戰的隊友（最多 MAX_ACTIVE 位，必須在招募名單裡）。
+ * 休息的隊友從戰場上移除；新出戰的在主角身邊出現。戰鬥中不能換。回傳錯誤訊息或 null。
+ */
+export function setActiveCompanions(active: ClassId[]): string | null {
+  if (combat.inCombat) return '戰鬥中不能換人'
+  const want = progress.recruited.filter((c) => active.includes(c))
+  if (want.length > MAX_ACTIVE) return `最多 ${MAX_ACTIVE} 位隊友出戰`
+  progress.bench = progress.recruited.filter((c) => !want.includes(c))
+  combat.units = combat.units.filter((u) => u.kind !== 'ally' || (u.classId && want.includes(u.classId)))
+  for (const c of want) if (!combat.units.some((u) => u.classId === c && u.kind === 'ally')) spawnAlly(c)
+  // 依出戰順序重排（隊形位置跟著順序）
+  const allies = want.map((c) => combat.units.find((u) => u.classId === c && u.kind === 'ally')!).filter(Boolean)
+  combat.units = [combat.units[0], ...allies, ...combat.units.filter((u) => u.team === 'enemy')]
+  rescaleIdleEnemies()
+  return null
 }
 
 function monsterUnit(def: MonsterDef, heroLevel: number): Unit {
@@ -286,8 +334,8 @@ export function spawnAreaBoss(def: AreaBossDef, heroLevel: number) {
   combat.units.push(u)
 }
 
-/** 主角未選的三個職業：依序對應草原、森林、石環三個招募事件 */
-export const companionClasses = (heroClass: ClassId) => CLASS_ORDER.filter((c) => c !== heroClass)
+/** 主角未選的三個職業：依序對應草原、森林、石環三個招募事件（第二章的暗殺者、藥師不在其中） */
+export const companionClasses = (heroClass: ClassId) => HERO_CLASSES.filter((c) => c !== heroClass)
 export const allyId = (classId: ClassId) => `ally-${classId}`
 
 // ── 切換地圖：野外的怪物與掉落物先收起來，回到野外再放回去 ──
@@ -326,6 +374,8 @@ export const stashedUnits = (): readonly Unit[] => stash?.units ?? []
 function clearBattlefield() {
   combat.projectiles = []
   combat.zones = []
+  combat.spores = []
+  combat.later = []
   combat.hazards = []
   if (stash) combat.drops = []
   slotUnits.fill(undefined)
@@ -366,14 +416,16 @@ export function initCombat(heroName: string, heroClass: ClassId, at = SPAWN) {
   const heroLevel = progress.members[heroClass].level
   combat.units = [
     partyUnit('hero', 'hero', heroName, heroClass, at.x, at.z),
-    ...progress.recruited.filter((c) => c !== heroClass).map((c, i) =>
-      partyUnit(allyId(c), 'ally', CLASSES[c].companion, c, at.x + FORMATION[i % 3].x, at.z - FORMATION[i % 3].z),
-    ),
+    ...activeCompanions()
+      .filter((c) => c !== heroClass)
+      .map((c, i) => partyUnit(allyId(c), 'ally', CLASSES[c].companion, c, at.x + FORMATION[i % 3].x, at.z - FORMATION[i % 3].z)),
     ...MONSTERS.map((m) => monsterUnit(m, heroLevel)),
   ]
   slotUnits.fill(undefined)
   combat.projectiles = []
   combat.zones = []
+  combat.spores = []
+  combat.later = []
   combat.hazards = []
   combat.drops = []
   combat.feed = []

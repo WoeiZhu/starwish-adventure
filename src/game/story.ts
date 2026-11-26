@@ -5,13 +5,13 @@ import { QUALITIES, describeStats, itemScore, makeItem, type Quality } from '../
 import { CLASS_WEAPONS, TIER_MIN_LEVEL, type WeaponModel } from '../data/weaponModels'
 import { DRAW_LEVER, DRAW_NOTICE } from '../data/terrain'
 import { TOWN_BUILDING_NAME, TOWN_DOORS, TOWN_NAME, TOWN_NPCS, type TownBuildingId, type TownNpcRole } from '../data/town'
-import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE } from '../data/world'
+import { CHESTS, EVENT_SPOTS, GROVE, MERCHANT, NPC_ELDER, REGION_NAME, RUINS, SPRING, STELE, VALLEY_SPOTS } from '../data/world'
 import { sfx } from '../systems/sfx'
 import { inTown } from '../world/maps'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
 import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, refreshParty, spawnEnemy, stashedUnits } from './combat/state'
 import type { Unit } from './combat/types'
-import { C2_HUNT_GOAL, HUNT_GOAL, addItem, equip, equippedItem, progress, storyReached, unlock } from './progress'
+import { C2_HUNT_GOAL, HUNT_GOAL, addItem, equip, equippedItem, progress, storyReached, unlock, type StoryStep } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
@@ -31,6 +31,11 @@ export interface Interactable {
 }
 
 const SPOTS = [EVENT_SPOTS.meadow, EVENT_SPOTS.forest, EVENT_SPOTS.ruins]
+/** 第二章的夥伴：從哪一步開始出現、在哪裡、事件怪物的標記 */
+const VALLEY_MATES: { classId: ClassId; from: StoryStep; spot: keyof typeof VALLEY_SPOTS; facing: number; tag: string; hint: string }[] = [
+  { classId: 'apothecary', from: 'c2_hunt', spot: 'herb', facing: 0.4, tag: 'ev_herb', hint: '（支線）山谷中央的蘑菇群附近，好像有人在呼救' },
+  { classId: 'assassin', from: 'c2_crystal', spot: 'shadow', facing: -0.8, tag: 'ev_shadow', hint: '（支線）山谷西側有人在追蹤月影狼群' },
+]
 const SPOT_HINT = ['翠綠草原東側傳來求救聲', '西邊的迷霧森林有冒險者失蹤', '東北方的古代石環有位學者在調查']
 const POTION_PRICE = 15
 /** 事件怪物全滅後要執行的後續（不存檔：讀檔後事件會重新開始） */
@@ -220,6 +225,20 @@ export function interactables(): Interactable[] {
       })
     })
   }
+  // 第二章的夥伴：淨化山谷開始後藥師出現、找到侵蝕源頭後暗殺者出現
+  for (const v of VALLEY_MATES) {
+    if (progress.recruited.includes(v.classId) || !storyReached(v.from)) continue
+    list.push({
+      id: `companion-${v.classId}`,
+      kind: 'companion',
+      ...VALLEY_SPOTS[v.spot],
+      facing: v.facing,
+      name: CLASSES[v.classId].companion,
+      verb: '交談',
+      classId: v.classId,
+      marker: !tagAlive(v.tag),
+    })
+  }
   // 東側吊橋：從山谷那一側放下後，石環 ↔ 星晶林之間就多了一條捷徑
   if (!progress.unlocks.includes('east_bridge')) {
     list.push({ id: 'lever', kind: 'lever', ...DRAW_LEVER, facing: 0, name: '吊橋絞盤', verb: '轉動', marker: false })
@@ -267,14 +286,19 @@ function setStep(step: typeof progress.story.step, feed: string) {
 
 function joined(c: ClassId) {
   const cls = CLASSES[c]
-  recruitAlly(c)
+  const fight = recruitAlly(c)
   const u = combat.units.find((x) => x.classId === c)
   if (u) {
     pillar(u.x, u.z, '#ffe27a', 0.9, 5, 0.9)
     ring(u.x, u.z, '#ffe27a', 0.3, 2.6, 0.6)
     burst(u.x, 0.3, u.z, '#ffe27a', 24, 4, { up: 6, gravity: 5, life: 1 })
   }
-  addFeed(`${cls.companion}（${cls.name}）加入了隊伍！`, '#2f9e52')
+  if (fight) addFeed(`${cls.companion}（${cls.name}）加入了隊伍！`, '#2f9e52')
+  else {
+    // 出戰名額滿了：先加入名單休息
+    addFeed(`${cls.companion}（${cls.name}）加入了名單！出戰已滿，可在選單「隊伍」換人`, '#2f9e52')
+    useGame.getState().showToast(`${cls.companion}加入名單：選單「隊伍」可以換人出戰`)
+  }
   sfx.levelUp()
   useGame.getState().partyChanged()
   if (progress.recruited.length >= 3 && story().step === 'recruit') {
@@ -492,7 +516,62 @@ function talkMerchant(speaker = MERCHANT.name) {
   )
 }
 
+/** 第二章的夥伴：先一起打倒怪物，打完才加入 */
+function talkValleyMate(c: ClassId) {
+  const v = VALLEY_MATES.find((m) => m.classId === c)!
+  const n = CLASSES[c].companion
+  const at = VALLEY_SPOTS[v.spot]
+  const lv = hero().level
+  if (tagAlive(v.tag)) return say(n, ['小心！先把牠們打倒再說！'])
+  const leave: Choice = { label: '暫時離開', desc: '事件保留，之後還能回來', run: () => {} }
+  if (c === 'apothecary') {
+    return say(
+      n,
+      ['啊，得救了……不對，還沒得救！', `我是${n}，是個藥師。我在研究孢子蘑菇的毒，結果採太多，被牠們圍住了。`, '牠們的毒霧我很熟，只是一個人打不完！'],
+      [
+        {
+          label: '幫她擊退蘑菇',
+          desc: '打倒周圍失控的孢子蘑菇',
+          run: () => {
+            for (let i = 0; i < 3; i++) {
+              const a = (i / 3) * Math.PI * 2 + 0.4
+              spawnEnemy({ name: '失控的孢子蘑菇', color: '#c98ad8', species: 'mushroom', x: at.x + Math.cos(a) * 3.4, z: at.z + Math.sin(a) * 3.4, level: lv, tag: v.tag })
+            }
+            addFeed('孢子蘑菇圍了過來！', '#a96bf0')
+            pending[v.tag] = () => {
+              say(n, ['呼……謝謝你們！這些毒我可以調成武器，也能調成藥。', '讓我跟你們一起走吧，受傷了交給我，敵人也交給我的毒！'], undefined, () => joined(c))
+            }
+          },
+        },
+        leave,
+      ],
+    )
+  }
+  return say(
+    n,
+    ['……你們也在追月影狼？', `我是${n}。狼群的首領被星晶侵蝕了，一直在山谷裡襲擊旅人。`, '我一個人能殺進去，但殺不出來。要不要一起？'],
+    [
+      {
+        label: '一起獵狼',
+        desc: '挑戰精英怪「侵蝕的狼群首領」',
+        run: () => {
+          spawnEnemy({ name: '侵蝕的狼群首領', color: '#6f86c8', species: 'wolf', tier: 'elite', x: at.x - 3.5, z: at.z - 1.5, level: lv + 1, tag: v.tag })
+          for (const side of [-1, 1]) {
+            spawnEnemy({ name: '月影幼狼', color: '#8fa6d8', species: 'wolf', x: at.x - 2.5, z: at.z + side * 2.5, level: lv, tag: v.tag })
+          }
+          addFeed('狼群首領現身了！', '#6fa8dc')
+          pending[v.tag] = () => {
+            say(n, ['……不錯的身手。', '我叫索恩，雙刀和影子是我的專長。之後的路，算我一份。'], undefined, () => joined(c))
+          }
+        },
+      },
+      leave,
+    ],
+  )
+}
+
 function talkCompanion(c: ClassId) {
+  if (VALLEY_MATES.some((m) => m.classId === c)) return talkValleyMate(c)
   const cls = CLASSES[c]
   const n = cls.companion
   const idx = companions().indexOf(c)
@@ -731,7 +810,14 @@ export function questTarget(): { x: number; z: number } | null {
   }
 }
 
+/** HUD 任務欄的文字：主線＋（第二章）還沒加入的夥伴提示 */
 export function questInfo(): QuestInfo {
+  const q = mainQuestInfo()
+  const side = VALLEY_MATES.filter((v) => storyReached(v.from) && !progress.recruited.includes(v.classId)).map((v) => v.hint)
+  return side.length ? { title: q.title, lines: [...q.lines, ...side] } : q
+}
+
+function mainQuestInfo(): QuestInfo {
   const s = story()
   switch (s.step) {
     case 'talk':

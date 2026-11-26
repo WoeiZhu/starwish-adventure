@@ -1,6 +1,6 @@
 // 技能特效測試頁：切換職業、施放示範技能、即時調整參數、看時間軸與效能數字。
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CLASS_ORDER, CLASSES, type ClassId } from '../data/classes'
+import { HERO_CLASSES as CLASS_ORDER, CLASSES, type ClassId } from '../data/classes'
 import { DEMO_SKILLS } from '../skills/demoSkills'
 import { unlockAudio } from '../systems/sfx'
 import { timelineLength, type TimelineEvent, type TimelineKind } from '../vfx/timeline'

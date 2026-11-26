@@ -1,5 +1,5 @@
 // 存檔：localStorage 單一存檔。記錄角色、成長、背包與所在位置。
-import { CLASSES, CLASS_ORDER, MAX_LEVEL, type ClassId } from '../data/classes'
+import { CLASSES, CLASS_ORDER, HERO_CLASSES, MAX_ACTIVE, MAX_LEVEL, type ClassId } from '../data/classes'
 import type { Gender } from '../data/appearance'
 import { SLOTS, type Item } from '../data/items'
 import { BRIDGES } from '../data/terrain'
@@ -18,6 +18,7 @@ const SAVE_KEY = 'starwish.save.v1'
  *      捷徑視為未解鎖；位置若剛好落在新地形（河流、山脊）裡，移到最近的可走處
  *   3：加上 mapId（所在地圖：主線世界 / 星光鎮）與 returnPortal（在城裡時，出城後回到的位置）。
  *      讀到 1、2 版：當作在主線世界、沒有返回位置，其他進度照舊
+ *   （3 版之後加的 bench＝休息名單是選填欄位：沒有就當作全員出戰，不用升版本）
  */
 const VERSION = 3
 // 'intro_town'：第一次進星光鎮的過場已經看過（game/cutscene.ts 的 INTRO_FLAG；這裡寫死字串，避免模組互相引用）
@@ -48,6 +49,8 @@ export interface SaveData {
   potions: number
   kills: number
   recruited: ClassId[]
+  /** 休息中的隊友（舊存檔沒有：全員出戰） */
+  bench: ClassId[]
   story: StoryState
   unlocks: string[]
 }
@@ -69,6 +72,7 @@ export function writeSave(profile: SaveProfile, pos: { x: number; z: number }, m
     potions: progress.potions,
     kills: progress.kills,
     recruited: progress.recruited,
+    bench: progress.bench,
     story: progress.story,
     unlocks: progress.unlocks,
   }
@@ -89,7 +93,7 @@ export function readSave(): SaveData | null {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
     const d = JSON.parse(raw) as Partial<SaveData>
-    if (![1, 2, VERSION].includes(d.version ?? 0) || !d.profile || !d.members || !(d.profile.classId in CLASSES)) return null
+    if (![1, 2, VERSION].includes(d.version ?? 0) || !d.profile || !d.members || !(d.profile.classId in CLASSES) || !HERO_CLASSES.includes(d.profile.classId)) return null
     const heroClass = d.profile.classId
     // 1、2 版沒有 mapId：一律當作在主線世界
     const mapId: MapId = d.mapId === TOWN_ID ? TOWN_ID : 'overworld'
@@ -110,6 +114,13 @@ export function readSave(): SaveData | null {
         : { ...TOWN_PORTAL.ret }
     }
     const outside = returnPortal ?? pos
+    // 階段 C 的舊存檔沒有招募名單：當作第一章三位夥伴都已加入
+    const recruited = Array.isArray(d.recruited)
+      ? CLASS_ORDER.filter((c) => c !== heroClass && d.recruited!.includes(c)).sort((a, b) => d.recruited!.indexOf(a) - d.recruited!.indexOf(b))
+      : HERO_CLASSES.filter((c) => c !== heroClass)
+    // 休息名單：只留名單上的人，且出戰的不超過上限（多的從後面加入的開始休息）
+    const bench = Array.isArray(d.bench) ? recruited.filter((c) => d.bench!.includes(c)) : []
+    for (const c of [...recruited].reverse()) if (recruited.length - bench.length > MAX_ACTIVE && !bench.includes(c)) bench.push(c)
     const inventory = (Array.isArray(d.inventory) ? d.inventory : []).filter(
       (i): i is Item => !!i && typeof i.uid === 'string' && SLOTS.includes(i.slot) && typeof i.stats === 'object',
     )
@@ -146,12 +157,9 @@ export function readSave(): SaveData | null {
       gold: Math.round(num(d.gold, 0, 1e9, 0)),
       potions: Math.round(num(d.potions, 0, 999, 0)),
       kills: Math.round(num(d.kills, 0, 1e9, 0)),
-      // 階段 C 的舊存檔沒有這兩個欄位：當作已招募全員、直接挑戰 Boss
-      recruited: Array.isArray(d.recruited)
-        ? CLASS_ORDER.filter((c) => c !== heroClass && d.recruited!.includes(c)).sort(
-            (a, b) => d.recruited!.indexOf(a) - d.recruited!.indexOf(b),
-          )
-        : CLASS_ORDER.filter((c) => c !== heroClass),
+      recruited,
+      bench,
+      // 階段 C 的舊存檔沒有劇情欄位：直接挑戰 Boss
       story:
         d.story && STEPS.includes(d.story.step)
           ? {
@@ -179,6 +187,7 @@ export function applySave(d: SaveData) {
   progress.potions = d.potions
   progress.kills = d.kills
   progress.recruited = d.recruited
+  progress.bench = [...d.bench]
   progress.story = d.story
   progress.unlocks = [...d.unlocks]
   refreshGates(progress.unlocks)
