@@ -1,0 +1,42 @@
+[
+ {
+  "name": "鐵牙野豬（boar）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":0.9,\"attack\":0,\"actionSeq\":1,\"hit\":4,\"end\":{\"alive\":true,\"hp\":856,\"species\":\"boar\",\"range\":0.45}}"
+ },
+ {
+  "name": "野豬：蓄力衝撞有觸發（actionSeq 增加）",
+  "ok": true,
+  "detail": "seq=1"
+ },
+ {
+  "name": "月翼蝠（bat）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":0.2,\"attack\":0,\"actionSeq\":2,\"hit\":2,\"end\":{\"alive\":true,\"hp\":230,\"species\":\"bat\",\"range\":0.45}}"
+ },
+ {
+  "name": "月翼蝠：俯衝有觸發",
+  "ok": true,
+  "detail": "seq=2"
+ },
+ {
+  "name": "砂鱗蜥兵（lizard）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":6.1,\"attack\":0,\"actionSeq\":0,\"hit\":5,\"end\":{\"alive\":true,\"hp\":455,\"species\":\"lizard\",\"range\":6}}"
+ },
+ {
+  "name": "砂鱗蜥兵：遠程（range>2）",
+  "ok": true,
+  "detail": "range=6"
+ },
+ {
+  "name": "裂岩甲蟹（crab）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":1,\"attack\":0,\"actionSeq\":0,\"hit\":5,\"end\":{\"alive\":true,\"hp\":1175,\"species\":\"crab\",\"range\":0.45}}"
+ },
+ {
+  "name": "主控台沒有錯誤",
+  "ok": true,
+  "detail": ""
+ }
+]

@@ -15,7 +15,10 @@ import { ModelBoundary } from './characters/CharacterModel'
 import { addPose, crossFade, useClipModel } from './characters/clipModel'
 import { Slime } from './Slime'
 
-type Kind = 'slime' | 'goblin' | 'guardian' | 'wolf' | 'mushroom' | 'crystal' | 'stag'
+type Kind = 'slime' | 'goblin' | 'guardian' | 'wolf' | 'mushroom' | 'crystal' | 'stag' | 'boar' | 'bat' | 'lizard' | 'crab'
+
+/** 新怪物（v002 角色包）：動作片段名稱統一為 Idle / Walk / Run / Attack / Hit / Death */
+const V2 = (id: string) => modelUrl(`starwish-characters-20261126-v002/${id}/character-game.web.glb`)
 
 interface KindConfig {
   url: string
@@ -48,7 +51,7 @@ interface KindConfig {
 
 const CONFIG: Record<Kind, KindConfig> = {
   slime: {
-    url: modelUrl('slime.glb'),
+    url: modelUrl('slime.web.glb'),
     height: 0.77,
     barGap: 0.3,
     deathHold: 1.3,
@@ -61,7 +64,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     tierScale: false,
   },
   goblin: {
-    url: modelUrl('elite-goblin.glb'),
+    url: modelUrl('elite-goblin.web.glb'),
     height: 1.5,
     barGap: 0.3,
     deathHold: 2.2,
@@ -76,7 +79,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     tierScale: false,
   },
   guardian: {
-    url: modelUrl('guardian-boss.glb'),
+    url: modelUrl('guardian-boss.web.glb'),
     height: 3.0,
     barGap: 0.35,
     deathHold: 2.2,
@@ -92,7 +95,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     tierScale: false,
   },
   wolf: {
-    url: modelUrl('moon-wolf.glb'),
+    url: modelUrl('moon-wolf.web.glb'),
     height: 0.8,
     barGap: 0.3,
     deathHold: 1.6,
@@ -108,7 +111,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     clipSpeed: { Pounce: 1.3 },
   },
   mushroom: {
-    url: modelUrl('spore-mushroom.glb'),
+    url: modelUrl('spore-mushroom.web.glb'),
     height: 0.9,
     barGap: 0.3,
     deathHold: 1.6,
@@ -123,7 +126,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     hide: ['AnimatedProjectile'],
   },
   crystal: {
-    url: modelUrl('star-crystal.glb'),
+    url: modelUrl('star-crystal.web.glb'),
     height: 1.15,
     barGap: 0.3,
     deathHold: 1.7,
@@ -138,7 +141,7 @@ const CONFIG: Record<Kind, KindConfig> = {
     hide: ['AnimatedProjectile'],
   },
   stag: {
-    url: modelUrl('moss-stag.glb'),
+    url: modelUrl('moss-stag.web.glb'),
     height: 1.6,
     barGap: 0.35,
     deathHold: 1.9,
@@ -153,6 +156,68 @@ const CONFIG: Record<Kind, KindConfig> = {
     tierScale: true,
     clipSpeed: { Charge: 1.4, Heal: 1.25 },
   },
+  boar: {
+    url: V2('M01'),
+    height: 0.95,
+    barGap: 0.3,
+    deathHold: 1.7,
+    attackTime: 0.8,
+    attackClip: { name: 'Attack', from: 0, speed: 1.7 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.4,
+    walkRef: 1.4,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Attack: 1.6 },
+  },
+  bat: {
+    url: V2('M02'),
+    height: 0.9,
+    barGap: 0.3,
+    deathHold: 1.7,
+    attackTime: 0.75,
+    attackClip: { name: 'Attack', from: 0, speed: 1.9 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.8,
+    walkRef: 1.8,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    clipSpeed: { Attack: 1.8 },
+  },
+  lizard: {
+    url: V2('M03'),
+    height: 1.25,
+    barGap: 0.3,
+    deathHold: 1.7,
+    attackTime: 0.9,
+    attackClip: { name: 'Attack', from: 0, speed: 1.5 },
+    walk: 'Walk',
+    run: 'Run',
+    runAt: 2.6,
+    walkRef: 1.5,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+    // 模型自帶的投矛光彈改由遊戲的遠程光彈表現，避免重複
+    hide: ['AttackProjectile'],
+  },
+  crab: {
+    url: V2('M04'),
+    height: 0.8,
+    barGap: 0.3,
+    deathHold: 1.7,
+    attackTime: 0.8,
+    attackClip: { name: 'Attack', from: 0, speed: 1.7 },
+    walk: 'Walk',
+    walkRef: 1.2,
+    hitClip: true,
+    tint: false,
+    tierScale: true,
+  },
 }
 
 /** 外觀模型：依種族；史萊姆的精英與 Boss 也是史萊姆（放大＋王冠） */
@@ -162,6 +227,10 @@ function kindOf(u: Unit): Kind {
     case 'mushroom':
     case 'crystal':
     case 'stag':
+    case 'boar':
+    case 'bat':
+    case 'lizard':
+    case 'crab':
     case 'slime':
       return u.species
   }

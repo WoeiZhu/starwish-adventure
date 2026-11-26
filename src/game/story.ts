@@ -690,6 +690,47 @@ export interface QuestInfo {
   lines: string[]
 }
 /** HUD 任務欄的文字 */
+/** 任務指引箭頭：目前任務要去的地方（野外才有）。沒有目標時回傳 null */
+export function questTarget(): { x: number; z: number } | null {
+  if (inTown()) return null
+  const s = story()
+  const h = hero()
+  const dist = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z)
+  const nearestOf = (pick: (u: Unit) => boolean) => {
+    let best: Unit | null = null
+    for (const u of combat.units) {
+      if (u.team !== 'enemy' || !u.alive || !pick(u)) continue
+      if (!best || dist(u, h) < dist(best, h)) best = u
+    }
+    return best
+  }
+  switch (s.step) {
+    case 'talk':
+    case 'done':
+      return NPC_ELDER
+    case 'hunt':
+      return nearestOf((u) => u.species === 'slime' && u.tier === 'normal') ?? { x: -9, z: 21 }
+    case 'recruit': {
+      const todo = companions().map((c, i) => (progress.recruited.includes(c) ? null : SPOTS[i])).filter((x) => !!x)
+      let best = todo[0] ?? null
+      for (const p of todo) if (best && Math.hypot(p!.x - h.x, p!.z - h.z) < Math.hypot(best.x - h.x, best.z - h.z)) best = p
+      return best
+    }
+    case 'boss':
+      return nearestOf((u) => u.tier === 'boss') ?? RUINS
+    case 'c2_scout':
+      return STELE
+    case 'c2_hunt':
+      return nearestOf((u) => u.species === 'wolf' || u.species === 'mushroom') ?? { x: -10, z: -48 }
+    case 'c2_crystal':
+      return nearestOf((u) => u.tag === 'ev_grove') ?? GROVE
+    case 'c2_boss':
+      return nearestOf((u) => u.tag === 'boss2') ?? SPRING
+    default:
+      return null
+  }
+}
+
 export function questInfo(): QuestInfo {
   const s = story()
   switch (s.step) {

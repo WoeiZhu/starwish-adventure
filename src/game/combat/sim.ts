@@ -274,7 +274,7 @@ function enrage(e: Unit) {
 }
 
 /** 月影幼狼：隔一段距離時撲向目標，落地咬一口 */
-function wolfPounce(e: Unit, t: Unit) {
+function wolfPounce(e: Unit, t: Unit, clip = 'Pounce', label = '撲擊！') {
   const gap = dist(e, t) - t.radius - e.radius
   if (e.special > 0 || gap < 1.6 || gap > 6) return
   e.special = 6 + Math.random() * 2.5
@@ -285,8 +285,8 @@ function wolfPounce(e: Unit, t: Unit) {
   e.dashT = 0.42
   e.dashPower = e.tier === 'normal' ? 1.3 : 1.6
   e.atkTimer = Math.max(e.atkTimer, 0.8)
-  action(e, 'Pounce')
-  addFloater(e, '撲擊！', '#c9d8ff', false, 1.4)
+  action(e, clip)
+  addFloater(e, label, '#c9d8ff', false, 1.4)
 }
 
 /** 孢子蘑菇：目標靠近時在自己周圍噴出毒霧（綠圈，會留在地上一陣子） */
@@ -317,6 +317,20 @@ function crystalBarrage(e: Unit, t: Unit) {
   e.atkTimer = Math.max(e.atkTimer, delay)
   action(e, 'Shoot')
   addFloater(e, '星晶彈幕！', '#bfe9ff', true, 2.6)
+  sfx.taunt()
+}
+
+/** 鐵牙野豬：看到目標就蓄力（紅圈預兆），然後衝撞目標所在位置 */
+function boarCharge(e: Unit, t: Unit) {
+  const d = dist(e, t)
+  if (e.special > 0 || d > 9 || d < 3) return
+  e.special = e.tier === 'normal' ? 6.5 : 5
+  const delay = 1.0
+  combat.hazards.push({ owner: e, x: t.x, z: t.z, radius: 1.9, delay, total: delay, power: 1.5, dash: true, dashClip: 'Attack' })
+  e.castT = delay - 0.3
+  e.castKind = 'hold'
+  e.atkTimer = Math.max(e.atkTimer, delay + 0.3)
+  addFloater(e, '蓄力衝撞！', '#ff8f8f', false, 1.8)
   sfx.taunt()
 }
 
@@ -370,6 +384,10 @@ function enemySpecial(e: Unit, t: Unit, dt: number) {
       return
     case 'stag':
       return stagSkills(e, t)
+    case 'bat':
+      return wolfPounce(e, t, 'Attack', '俯衝！')
+    case 'boar':
+      return boarCharge(e, t)
   }
   if (e.tier === 'normal') return
   if (e.special > 0 || dist(e, t) > 10) return
@@ -400,7 +418,7 @@ function updateHazards(dt: number) {
         o.dashZ = z.z
         o.dashT = 0.3
         o.dashPower = 0
-        action(o, 'Charge')
+        action(o, z.dashClip ?? 'Charge')
       }
     }
     if (z.delay > 0) continue

@@ -7,9 +7,11 @@ import { unlockAudio } from './systems/sfx'
 import { RotateHint } from './ui/RotateHint'
 import { Hud } from './ui/Hud'
 import { MenuPanel } from './ui/MenuPanel'
-import { ChapterComplete, DialogBox, HelpPanel, LoadingVeil, PauseOverlay, Toast, TownBanner } from './ui/Overlays'
+import { LoadingScreen } from './ui/LoadingScreen'
+import { ChapterComplete, DialogBox, HelpPanel, PauseOverlay, Toast, TownBanner } from './ui/Overlays'
 import { Music } from './ui/Music'
 import { TitleScreen } from './ui/TitleScreen'
+import { TownIntro, useCutsceneActive } from './ui/TownIntro'
 
 export function App() {
   const phase = useGame((s) => s.phase)
@@ -18,6 +20,7 @@ export function App() {
   const dialog = useGame((s) => s.dialog)
   const menu = useGame((s) => s.menu)
   const chapterDone = useGame((s) => s.chapterDone)
+  const cine = useCutsceneActive()
 
   useEffect(() => installInput(), [])
   useEffect(() => installTouchGuards(), [])
@@ -35,7 +38,7 @@ export function App() {
   }, [])
 
   return (
-    <div className="app">
+    <div className={`app${cine ? ' cine' : ''}`}>
       <GameScene />
       {phase === 'title' ? (
         <TitleScreen />
@@ -44,7 +47,8 @@ export function App() {
           <Hud />
           <TownBanner />
           <Toast />
-          <LoadingVeil />
+          <TownIntro />
+          <LoadingScreen />
           {dialog && <DialogBox />}
           {showHelp && !paused && <HelpPanel />}
           {menu && <MenuPanel />}

@@ -7,6 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { RUN_SPEED, WALK_SPEED } from '../../game/runtime'
 import { useGame } from '../../game/store'
+import { withMeshopt } from '../gltf'
 import type { CharacterModelProps } from './types'
 import { Gear } from './Gear'
 import { captureHands } from './weapons'
@@ -53,7 +54,7 @@ function pose(r: BoneRig | undefined, x: number, y: number, z: number) {
 }
 
 export function GlbCharacter({ appearance, motion }: CharacterModelProps) {
-  const gltf = useLoader(GLTFLoader, appearance.modelUrl!)
+  const gltf = useLoader(GLTFLoader, appearance.modelUrl!, withMeshopt)
 
   const model = useMemo(() => {
     const scene = cloneSkinned(gltf.scene)

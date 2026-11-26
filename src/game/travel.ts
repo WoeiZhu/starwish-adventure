@@ -7,6 +7,7 @@ import { PORTAL_COOLDOWN_MS, inTrigger, TOWN_EXIT, TOWN_ID, TOWN_NAME, TOWN_PORT
 import { mapState, setMapLoading } from '../world/maps'
 import { isPriming, primeStream, resetStream } from '../world/stream'
 import { combat, hero, placeParty, restoreWorld, stashWorld } from './combat/state'
+import { cancelCutscene, queueTownIntro } from './cutscene'
 import { runtime } from './runtime'
 import { useGame } from './store'
 
@@ -45,6 +46,7 @@ export function enterMap(id: MapId, at: MapSpot) {
   runtime.player.speed = 0
   mapState.id = id
   if (id === 'overworld') {
+    cancelCutscene()
     restoreWorld()
     setMapLoading(false)
     // 回到野外：從城門外重新載入周圍區塊（載好之前主角不出現、不能動）
@@ -55,6 +57,8 @@ export function enterMap(id: MapId, at: MapSpot) {
     resetStream()
     // 城鎮模型載入完成（scene/Town.tsx）才會設回 false
     setMapLoading(true)
+    // 第一次進城：載入完成後播過場
+    queueTownIntro()
   }
   placeParty(at, at.facing)
   travel.armed = false
@@ -110,6 +114,7 @@ export function townLoadFailed() {
 /** 讀檔：先決定地圖並開始載入，人物等地圖準備好才出現（initCombat 之後呼叫） */
 export function arriveFromSave(id: MapId, pos: { x: number; z: number }, ret: MapSpot | null) {
   clearMotion()
+  cancelCutscene() // 讀檔時人已經在城裡了，不播進城過場
   mapState.id = id
   travel.armed = false
   travel.lastAt = performance.now()
@@ -130,6 +135,7 @@ export function arriveFromSave(id: MapId, pos: { x: number; z: number }, ret: Ma
 
 /** 開新局、回標題：一律回到主線世界 */
 export function resetMap() {
+  cancelCutscene()
   mapState.id = 'overworld'
   setMapLoading(false)
   travel.returnPortal = null

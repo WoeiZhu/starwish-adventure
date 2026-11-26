@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MERCHANT_APPEARANCE, NPC_ELDER_APPEARANCE, buildAppearance } from '../data/appearance'
 import { LOOT_URLS } from '../data/lootModels'
 import { CHESTS, regionAt, type ChestDef } from '../data/world'
+import { hero } from '../game/combat/state'
 import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
@@ -300,6 +301,9 @@ function Item({ it }: { it: Interactable }) {
     if (path) {
       runtime.path = path
       runtime.approach = false
+      // 點 NPC 就是要走過去：取消先前鎖定的怪物與排隊的技能，一次點擊就走，不會被附近的戰鬥拉回去
+      runtime.queuedSkill = null
+      hero().targetId = null
     }
   }
 

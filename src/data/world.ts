@@ -171,6 +171,10 @@ const RUINS_GOBLIN = [{ name: '石環哥布林', color: '#9a8a6a' }]
 const WOLF = [{ name: '月影幼狼', color: '#8fa6d8' }]
 const SHROOM = [{ name: '孢子蘑菇', color: '#c98ad8' }]
 const CRYSTAL = [{ name: '星晶魔靈', color: '#8fd8ff' }]
+const BOAR = [{ name: '鐵牙野豬', color: '#ffffff' }]
+const BAT = [{ name: '月翼蝠', color: '#ffffff' }]
+const LIZARD = [{ name: '砂鱗蜥兵', color: '#ffffff' }]
+const CRAB = [{ name: '裂岩甲蟹', color: '#ffffff' }]
 /** 翠綠草原是史萊姆，離村子越遠等級越高；迷霧森林與石環外圍是哥布林 */
 export const CAMPS: CampDef[] = [
   { id: 'm1', x: -9, z: 21, species: 'slime', kinds: SLIME_KINDS, level: 1, count: 3 },
@@ -193,6 +197,11 @@ export const CAMPS: CampDef[] = [
   { id: 'v4', x: -12, z: -61, species: 'mushroom', kinds: SHROOM, level: 7, count: 3 },
   { id: 'v5', x: 13, z: -64, species: 'wolf', kinds: WOLF, level: 8, count: 3 },
   { id: 'v6', x: -27, z: -66, species: 'mushroom', kinds: SHROOM, level: 8, count: 4 },
+  // 新怪物：野豬在迷霧森林深處、蜥兵守石環外圍、蝙蝠與甲蟹在山谷兩側
+  { id: 'n1', x: -29, z: -8, species: 'boar', kinds: BOAR, level: 5, count: 2 },
+  { id: 'n2', x: 31, z: -13, species: 'lizard', kinds: LIZARD, level: 7, count: 3 },
+  { id: 'n3', x: -3, z: -56, species: 'bat', kinds: BAT, level: 7, count: 3 },
+  { id: 'n4', x: 24, z: -47, species: 'crab', kinds: CRAB, level: 8, count: 2 },
   { id: 'v7', x: -31, z: -46, species: 'crystal', kinds: CRYSTAL, level: 7, count: 1, tier: 'elite' },
   { id: 'v8', x: 31, z: -67, species: 'crystal', kinds: CRYSTAL, level: 8, count: 1, tier: 'elite' },
 ]

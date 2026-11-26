@@ -1,7 +1,7 @@
 // 遊戲中 HUD（精簡版，以手機橫向為基準）：
 // 左上只留主角頭像與細血條、隊友小血條；右上收成一個選單按鈕；任務預設只顯示標題。
 // 戰鬥數值存在 combat 單例，靠 store 的 tick（每 0.1 秒）觸發重繪。
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CLASSES, MAX_LEVEL } from '../data/classes'
 import { LAYOUT, TOWN_NAME } from '../data/town'
 import { REGION_NAME } from '../data/world'
@@ -12,7 +12,7 @@ import { cycleTarget, heroCast } from '../game/combat/sim'
 import { expToNext, pointsLeft, progress } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
-import { interactNearest, questInfo } from '../game/story'
+import { interactNearest, questInfo, questTarget } from '../game/story'
 import { canFullscreen, enterAppMode, isFullscreen, isStandalone, isTouch } from '../systems/mobile'
 import { musicEnabled, setMusicEnabled } from '../systems/music'
 import { Joystick } from './TouchControls'
@@ -37,6 +37,48 @@ const FEED_SECONDS = 7
 const QUEST_OPEN_MS = 9000
 
 const pct = (value: number, max: number) => `${Math.max(0, Math.min(1, value / max)) * 100}%`
+
+/** 任務指引：箭頭指向目前任務的目標（相對於鏡頭方向），旁邊顯示距離；快到了就收起來。每幀直接改 DOM，不觸發 React 重繪 */
+function QuestArrow() {
+  const root = useRef<HTMLDivElement>(null)
+  const arrow = useRef<HTMLSpanElement>(null)
+  const label = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    let id = 0
+    const tick = () => {
+      id = requestAnimationFrame(tick)
+      const el = root.current
+      if (!el) return
+      const t = useGame.getState().phase === 'playing' ? questTarget() : null
+      const p = runtime.player
+      const d = t ? Math.hypot(t.x - p.x, t.z - p.z) : 0
+      const show = !!t && d > 7
+      if (el.hidden === show) el.hidden = !show
+      if (!show || !t) return
+      const yaw = runtime.cam.yaw
+      const dx = t.x - p.x
+      const dz = t.z - p.z
+      // 鏡頭前方 (-sin yaw, -cos yaw)，右方 (cos yaw, -sin yaw)；0 度朝上、順時針為正
+      const fwd = -Math.sin(yaw) * dx - Math.cos(yaw) * dz
+      const right = Math.cos(yaw) * dx - Math.sin(yaw) * dz
+      arrow.current!.style.transform = `rotate(${Math.atan2(right, fwd)}rad)`
+      const m = Math.round(d)
+      if (label.current!.textContent !== m + ' m') label.current!.textContent = m + ' m'
+    }
+    id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(id)
+  }, [])
+  return (
+    <div className="quest-arrow" ref={root} hidden aria-label="任務方向">
+      <span className="qa-ring">
+        <span className="qa-needle" ref={arrow}>
+          ▲
+        </span>
+      </span>
+      <span className="qa-dist" ref={label} />
+    </div>
+  )
+}
 
 export function Hud() {
   useGame((s) => s.tick)
@@ -212,8 +254,8 @@ export function Hud() {
             <button onClick={pick(toggleHelp)}>
               操作說明 <kbd>H</kbd>
             </button>
-            <button onClick={() => setQuality(quality === 'high' ? 'saver' : 'high')}>
-              畫質 <span className="menu-val">{quality === 'high' ? '高畫質' : '省電'}</span>
+            <button onClick={() => setQuality(quality === 'high' ? 'mid' : quality === 'mid' ? 'saver' : 'high')}>
+              畫質 <span className="menu-val">{quality === 'high' ? '高' : quality === 'mid' ? '中' : '低（省電）'}</span>
             </button>
             <button
               onClick={() => {
@@ -237,6 +279,7 @@ export function Hud() {
             {questOpen && quest.lines.map((l) => <span key={l}>{l}</span>)}
           </button>
         )}
+        {!menuOpen && <QuestArrow />}
       </div>
 
       <div className="hud-bl">

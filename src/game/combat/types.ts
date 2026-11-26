@@ -182,6 +182,8 @@ export interface Hazard {
   color?: string
   /** 衝撞：生效前一刻怪物衝到圈中心 */
   dash?: boolean
+  /** 衝撞時畫面播放的動作片段（預設 Charge） */
+  dashClip?: string
 }
 
 export interface Drop {

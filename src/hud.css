@@ -438,3 +438,52 @@
     font-size: 30px;
   }
 }
+
+/* 很窄的畫面（電腦縮小視窗、小螢幕直拿但選單外）：技能列換成兩排，不會左右被切掉 */
+@media (max-width: 460px) {
+  .hud .skillbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100vw - 16px);
+    row-gap: 4px;
+  }
+  .hud .skill,
+  .hud button.skill {
+    width: 44px;
+    height: 42px;
+  }
+}
+
+/* 任務指引箭頭 */
+.quest-arrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 2px 9px 2px 3px;
+  border-radius: 999px;
+  background: rgba(40, 30, 50, 0.45);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+}
+.quest-arrow[hidden] {
+  display: none;
+}
+.qa-ring {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 233, 168, 0.2);
+  border: 1.5px solid #ffe9a8;
+}
+.qa-needle {
+  display: block;
+  font-size: 13px;
+  line-height: 1;
+  color: #ffe9a8;
+  transition: transform 0.08s linear;
+}

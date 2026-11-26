@@ -6,6 +6,7 @@ import { ENEMY_SLOTS } from '../game/combat/state'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { updatePortals } from '../game/travel'
+import { isTouch } from '../systems/mobile'
 import { CameraRig } from './CameraRig'
 import { CombatLayer } from './CombatLayer'
 import { Interactables } from './Interactables'
@@ -31,7 +32,7 @@ function Lighting() {
   const quality = useGame((s) => s.quality)
   // 省電模式用較小的陰影貼圖；換尺寸要丟掉舊貼圖讓它重建
   useEffect(() => {
-    const size = quality === 'high' ? 2048 : 1024
+    const size = quality === 'high' ? 2048 : 1024 // 中／低畫質：陰影貼圖 1024
     const shadow = sun.current.shadow
     if (shadow.mapSize.x === size) return
     shadow.mapSize.set(size, size)
@@ -88,8 +89,8 @@ export function GameScene() {
     <Canvas
       shadows
       flat
-      // 省電模式不放大解析度（手機像素密度 3 倍時差很多）
-      dpr={quality === 'high' ? [1, 2] : 1}
+      // 解析度倍率上限：低畫質不放大（手機像素密度 3 倍時差很多）、中畫質 1.5、高畫質電腦 2 / 手機 1.5
+      dpr={quality === 'saver' ? 1 : quality === 'mid' || isTouch ? [1, 1.5] : [1, 2]}
       camera={{ fov: 40, near: 0.1, far: 400, position: [0, 6, 16] }}
       gl={{ antialias: true }}
     >

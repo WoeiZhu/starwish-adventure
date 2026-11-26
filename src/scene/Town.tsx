@@ -24,7 +24,7 @@ function TownModel() {
 
   // 陰影：高畫質時建築與樹投影（省電模式不投影）；全部都接收陰影
   useLayoutEffect(() => {
-    Object.assign(townStats, prepareStatic(scene, quality === 'high'))
+    Object.assign(townStats, prepareStatic(scene, quality !== 'saver'))
   }, [scene, quality])
 
   // 城門擋住鏡頭時淡出（剛進城時鏡頭在主角身後、隔著城門）

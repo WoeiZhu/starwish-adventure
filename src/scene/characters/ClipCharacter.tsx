@@ -11,7 +11,7 @@ import type { CharacterModelProps } from './types'
 const TARGET_HEIGHT = 1.4
 
 export function ClipCharacter({ appearance, motion }: CharacterModelProps) {
-  const model = useClipModel(appearance.clipModelUrl!, TARGET_HEIGHT)
+  const model = useClipModel(appearance.clipModelUrl!, appearance.clipHeight ?? TARGET_HEIGHT)
   const cur = useRef<THREE.AnimationAction | undefined>(undefined)
 
   useEffect(() => {

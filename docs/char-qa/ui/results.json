@@ -1,0 +1,67 @@
+[
+ {
+  "name": "鐵牙野豬（boar）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":1,\"attack\":0,\"actionSeq\":1,\"hit\":5,\"end\":{\"alive\":true,\"hp\":869,\"species\":\"boar\",\"range\":0.45}}"
+ },
+ {
+  "name": "野豬：蓄力衝撞有觸發（actionSeq 增加）",
+  "ok": true,
+  "detail": "seq=1"
+ },
+ {
+  "name": "月翼蝠（bat）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":0.8,\"attack\":1,\"actionSeq\":2,\"hit\":1,\"end\":{\"alive\":true,\"hp\":248,\"species\":\"bat\",\"range\":0.45}}"
+ },
+ {
+  "name": "月翼蝠：俯衝有觸發",
+  "ok": true,
+  "detail": "seq=2"
+ },
+ {
+  "name": "砂鱗蜥兵（lizard）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":6.1,\"attack\":1,\"actionSeq\":0,\"hit\":4,\"end\":{\"alive\":true,\"hp\":477,\"species\":\"lizard\",\"range\":6}}"
+ },
+ {
+  "name": "砂鱗蜥兵：遠程（range>2）",
+  "ok": true,
+  "detail": "range=6"
+ },
+ {
+  "name": "裂岩甲蟹（crab）：接近並攻擊",
+  "ok": true,
+  "detail": "{\"minD\":1,\"attack\":0,\"actionSeq\":0,\"hit\":5,\"end\":{\"alive\":true,\"hp\":1180,\"species\":\"crab\",\"range\":0.45}}"
+ },
+ {
+  "name": "任務箭頭：顯示、距離約 25 m、方向在身後",
+  "ok": true,
+  "detail": "{\"shown\":true,\"rot\":\"rotate(3.03878rad)\",\"text\":\"25 m\"}"
+ },
+ {
+  "name": "走到目標附近（7 m 內）箭頭收起",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "畫質三段（高／中／低）可切換",
+  "ok": true,
+  "detail": "high:high,mid:mid,saver:saver"
+ },
+ {
+  "name": "中畫質：解析度倍率不超過 1.5",
+  "ok": true,
+  "detail": "{\"dpr\":1,\"shadowOn\":true}"
+ },
+ {
+  "name": "窄畫面（300px）技能列沒有被切掉",
+  "ok": true,
+  "detail": "{\"left\":75,\"right\":225,\"w\":300}"
+ },
+ {
+  "name": "主控台沒有錯誤",
+  "ok": true,
+  "detail": ""
+ }
+]

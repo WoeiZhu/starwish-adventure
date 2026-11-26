@@ -6,6 +6,7 @@ import { buildAppearance } from '../data/appearance'
 import { CLASSES } from '../data/classes'
 import { SPAWN } from '../data/world'
 import { dist, hero, unitById } from '../game/combat/state'
+import { cutscene } from '../game/cutscene'
 import { gearLook } from '../game/gear'
 import { PLAYER_RADIUS, RUN_SPEED, WALK_SPEED, runtime } from '../game/runtime'
 import { useGame } from '../game/store'
@@ -76,7 +77,9 @@ export function Player() {
     let vz = 0
     let want = 0
     let following = false
-    const canAct = h.alive && !s.dialog && h.stun <= 0
+    // 過場播放中不能動（也不能閃避）
+    if (cutscene.state === 'active') dodge.request = false
+    const canAct = h.alive && !s.dialog && h.stun <= 0 && cutscene.state !== 'active'
     const axis = moveAxis()
     const manual = canAct && (axis.x !== 0 || axis.y !== 0)
     let mx = 0

@@ -197,6 +197,8 @@ export function setEnemyLevel(u: Unit, level: number) {
   u.castKind = ''
   u.dashT = 0
   u.dashPower = 0
+  // 野豬與蝙蝠一接戰就先衝撞／俯衝，不用等 4 秒
+  if (u.species === 'boar' || u.species === 'bat') u.special = 0.8
 }
 
 /** 事件生成的怪物（招募戰、精英、Boss、Boss 召喚）：不重生，生成時立刻鎖定主角 */

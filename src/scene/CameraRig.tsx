@@ -8,6 +8,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { TOWN_PORTAL } from '../data/town'
 import { SPAWN } from '../data/world'
+import { cutscene, sampleCutscene, updateCutscene } from '../game/cutscene'
 import { interactables } from '../game/story'
 import { inTown } from '../world/maps'
 import { runtime } from '../game/runtime'
@@ -39,6 +40,9 @@ export const CAM = {
   maxTilt: 1.5,
 }
 
+const cinePos = new THREE.Vector3()
+const cineLook = new THREE.Vector3()
+const cineBase = new THREE.Vector3()
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 const lerpAngle = (a: number, b: number, t: number) => a + wrap(b - a) * t
 
@@ -255,6 +259,7 @@ export function CameraRig() {
     }
     // 對話中鏡頭照樣更新（交談模式要拉近），其他暫停狀態不動
     if (g.paused && !g.dialog) return
+    updateCutscene(dt)
 
     // 縮放超出目前模式的範圍：切到另一個模式（雙指拉遠 → 探索；拉近 → 沉浸）
     const mode = CAM_MODES[g.camMode]
@@ -307,7 +312,8 @@ export function CameraRig() {
       gateW = THREE.MathUtils.smoothstep(18 - d, 0, 12) * (g.camMode === 'explore' ? 0.85 : 1)
     }
     b.gate += (gateW - b.gate) * k(3)
-    b.arrive *= Math.exp(-dt * 0.9)
+    // 過場播放中先不讓「進城近景」衰減，播完從那個近景自然拉開
+    if (cutscene.state !== 'active') b.arrive *= Math.exp(-dt * 0.9)
 
     if (b.gate > 0.001) {
       // 鏡頭在主角北邊、看向南方的城門（yaw = π）
@@ -335,6 +341,13 @@ export function CameraRig() {
 
     camera.position.set(tx + dx * c.eff, Math.max(CAM.minHeight, ty + dy * c.eff), tz + dz * c.eff)
     camera.lookAt(tx, ty, tz)
+    // 過場：把一般鏡頭的位置與注視點，依權重換成運鏡路徑上的位置（最後一段權重降到 0，平滑接回）
+    if (cutscene.state === 'active') {
+      const w = sampleCutscene(cinePos, cineLook)
+      camera.position.lerp(cinePos, w)
+      cineBase.set(tx, ty, tz).lerp(cineLook, w)
+      camera.lookAt(cineBase)
+    }
     // 鏡頭震動：強度隨時間快速衰減，距離越遠晃動越大以維持畫面上的幅度
     if (runtime.shake > 0.002) {
       const amp = runtime.shake * (0.25 + c.eff * 0.035)

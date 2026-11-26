@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { useLoader } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { withMeshopt } from '../gltf'
 
 export interface ClipModel {
   scene: THREE.Object3D
@@ -30,7 +31,7 @@ export interface BoneRest {
 const OVERLAY_BONES = ['RightArm', 'LeftArm', 'RightForeArm', 'LeftForeArm', 'Spine02', 'Spine', 'Head']
 
 export function useClipModel(url: string, height: number): ClipModel {
-  const gltf = useLoader(GLTFLoader, url)
+  const gltf = useLoader(GLTFLoader, url, withMeshopt)
 
   const model = useMemo<ClipModel>(() => {
     const scene = cloneSkinned(gltf.scene)

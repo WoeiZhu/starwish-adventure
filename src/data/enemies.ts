@@ -12,7 +12,7 @@ export interface EnemyStats {
 }
 
 /** 怪物種族：決定外觀、能力傾向與攻擊方式（階級另外計算） */
-export type Species = 'slime' | 'goblin' | 'wolf' | 'mushroom' | 'crystal' | 'stag'
+export type Species = 'slime' | 'goblin' | 'wolf' | 'mushroom' | 'crystal' | 'stag' | 'boar' | 'bat' | 'lizard' | 'crab'
 export interface SpeciesDef {
   hp: number
   atk: number
@@ -36,6 +36,14 @@ export const SPECIES: Record<Species, SpeciesDef> = {
   crystal: { hp: 0.8, atk: 1.05, speed: 0.95, interval: 1.25, range: 6.5 },
   // 苔蘚靈鹿：Boss，會衝撞、治療自己與手下
   stag: { hp: 1.1, atk: 1, speed: 1.05, interval: 1, summon: { name: '月影幼狼', color: '#8fa6d8', species: 'wolf' } },
+  // 鐵牙野豬：耐打，隔一段距離蓄力衝撞（先出紅圈，閃避有用）
+  boar: { hp: 1.3, atk: 1.1, speed: 1, interval: 1.1 },
+  // 月翼蝠：血最少、飛得快，俯衝撲向目標
+  bat: { hp: 0.6, atk: 0.95, speed: 1.35, interval: 0.8 },
+  // 砂鱗蜥兵：遠程投矛，保持距離
+  lizard: { hp: 0.85, atk: 1.1, speed: 0.95, interval: 1.3, range: 6 },
+  // 裂岩甲蟹：很硬、很慢、攻擊重
+  crab: { hp: 1.6, atk: 1.15, speed: 0.7, interval: 1.2 },
 }
 
 export const ENEMY = {

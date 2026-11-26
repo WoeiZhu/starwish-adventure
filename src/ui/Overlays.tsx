@@ -1,10 +1,10 @@
 // 疊加介面：對話框、暫停選單、操作說明、提示訊息。
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import { getCutsceneState, subscribeCutscene } from '../game/cutscene'
 import { useGame } from '../game/store'
 import { isTouch } from '../systems/mobile'
 import { TOWN_NAME } from '../data/town'
 import { isMapLoading, subscribeMap } from '../world/maps'
-import { isPriming, subscribe } from '../world/stream'
 
 const CONTROLS: [string, string][] = [
   ['W / A / S / D', '自由移動（會取消點擊自動移動）'],
@@ -175,14 +175,16 @@ export function Toast() {
 export function TownBanner() {
   const mapId = useGame((s) => s.mapId)
   const town = useSyncExternalStore(subscribeMap, isMapLoading)
+  // 第一次進城的過場（字卡已經有城鎮名稱）播完之後才顯示
+  const cine = useSyncExternalStore(subscribeCutscene, getCutsceneState)
   const [show, setShow] = useState(0)
   useEffect(() => {
-    if (mapId === 'overworld' || town) return
+    if (mapId === 'overworld' || town || cine !== 'idle') return
     const id = Date.now()
     setShow(id)
     const t = setTimeout(() => setShow((v) => (v === id ? 0 : v)), 3200)
     return () => clearTimeout(t)
-  }, [mapId, town])
+  }, [mapId, town, cine])
   if (!show || mapId === 'overworld') return null
   return (
     <div className="town-banner" key={show}>
@@ -191,12 +193,4 @@ export function TownBanner() {
       <span className="town-banner-sub">安全區　·　商店與公會</span>
     </div>
   )
-}
-
-/** 讀檔、開局或進出城鎮時：主角周圍的區域（或城鎮模型）還在載入 */
-export function LoadingVeil() {
-  const priming = useSyncExternalStore(subscribe, isPriming)
-  const town = useSyncExternalStore(subscribeMap, isMapLoading)
-  if (town) return <div className="loading-veil">前往{TOWN_NAME}…</div>
-  return priming ? <div className="loading-veil">載入地區中…</div> : null
 }

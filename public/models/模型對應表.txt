@@ -28,3 +28,10 @@ cleric.glb                   聖者   CLERIC  聖者.glb                     隊
 - 站姿為 A 字（手臂張開約 45 度），程式會把手臂放下
 - 模型不含武器，武器由程式依職業掛在 LeftHand / RightHand 骨頭上
 - 目前每個檔案約 5 MB（含內嵌貼圖），四個合計約 21 MB
+
+5. 壓縮版（2026-11-26）：上面所有角色與怪物模型都有 .web.glb（meshopt 網格壓縮＋WebP 貼圖，1024 或 512），
+   程式讀的是 .web.glb；原檔 .glb 留作來源。更新模型後執行 tools/assets/build-web.ps1 重新壓縮。
+   原因：原檔貼圖 2048×2048，載入後每個約 22 MB 顯存，手機吃不消。
+6. 新角色包 starwish-characters-20261126-v002/（星誓長槍衛、鐵牙野豬、月翼蝠、砂鱗蜥兵、裂岩甲蟹、影葉雙刀、星藥使）：
+   G01 當城門守衛、M01–M04 當新怪物（src/scene/Enemy.tsx 的 CONFIG、src/data/enemies.ts 的 SPECIES、
+   src/data/world.ts 的 CAMPS n1–n4）。A02、A04 還沒接入。說明見 docs/char-v2-and-fixes.md。

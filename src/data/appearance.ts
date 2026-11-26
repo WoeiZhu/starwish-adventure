@@ -19,6 +19,8 @@ export interface Appearance {
   modelUrl?: string
   /** 內含 Idle / Walk / Run 動畫片段的 GLB；有值時優先於 modelUrl，直接播放模型自帶動作 */
   clipModelUrl?: string
+  /** clipModelUrl 模型的顯示高度（公尺，預設 1.4）；帶長槍的衛兵比一般人高 */
+  clipHeight?: number
   /** 已裝備武器的品質顏色；程序化武器（武器模型載入失敗時）的裝飾與發光改用此色 */
   weaponTint?: string
   /** 手上的武器模型（武器包 GLB）；沒有或載入失敗時用程序化武器 */
@@ -42,10 +44,10 @@ export const modelUrl = (file: string) => `${import.meta.env.BASE_URL}models/${f
 
 /** 各職業的 GLB 模型（public/models），來源為 Character/ 資料夾 */
 export const CLASS_MODELS: Record<ClassId, string> = {
-  archer: modelUrl('archer.glb'),
-  mage: modelUrl('mage.glb'),
-  knight: modelUrl('knight.glb'),
-  cleric: modelUrl('cleric.glb'),
+  archer: modelUrl('archer.web.glb'),
+  mage: modelUrl('mage.web.glb'),
+  knight: modelUrl('knight.web.glb'),
+  cleric: modelUrl('cleric.web.glb'),
 }
 
 const CLASS_HEADGEAR: Record<ClassId, Headgear> = {
@@ -86,7 +88,7 @@ export const MERCHANT_APPEARANCE: Appearance = {
   weapon: 'none',
   headgear: 'none',
   armor: false,
-  clipModelUrl: modelUrl('merchant-npc.glb'),
+  clipModelUrl: modelUrl('merchant-npc.web.glb'),
 }
 
 export const NPC_ELDER_APPEARANCE: Appearance = {
@@ -99,5 +101,5 @@ export const NPC_ELDER_APPEARANCE: Appearance = {
   weapon: 'none',
   headgear: 'flower',
   armor: false,
-  clipModelUrl: modelUrl('guide-npc.glb'),
+  clipModelUrl: modelUrl('guide-npc.web.glb'),
 }

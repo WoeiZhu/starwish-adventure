@@ -275,7 +275,7 @@ function TownGateModel() {
   const gltf = useLoader(GLTFLoader, TOWN_GATE_URL, withMeshopt)
   // 每次掛上都用一份複本（共用網格與材質），區塊卸載再載入時不會跟舊的打架
   const scene = useMemo(() => gltf.scene.clone(), [gltf])
-  useLayoutEffect(() => void prepareStatic(scene, quality === 'high'), [scene, quality])
+  useLayoutEffect(() => void prepareStatic(scene, quality !== 'saver'), [scene, quality])
   // 剛出城時鏡頭在主角身後、隔著城門：城門淡出
   const mats = useMemo(() => {
     const out = new Set<THREE.Material>()

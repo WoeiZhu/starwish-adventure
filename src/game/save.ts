@@ -20,7 +20,8 @@ const SAVE_KEY = 'starwish.save.v1'
  *      讀到 1、2 版：當作在主線世界、沒有返回位置，其他進度照舊
  */
 const VERSION = 3
-const UNLOCK_IDS = new Set(BRIDGES.filter((b) => b.locked).map((b) => b.id))
+// 'intro_town'：第一次進星光鎮的過場已經看過（game/cutscene.ts 的 INTRO_FLAG；這裡寫死字串，避免模組互相引用）
+const UNLOCK_IDS = new Set([...BRIDGES.filter((b) => b.locked).map((b) => b.id), 'intro_town'])
 const STEPS: readonly StoryState['step'][] = STORY_STEPS
 
 export interface SaveProfile {

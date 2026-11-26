@@ -10,7 +10,12 @@ $jobs = @(
   @{ dir = '.'; files = 'star-coin','potion-bottle','potion-bottle-blue','potion-bottle-green','material-pouch','equipment-bundle'; size = 512 },
   @{ dir = '.'; files = 'wooden-chest'; size = 1024 },
   # 新版城鎮（城牆式）用的單體模型：依配置表擺放，不用整座城的 town-environment
-  @{ dir = 'starwish-town-meshy-20261123-v001'; files = 'weapon-shop','general-store','adventurers-guild','town-inn','star-fountain','town-tree','town-wall'; size = 1024 }
+  @{ dir = 'starwish-town-meshy-20261123-v001'; files = 'weapon-shop','general-store','adventurers-guild','town-inn','star-fountain','town-tree','town-wall'; size = 1024 },
+  # 舊角色與怪物：原檔每個 4～5 MB（2048 貼圖，載入後約 22 MB 顯存），壓成約 0.3 MB
+  @{ dir = '.'; files = 'archer','mage','knight','cleric','guide-npc','merchant-npc','elite-goblin','guardian-boss','moss-stag'; size = 1024 },
+  @{ dir = '.'; files = 'slime','moon-wolf','spore-mushroom','star-crystal'; size = 512 },
+  # 新角色（v002）：城門衛兵、新怪物（鐵牙野豬、月翼蝠、砂鱗蜥兵、裂岩甲蟹）。原檔 3.4～13.6 MB
+  @{ dir = 'starwish-characters-20261126-v002'; files = 'G01\character-game','M01\character-game','M02\character-game','M03\character-game','M04\character-game'; size = 1024 }
 )
 
 foreach ($job in $jobs) {

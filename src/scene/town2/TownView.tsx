@@ -422,12 +422,14 @@ function Signs({ signs, wood }: { signs: TownLayout['signs']; wood: boolean }) {
   )
 }
 
-/** 守衛：程序化 Q 版人物（紅金制服），和隊伍裡的戰士模型區分開，面數也少很多 */
+/** 守衛：星誓長槍衛（新角色包 G01，已含長槍與盾牌）。每位守衛各自一份骨架與動畫 */
 const GUARD_LOOK = {
   ...buildAppearance('boy', 'knight'),
   modelUrl: undefined,
-  outfit: { primary: '#c8463d', secondary: '#f2c14e', accent: '#4a3b52' },
-  hair: '#6b4a2e',
+  clipModelUrl: modelUrl('starwish-characters-20261126-v002/G01/character-game.web.glb'),
+  clipHeight: 1.5,
+  weaponModel: undefined,
+  shieldModel: undefined,
 }
 /** 守衛：角色模型一個約 3 萬面，鏡頭 30 m 外就不畫（手機省很多） */
 function Guards({ guards }: { guards: TownLayout['guards'] }) {
@@ -530,7 +532,7 @@ function Roads({ L, shell }: { L: TownLayout; shell: boolean }) {
 }
 
 /** 城外中景：森林一圈、遠處丘陵、城後的河、岩石 */
-function Surroundings({ L, quality }: { L: TownLayout; quality: 'high' | 'saver' }) {
+function Surroundings({ L, quality }: { L: TownLayout; quality: 'high' | 'mid' | 'saver' }) {
   const data = useMemo(() => {
     const f = L.footprint
     const gx = L.gate?.x ?? L.arch?.x ?? 0
@@ -539,7 +541,7 @@ function Surroundings({ L, quality }: { L: TownLayout; quality: 'high' | 'saver'
       { minX: gx - 16, maxX: gx + 16, minZ: f.maxZ - 2, maxZ: f.maxZ + 200 },
       ...L.fields.map((x) => ({ minX: x.x - x.w / 2 - 2, maxX: x.x + x.w / 2 + 2, minZ: x.z - x.d / 2 - 2, maxZ: x.z + x.d / 2 + 2 })),
     ]
-    const trees = forestRing(f, keep, quality === 'high' ? 520 : 300, L.walls.length ? 5 : 2, 78)
+    const trees = forestRing(f, keep, quality !== 'saver' ? 520 : 300, L.walls.length ? 5 : 2, 78)
     const cone = trees.filter((t) => !t.round)
     const round = trees.filter((t) => t.round)
     const mk = (geo: THREE.BufferGeometry, list: typeof trees) => {
@@ -625,7 +627,7 @@ function wallPieces(L: TownLayout) {
 export interface TownViewProps {
   layout: TownLayout
   mode: 'interior' | 'shell'
-  quality: 'high' | 'saver'
+  quality: 'high' | 'mid' | 'saver'
   /** 測試頁：開關中景、顯示守衛 */
   showSurroundings?: boolean
   onGroundClick?: (e: ThreeEvent<MouseEvent>) => void
@@ -637,7 +639,7 @@ export interface TownViewProps {
 
 export function TownView({ layout: L, mode, quality, showSurroundings = true, onGroundClick, onReady, gateVolume, allGuards = false }: TownViewProps) {
   const shell = mode === 'shell'
-  const shadows = quality === 'high'
+  const shadows = quality !== 'saver'
   const modules = useModules(L, shell)
   const fade = useMemo<FadeRegistry>(() => new Map(), [])
   useBuildingFade(L, fade, !shell)

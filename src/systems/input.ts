@@ -1,5 +1,6 @@
 // 鍵盤輸入：持續按住的鍵存在 keys；一次性按鍵直接呼叫 store / 戰鬥動作。
 import { cycleTarget, heroCast } from '../game/combat/sim'
+import { cutscene, skipCutscene } from '../game/cutscene'
 import { runtime } from '../game/runtime'
 import { interactNearest } from '../game/story'
 import { usePotion } from '../game/combat/rewards'
@@ -21,6 +22,11 @@ export function installInput() {
     const s = useGame.getState()
     if (s.phase !== 'playing') return
     if (e.code === 'Tab' || e.code === 'Space') e.preventDefault()
+    // 過場播放中：這幾個鍵是跳過，其他按鍵都不理
+    if (cutscene.state === 'active') {
+      if (e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyF') skipCutscene()
+      return
+    }
     keys.add(e.code)
     if (e.repeat) return
     const acting = !s.paused && !s.dialog

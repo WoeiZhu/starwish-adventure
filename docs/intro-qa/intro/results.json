@@ -1,0 +1,127 @@
+[
+ {
+  "name": "開局：載入畫面出現（畫布、提示、標籤）",
+  "ok": true,
+  "detail": "{\"shown\":true,\"tip\":\"小提示：隊友會自己找敵人，你專心躲技能、放大招就好。\",\"label\":\"載入地區中...\",\"canvas\":true,\"pe\":\"none\"}"
+ },
+ {
+  "name": "載入畫面不擋點擊（pointer-events: none）",
+  "ok": true,
+  "detail": "none"
+ },
+ {
+  "name": "載完之後（停留＋淡出）載入畫面消失",
+  "ok": true,
+  "detail": "進度條曾到 82.2%"
+ },
+ {
+  "name": "進城：載入畫面顯示「前往星光鎮」",
+  "ok": true,
+  "detail": "{\"shown\":true,\"label\":\"前往星光鎮...\"}"
+ },
+ {
+  "name": "進城載完後載入畫面消失",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "自動測試預設不播過場（webdriver）",
+  "ok": true,
+  "detail": "{\"s\":\"idle\",\"t\":0,\"played\":0}"
+ },
+ {
+  "name": "手機橫拿（844×390）：標誌、進度條、提示都在畫面內",
+  "ok": true,
+  "detail": "{\"tipBottom\":335,\"logoTop\":27,\"barTop\":281,\"h\":390}"
+ },
+ {
+  "name": "新遊戲：還沒有看過過場",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "第一次進城：載入完成後開始播過場",
+  "ok": true,
+  "detail": "{\"s\":\"active\",\"t\":0.05,\"played\":1}"
+ },
+ {
+  "name": "過場中 HUD 隱藏、上下出現黑邊",
+  "ok": true,
+  "detail": "[[\"hidden\",\"11%\"],[\"hidden\",\"11%\"],[\"hidden\",\"11%\"],[\"hidden\",\"11%\"]]"
+ },
+ {
+  "name": "鏡頭沿路徑移動（起點與 6.5 秒處相距 > 20 m）、起點在高處",
+  "ok": true,
+  "detail": "moved=38.2 y0=29.4 y3=6.7"
+ },
+ {
+  "name": "字卡「星光鎮」在 2.5 秒時可見",
+  "ok": true,
+  "detail": "1"
+ },
+ {
+  "name": "過場中按 W 主角不會移動",
+  "ok": true,
+  "detail": "{\"startPos\":{\"x\":0,\"z\":15.06},\"afterKey\":{\"x\":0,\"z\":15.06}}"
+ },
+ {
+  "name": "開始播放就寫進存檔（中途關掉也不會重播）",
+  "ok": true,
+  "detail": "[\"intro_town\"]"
+ },
+ {
+  "name": "Space 跳過：時間直接跳到最後一段",
+  "ok": true,
+  "detail": "{\"s\":\"active\",\"t\":7.9,\"played\":1}"
+ },
+ {
+  "name": "跳過後約 1.4 秒內結束過場",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "結束後 HUD 恢復、過場畫面移除",
+  "ok": true,
+  "detail": "{\"vis\":\"visible\",\"intro\":false}"
+ },
+ {
+  "name": "結束後鏡頭回到主角身邊（水平距離 < 10 m）",
+  "ok": true,
+  "detail": "d=7.2"
+ },
+ {
+  "name": "結束後主角可以移動",
+  "ok": true,
+  "detail": "{\"x\":5.489552755799094e-16,\"z\":12.818720000076297}"
+ },
+ {
+  "name": "結束後顯示城鎮名稱橫幅",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "出城再進城不重播（已看過）",
+  "ok": true,
+  "detail": "{\"s\":\"idle\",\"t\":9.01,\"played\":1}"
+ },
+ {
+  "name": "點畫面可以跳過",
+  "ok": true,
+  "detail": "{\"s\":\"active\",\"t\":7.86,\"played\":2}"
+ },
+ {
+  "name": "按「跳過」可以跳過",
+  "ok": true,
+  "detail": "{\"s\":\"active\",\"t\":7.84,\"played\":3}"
+ },
+ {
+  "name": "排入過場後切回野外會取消（不會卡在 pending）",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "主控台沒有錯誤",
+  "ok": true,
+  "detail": ""
+ }
+]
