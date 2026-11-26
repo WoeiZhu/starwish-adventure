@@ -57,8 +57,17 @@ function loadQuality(): Quality {
   return isTouch ? 'saver' : 'high'
 }
 
+const MINIMAP_KEY = 'starwish.minimap'
+function loadMinimap(): boolean {
+  try {
+    return localStorage.getItem(MINIMAP_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
 export type ZoomLabel = 'far' | 'mid' | 'near'
-export type MenuTab = 'party' | 'bag' | 'tree'
+export type MenuTab = 'party' | 'bag' | 'tree' | 'map'
 /** 對話最後一句出現的選項 */
 export interface Choice {
   label: string
@@ -111,7 +120,10 @@ interface GameState {
   mapId: MapId
   /** 畫質：高畫質 / 省電（手機預設省電） */
   quality: Quality
+  /** 小地圖開關（會記住） */
+  minimap: boolean
 
+  setMinimap: (on: boolean) => void
   setQuality: (q: Quality) => void
   setMap: (id: MapId) => void
   setProfile: (p: Partial<Profile>) => void
@@ -177,7 +189,16 @@ export const useGame = create<GameState>()((set, get) => ({
   region: 'village',
   mapId: 'overworld',
   quality: loadQuality(),
+  minimap: loadMinimap(),
 
+  setMinimap: (minimap) => {
+    try {
+      localStorage.setItem(MINIMAP_KEY, minimap ? 'on' : 'off')
+    } catch {
+      /* 略過 */
+    }
+    set({ minimap })
+  },
   setMap: (mapId) => {
     if (get().mapId !== mapId) set({ mapId })
   },
@@ -285,6 +306,7 @@ export const useGame = create<GameState>()((set, get) => ({
   openMenu: (tab) => {
     const s = get()
     if (s.phase !== 'playing' || s.dialog) return
+    if (tab === 'map' && s.mapId !== 'overworld') return s.showToast('星光鎮裡不需要地圖，路標都在眼前')
     // 再按一次同一個分頁的快捷鍵就關閉
     if (s.menu === tab) return s.closeMenu()
     runtime.path = null

@@ -8,7 +8,7 @@ import { useGame, type MenuTab } from '../game/store'
 
 export const keys = new Set<string>()
 
-const MENU_KEYS: Record<string, MenuTab> = { KeyI: 'bag', KeyK: 'tree', KeyP: 'party' }
+const MENU_KEYS: Record<string, MenuTab> = { KeyI: 'bag', KeyK: 'tree', KeyP: 'party', KeyM: 'map' }
 const SKILL_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4']
 
 function isTyping(e: KeyboardEvent) {

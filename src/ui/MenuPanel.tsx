@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { isTouch } from '../systems/mobile'
 import { BagTab } from './menu/BagTab'
+import { MapTab } from './menu/MapTab'
 import { Avatar } from './menu/icons'
 import { CLASSES, MAX_LEVEL, type ClassId } from '../data/classes'
 import { QUALITIES, SLOTS, SLOT_NAME, describeStats, type Item } from '../data/items'
@@ -25,6 +26,7 @@ const TABS: { id: MenuTab; label: string; key: string }[] = [
   { id: 'party', label: '隊伍', key: 'P' },
   { id: 'bag', label: '背包', key: 'I' },
   { id: 'tree', label: '技能樹', key: 'K' },
+  { id: 'map', label: '地圖', key: 'M' },
 ]
 
 function ItemChip({ item }: { item: Item }) {
@@ -246,6 +248,7 @@ export function MenuPanel() {
           {tab === 'party' && <PartyTab classId={member} />}
           {tab === 'bag' && <BagTab classId={member} party={party} onChange={onChange} />}
           {tab === 'tree' && <TreeTab classId={member} onChange={onChange} />}
+          {tab === 'map' && <MapTab />}
         </main>
       </div>
     </div>

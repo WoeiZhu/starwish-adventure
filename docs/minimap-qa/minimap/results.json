@@ -1,0 +1,171 @@
+{
+ "pass": 33,
+ "total": 33,
+ "results": [
+  {
+   "name": "野外：右上角出現圓形小地圖（128 px，畫布依解析度放大）",
+   "ok": true,
+   "detail": "{\"x\":1142,\"y\":54,\"w\":128,\"h\":128,\"radius\":\"50%\",\"cw\":122,\"ch\":122,\"vw\":1280}"
+  },
+  {
+   "name": "小地圖在選單按鈕下方、靠右對齊",
+   "ok": true,
+   "detail": "按鈕底 48，小地圖頂 54"
+  },
+  {
+   "name": "小地圖有畫出內容（不是空白）",
+   "ok": true,
+   "detail": "{\"w\":122,\"h\":122,\"blueTop\":0,\"blueBottom\":1,\"blueLeft\":1,\"blueRight\":0,\"gold\":22,\"red\":0,\"opaque\":11699}"
+  },
+  {
+   "name": "鏡頭朝北（yaw 0）：河在小地圖上方",
+   "ok": true,
+   "detail": "{\"top\":2020,\"bottom\":0,\"left\":989,\"right\":957}"
+  },
+  {
+   "name": "鏡頭朝南（yaw π）：河在下方",
+   "ok": true,
+   "detail": "{\"top\":0,\"bottom\":1899,\"left\":968,\"right\":973}"
+  },
+  {
+   "name": "鏡頭朝西（yaw +90°）：河在右邊",
+   "ok": true,
+   "detail": "{\"top\":986,\"bottom\":955,\"left\":0,\"right\":1898}"
+  },
+  {
+   "name": "鏡頭朝東（yaw -90°）：河在左邊",
+   "ok": true,
+   "detail": "{\"top\":969,\"bottom\":973,\"left\":2017,\"right\":0}"
+  },
+  {
+   "name": "真實小地圖：河的位置符合目前鏡頭 yaw",
+   "ok": true,
+   "detail": "yaw 3.14 預期 bottom {\"top\":0,\"bottom\":510,\"left\":256,\"right\":246}"
+  },
+  {
+   "name": "主角箭頭角度：面向北、鏡頭朝北 → 朝上",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "主角箭頭角度：面向東、鏡頭朝北 → 朝右",
+   "ok": true,
+   "detail": "1.571"
+  },
+  {
+   "name": "主角箭頭角度：面向東、鏡頭朝西 → 朝下（跟著地圖轉）",
+   "ok": true,
+   "detail": "3.142"
+  },
+  {
+   "name": "主角箭頭角度：面向南、鏡頭朝南 → 朝上（面向鏡頭前方）",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "name": "任務距離只在任務箭頭顯示（小地圖不重複）",
+   "ok": true,
+   "detail": "{\"d\":11,\"arrow\":\"11 m\",\"pill\":false}"
+  },
+  {
+   "name": "目標在範圍內：小地圖有金色任務星星",
+   "ok": true,
+   "detail": "金色像素 22"
+  },
+  {
+   "name": "目標太遠：邊緣出現金色指針",
+   "ok": true,
+   "detail": "金色像素 12"
+  },
+  {
+   "name": "附近有怪物：小地圖出現紅點",
+   "ok": true,
+   "detail": "紅色像素 123"
+  },
+  {
+   "name": "點小地圖：開啟大地圖分頁並暫停",
+   "ok": true,
+   "detail": "{\"menu\":\"map\",\"paused\":true,\"tab\":\"地圖M\"}"
+  },
+  {
+   "name": "大地圖：畫布保持地圖比例（84:120）並放在容器內",
+   "ok": true,
+   "detail": "{\"wrap\":[918,572],\"canvas\":[396,566],\"ratio\":0.6996466431095406,\"side\":[1001,210],\"vw\":1280,\"vh\":720,\"inside\":true}"
+  },
+  {
+   "name": "大地圖：主角位置有白色箭頭",
+   "ok": true,
+   "detail": "{\"px\":127,\"py\":212,\"white\":35,\"cw\":396,\"ch\":566}"
+  },
+  {
+   "name": "大地圖側欄：目前位置、任務、圖例",
+   "ok": true,
+   "detail": "{\"here\":\"北境林道\",\"quest\":\"◆ 第二章　月光山谷\",\"legend\":6}"
+  },
+  {
+   "name": "Esc 關閉大地圖並繼續遊戲",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "M 鍵開啟大地圖",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "再按 M 關閉",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "選單有「地圖 M」與「小地圖」項目",
+   "ok": true,
+   "detail": "背包I｜技能樹K｜隊伍P｜地圖M｜鏡頭回正R｜操作說明H｜畫質高｜小地圖開｜音樂開｜暫停Esc"
+  },
+  {
+   "name": "關閉小地圖：畫面上消失並記住",
+   "ok": true,
+   "detail": "{\"gone\":true,\"saved\":\"off\"}"
+  },
+  {
+   "name": "重新開啟小地圖",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "城鎮裡不顯示小地圖",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "城鎮裡按 M：不開地圖，顯示提示",
+   "ok": true,
+   "detail": "{\"menu\":null,\"toast\":\"星光鎮裡不需要地圖，路標都在眼前\"}"
+  },
+  {
+   "name": "手機橫拿：小地圖縮小為 96 px，在畫面內且不與任務、技能列重疊",
+   "ok": true,
+   "detail": "{\"mm\":[738,50,96,146],\"chipTop\":152,\"arrowBottom\":248,\"vh\":390,\"vw\":844,\"overlapChip\":false,\"overlapArrow\":false,\"overlapSkill\":false,\"mmRight\":834}"
+  },
+  {
+   "name": "手機橫拿：點小地圖開大地圖，地圖與側欄都在畫面內",
+   "ok": true,
+   "detail": "{\"canvas\":[213,304],\"inView\":true,\"h\":310}"
+  },
+  {
+   "name": "小地圖每次繪製 < 3 ms（256 px）",
+   "ok": true,
+   "detail": "{\"mini\":0.04,\"full\":0.32}"
+  },
+  {
+   "name": "大地圖每次繪製 < 8 ms",
+   "ok": true,
+   "detail": "{\"mini\":0.04,\"full\":0.32}"
+  },
+  {
+   "name": "主控台沒有錯誤",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

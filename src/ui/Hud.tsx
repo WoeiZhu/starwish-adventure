@@ -15,6 +15,7 @@ import { useGame } from '../game/store'
 import { interactNearest, questInfo, questTarget } from '../game/story'
 import { canFullscreen, enterAppMode, isFullscreen, isStandalone, isTouch } from '../systems/mobile'
 import { musicEnabled, setMusicEnabled } from '../systems/music'
+import { MiniMap } from './MiniMap'
 import { Joystick } from './TouchControls'
 
 /** 手機上離開全螢幕（例如滑了返回手勢）後，顯示「全螢幕」按鈕讓玩家切回來 */
@@ -94,6 +95,8 @@ export function Hud() {
   const showToast = useGame((s) => s.showToast)
   const quality = useGame((s) => s.quality)
   const setQuality = useGame((s) => s.setQuality)
+  const minimap = useGame((s) => s.minimap)
+  const setMinimap = useGame((s) => s.setMinimap)
   const camMode = useGame((s) => s.camMode)
   const setCamMode = useGame((s) => s.setCamMode)
   const [music, setMusic] = useState(musicEnabled)
@@ -248,6 +251,11 @@ export function Hud() {
             <button onClick={pick(() => openMenu('party'))}>
               隊伍 <kbd>P</kbd>
             </button>
+            {!safe && (
+              <button onClick={pick(() => openMenu('map'))}>
+                地圖 <kbd>M</kbd>
+              </button>
+            )}
             <button onClick={pick(resetCamera)}>
               鏡頭回正 <kbd>R</kbd>
             </button>
@@ -257,6 +265,11 @@ export function Hud() {
             <button onClick={() => setQuality(quality === 'high' ? 'mid' : quality === 'mid' ? 'saver' : 'high')}>
               畫質 <span className="menu-val">{quality === 'high' ? '高' : quality === 'mid' ? '中' : '低（省電）'}</span>
             </button>
+            {!safe && (
+              <button onClick={() => setMinimap(!minimap)}>
+                小地圖 <span className="menu-val">{minimap ? '開' : '關'}</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setMusicEnabled(!music)
@@ -273,6 +286,7 @@ export function Hud() {
             </div>
           </div>
         )}
+        {!menuOpen && !safe && minimap && <MiniMap />}
         {!menuOpen && (
           <button className={'quest-chip' + (questOpen ? ' open' : '')} onClick={() => setQuestOpen((v) => !v)}>
             <b>◆ {quest.title}</b>
