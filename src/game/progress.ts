@@ -179,6 +179,55 @@ export function sellItem(uid: string) {
 }
 export const sellPrice = (item: Item) => Math.max(1, Math.round(itemScore(item) * 0.4))
 
+/** 一次賣掉多件（裝備中的不賣），回傳賣出件數與金幣 */
+export function sellMany(uids: string[]) {
+  let count = 0
+  let gold = 0
+  for (const uid of uids) {
+    const g = sellItem(uid)
+    if (g > 0) {
+      count++
+      gold += g
+    }
+  }
+  return { count, gold }
+}
+
+/** 低等級：比名單上最高等級的隊員低 4 級以上 */
+export const LOW_LEVEL_GAP = 4
+
+export interface SellAdvice {
+  /** 名單上有人換上它會變強（而且是那個人同部位最好的備品）：建議留著 */
+  keep: boolean
+  /** 沒用：每個能用的人都有更好的，或是比身上的差 */
+  junk: boolean
+  /** 等級比隊伍低很多 */
+  low: boolean
+  /** 名單上沒有人能用（例如還沒入隊職業的武器）：不建議賣 */
+  nobody: boolean
+}
+
+/**
+ * 賣東西畫面的標記。只看名單（出戰＋休息）：
+ * 每個能用的隊員，同部位背包裡最好的備品若比身上的強才算「留著」，其餘備品都是沒用的。
+ */
+export function sellAdvice(item: Item, roster: ClassId[]): SellAdvice {
+  const users = roster.filter((c) => canEquip(c, item))
+  const top = Math.max(1, ...roster.map((c) => progress.members[c].level))
+  const low = item.level <= top - LOW_LEVEL_GAP
+  if (users.length === 0) return { keep: false, junk: false, low, nobody: true }
+  const keep = users.some((c) => {
+    const cur = equippedItem(c, item.slot)
+    let best: Item | undefined
+    for (const it of progress.inventory) {
+      if (it.slot !== item.slot || !canEquip(c, it) || equippedBy(it.uid)) continue
+      if (!best || itemScore(it) > itemScore(best)) best = it
+    }
+    return best?.uid === item.uid && (!cur || itemScore(item) > itemScore(cur))
+  })
+  return { keep, junk: !keep, low, nobody: false }
+}
+
 /** 某職業某部位可用的最好裝備（不搶其他人身上的；skip 裡的職業視為空出來） */
 function bestPick(classId: ClassId, slot: Slot, taken: Set<string>) {
   let best: Item | undefined

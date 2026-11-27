@@ -12,6 +12,7 @@ export function gearLook(classId: ClassId): GearLook {
     weaponTint: w ? QUALITIES[w.quality].color : undefined,
     weaponModel: model.url,
     weaponClip: model.clip,
+    clipEquipment: model.equipment,
     shieldModel: classId === 'knight' ? shieldUrlFor(equippedItem(classId, 'armor')) : undefined,
   }
 }

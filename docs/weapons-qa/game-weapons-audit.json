@@ -1,0 +1,279 @@
+{
+  "status": "PASS",
+  "scope": "Actual React game, three tiers per companion, local isolated save",
+  "results": [
+    {
+      "name": "equip-tier-1",
+      "status": "PASS",
+      "equipment": [
+        {
+          "id": "assassin-1",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-1.web.glb",
+          "position": [
+            -1.0280236058102485,
+            0.6781223961828615,
+            7.534099456219108
+          ],
+          "scale": [
+            0.8799991914376213,
+            0.8799989891768795,
+            0.8799983210530975
+          ],
+          "meshCount": 3
+        },
+        {
+          "id": "assassin-1",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-1.web.glb",
+          "position": [
+            -1.5314057670677288,
+            0.6822411649939375,
+            7.5432743475521855
+          ],
+          "scale": [
+            0.8799880659209095,
+            0.8799829566873519,
+            0.8799798688069281
+          ],
+          "meshCount": 3
+        },
+        {
+          "id": "apothecary-1",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-1.web.glb",
+          "position": [
+            1.6315000341829538,
+            0.7153264136165044,
+            7.580410828056353
+          ],
+          "scale": [
+            0.8800195228991815,
+            0.8800212527762713,
+            0.8800215111723717
+          ],
+          "meshCount": 4
+        },
+        {
+          "id": "apothecary-1",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/potion-shared.web.glb",
+          "position": [
+            1.068318832997811,
+            0.70457743008684,
+            7.555110216823722
+          ],
+          "scale": [
+            0.8799985275492019,
+            0.8799986624948081,
+            0.8799975027438276
+          ],
+          "meshCount": 5
+        }
+      ]
+    },
+    {
+      "name": "equip-tier-2",
+      "status": "PASS",
+      "equipment": [
+        {
+          "id": "assassin-2",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-2.web.glb",
+          "position": [
+            -1.02793688910603,
+            0.6782748553190021,
+            7.534133209056911
+          ],
+          "scale": [
+            0.8799991917879448,
+            0.8799989921528741,
+            0.8799983177267794
+          ],
+          "meshCount": 1
+        },
+        {
+          "id": "assassin-2",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-2.web.glb",
+          "position": [
+            -1.531363152209501,
+            0.6822218918791737,
+            7.543262050699739
+          ],
+          "scale": [
+            0.8799879322870189,
+            0.8799830266426721,
+            0.8799799324865931
+          ],
+          "meshCount": 1
+        },
+        {
+          "id": "apothecary-2",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-1.web.glb",
+          "position": [
+            1.6317185058073698,
+            0.7152980937410971,
+            7.580065843823564
+          ],
+          "scale": [
+            0.8800195971768117,
+            0.8800209801371347,
+            0.8800217095348394
+          ],
+          "meshCount": 4
+        },
+        {
+          "id": "apothecary-2",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-2.web.glb",
+          "position": [
+            1.0682750190138985,
+            0.7046710383590938,
+            7.5551484054775155
+          ],
+          "scale": [
+            0.8799985268605156,
+            0.8799986729249969,
+            0.8799974930023208
+          ],
+          "meshCount": 6
+        }
+      ]
+    },
+    {
+      "name": "equip-tier-3",
+      "status": "PASS",
+      "equipment": [
+        {
+          "id": "assassin-3",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-3.web.glb",
+          "position": [
+            -1.028051112238561,
+            0.6780949328084236,
+            7.534104418319276
+          ],
+          "scale": [
+            0.8799991909443343,
+            0.8799989860130377,
+            0.879998324710227
+          ],
+          "meshCount": 1
+        },
+        {
+          "id": "assassin-3",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-3.web.glb",
+          "position": [
+            -1.5313386214461355,
+            0.6821135007092363,
+            7.54326217194362
+          ],
+          "scale": [
+            0.8799881680994653,
+            0.8799828964495198,
+            0.8799798268653894
+          ],
+          "meshCount": 1
+        },
+        {
+          "id": "apothecary-3",
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-3.web.glb",
+          "position": [
+            1.6316892335401658,
+            0.7152254977063994,
+            7.58008923680596
+          ],
+          "scale": [
+            0.8800195894116201,
+            0.8800210002942122,
+            0.8800216971428939
+          ],
+          "meshCount": 1
+        },
+        {
+          "id": "apothecary-3",
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-2.web.glb",
+          "position": [
+            1.0682761283741615,
+            0.7046278431921444,
+            7.55513663265378
+          ],
+          "scale": [
+            0.8799985270573123,
+            0.8799986719229899,
+            0.8799974938075321
+          ],
+          "meshCount": 6
+        }
+      ]
+    },
+    {
+      "name": "repeat-swap",
+      "status": "PASS",
+      "before": {
+        "geometries": 336,
+        "textures": 91
+      },
+      "after": {
+        "geometries": 336,
+        "textures": 91
+      }
+    },
+    {
+      "name": "existing-save-retains-model-ids",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/A02-modular.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/A04-modular.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/assassin-1.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/apothecary-1.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/potion-shared.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/assassin-2.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/apothecary-2.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/apothecary-1.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/assassin-3.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/apothecary-2.web.glb",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5183/models/starwish-weapon-expansion-20261126-v001/apothecary-3.web.glb",
+      "status": 200
+    }
+  ]
+}

@@ -517,10 +517,11 @@ const models = await ev(() =>
   performance
     .getEntriesByType('resource')
     .map((r) => r.name)
-    .filter((n) => /A0[24]\/character-game/.test(n))
-    .map((n) => n.split('/').slice(-2).join('/')),
+    .filter((n) => /A0[24]-modular/.test(n))
+    .map((n) => n.split('/').slice(-1)[0]),
 )
-check('載入壓縮過的 A02／A04 模型（.web.glb）', models.some((m) => m.startsWith('A02/') && m.endsWith('.web.glb')) && models.some((m) => m.startsWith('A04/') && m.endsWith('.web.glb')), JSON.stringify(models))
+// 人物本體改用「無手持武器」的模組版（starwish-weapon-expansion-20261126-v001），武器另外掛在掛點上
+check('載入壓縮過的 A02／A04 模組人物（.web.glb）', models.includes('A02-modular.web.glb') && models.includes('A04-modular.web.glb'), JSON.stringify(models))
 void tree
 
 check('主控台沒有錯誤', errs.length === 0, errs.slice(0, 5).join(' | '))

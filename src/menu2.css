@@ -1046,3 +1046,193 @@ html.menu-open .hud {
     min-height: 44px;
   }
 }
+
+/* ── 賣東西 ── */
+.ms.sell {
+  width: min(900px, calc(100vw - 48px));
+}
+.sell-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+.sell-gold {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff6d6;
+  font-size: 14px;
+  font-weight: 800;
+  color: #9a6b00;
+}
+.sell-gold b {
+  font-size: 16px;
+}
+.sell-tools {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 14px 4px;
+}
+.sell-marks {
+  align-items: center;
+}
+.sell-label {
+  flex: none;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--ink-soft);
+}
+.chip:disabled {
+  opacity: 0.45;
+}
+.sell-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 8px 14px;
+}
+.sell-tile.junk {
+  box-shadow: 0 0 0 2px #ffb3b3, 0 0 10px 1px rgba(255, 120, 120, 0.55);
+}
+.sell-tile.keep {
+  opacity: 0.8;
+}
+.sell-tile.picked {
+  outline: 3px solid var(--pink);
+  outline-offset: 2px;
+}
+.sell-tag {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  padding: 0 5px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 15px;
+  color: #fff;
+}
+.sell-tag.junk {
+  background: #e5484d;
+}
+.sell-tag.keep {
+  background: var(--up);
+}
+.sell-tag.wait {
+  background: #8a7b92;
+}
+.sell-low {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  padding: 0 5px;
+  border-radius: 7px;
+  background: #ffb020;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 15px;
+  color: #4a3b52;
+}
+.sell-check {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pink-deep);
+  border: 2px solid #fff;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+}
+.sell-info {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 60px;
+  padding: 8px 16px;
+  border-top: 2px solid #f1e8f4;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.sell-info b {
+  font-size: 14px;
+}
+.sell-info em {
+  font-style: normal;
+  color: var(--ink);
+}
+.sell-info .t-keep {
+  color: var(--up);
+}
+.sell-info .t-junk {
+  color: #e5484d;
+}
+.sell-info .t-low {
+  color: #c98400;
+}
+.sell-msg {
+  color: var(--up);
+}
+.sell-bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 2px solid #f1e8f4;
+  background: #fff;
+}
+.sell-bar .m-btn.danger {
+  border-color: transparent;
+  background: linear-gradient(180deg, #ff7b7b, #e5484d);
+  color: #fff;
+}
+.sell-bar .m-btn.danger small {
+  color: #fff;
+}
+@media (max-width: 760px), (max-height: 560px) and (orientation: landscape) {
+  .ms.sell {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border-width: 0;
+  }
+  .sell-tools {
+    padding: 6px 10px 2px;
+    gap: 6px 10px;
+  }
+  .sell-scroll {
+    padding: 6px 10px;
+  }
+  .sell-info {
+    min-height: 0;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .sell-bar {
+    padding: 8px 10px;
+  }
+  .sell-bar .m-btn {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}
+.bag-best .sell-open {
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}

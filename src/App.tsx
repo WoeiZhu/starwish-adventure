@@ -7,6 +7,7 @@ import { unlockAudio } from './systems/sfx'
 import { RotateHint } from './ui/RotateHint'
 import { Hud } from './ui/Hud'
 import { MenuPanel } from './ui/MenuPanel'
+import { SellPanel } from './ui/SellPanel'
 import { LoadingScreen } from './ui/LoadingScreen'
 import { ChapterComplete, DialogBox, HelpPanel, PauseOverlay, Toast, TownBanner } from './ui/Overlays'
 import { Music } from './ui/Music'
@@ -19,6 +20,7 @@ export function App() {
   const showHelp = useGame((s) => s.showHelp)
   const dialog = useGame((s) => s.dialog)
   const menu = useGame((s) => s.menu)
+  const sell = useGame((s) => s.sell)
   const chapterDone = useGame((s) => s.chapterDone)
   const cine = useCutsceneActive()
 
@@ -52,7 +54,8 @@ export function App() {
           {dialog && <DialogBox />}
           {showHelp && !paused && <HelpPanel />}
           {menu && <MenuPanel />}
-          {paused && !menu && <PauseOverlay />}
+          {sell && <SellPanel />}
+          {paused && !menu && !sell && <PauseOverlay />}
           {chapterDone > 0 && !dialog && <ChapterComplete chapter={chapterDone} />}
         </>
       )}

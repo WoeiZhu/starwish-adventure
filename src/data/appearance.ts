@@ -1,6 +1,6 @@
 // 外觀設定：性別外觀與職業服裝分開，組合成角色模型的輸入。
 import { CLASSES, type ClassId, type WeaponKind } from './classes'
-import { CLASS_WEAPONS, SHIELD_URLS } from './weaponModels'
+import { CLASS_WEAPONS, SHIELD_URLS, type ClipEquipment } from './weaponModels'
 
 export type Gender = 'boy' | 'girl'
 export type Headgear = 'none' | 'witchHat' | 'featherBand' | 'halo' | 'flower'
@@ -31,10 +31,12 @@ export interface Appearance {
   weaponClip?: string
   /** 騎士左手的盾牌模型 */
   shieldModel?: string
+  /** 第二章夥伴的獨立武器模組，使用無手持裝備的人物與已校正掛點。 */
+  clipEquipment?: ClipEquipment
 }
 
 /** 裝備帶來的外觀（game/gear.ts 依身上的裝備算出） */
-export type GearLook = Pick<Appearance, 'weaponTint' | 'weaponModel' | 'weaponClip' | 'shieldModel'>
+export type GearLook = Pick<Appearance, 'weaponTint' | 'weaponModel' | 'weaponClip' | 'shieldModel' | 'clipEquipment'>
 
 const GENDER_LOOK: Record<Gender, { hair: string; eye: string; skin: string }> = {
   boy: { hair: '#8a5630', eye: '#3f8fd6', skin: '#ffe0cc' },
@@ -64,11 +66,12 @@ const CLASS_HEADGEAR: Record<ClassId, Headgear> = {
 /** 沒有裝備資料時（例如還沒加入的夥伴）：第 1 階武器、第 1 階盾牌 */
 function defaultGear(classId: ClassId): GearLook {
   const w = CLASS_WEAPONS[classId][0]
-  return { weaponModel: w.url, weaponClip: w.clip, shieldModel: classId === 'knight' ? SHIELD_URLS[0] : undefined }
+  return { weaponModel: w.url, weaponClip: w.clip, shieldModel: classId === 'knight' ? SHIELD_URLS[0] : undefined, clipEquipment: w.equipment }
 }
 
 export function buildAppearance(gender: Gender, classId: ClassId, gear?: GearLook): Appearance {
   const cls = CLASSES[classId]
+  const look = gear ?? defaultGear(classId)
   return {
     gender,
     ...GENDER_LOOK[gender],
@@ -78,10 +81,10 @@ export function buildAppearance(gender: Gender, classId: ClassId, gear?: GearLoo
     headgear: CLASS_HEADGEAR[classId],
     armor: classId === 'knight',
     modelUrl: CLASS_MODELS[classId],
-    // 第二章夥伴：模型自帶動作與武器（性別外觀不適用）
-    clipModelUrl: cls.clipModel && modelUrl(cls.clipModel.file),
+    // 第二章夥伴沿用動作模型；獨立換裝改用無手持武器且帶掛點的版本。
+    clipModelUrl: look.clipEquipment ? modelUrl(look.clipEquipment.bodyFile) : cls.clipModel && modelUrl(cls.clipModel.file),
     clipHide: cls.clipModel?.hide,
-    ...(gear ?? defaultGear(classId)),
+    ...look,
   }
 }
 

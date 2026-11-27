@@ -1,10 +1,18 @@
-// 武器包（public/models/starwish-weapons-20261123-v001/）：每個職業 3 階武器、3 面盾牌、共用箭矢。
+// 四個原職業武器包，加上第二章雙刀／藥使擴充包：各職業皆有三階外觀。
 // 遊戲載入 tools/assets 壓縮過的 .web.glb；模型原點是握把，+Y 指向武器前端，+Z 是正面。
 import CATALOG from '../../public/models/starwish-weapons-20261123-v001/weapons-catalog.json'
+import EXPANSION from '../../public/models/starwish-weapon-expansion-20261126-v001/weapons-catalog.json'
 import type { ClassId } from './classes'
 
 /** 不從 appearance.ts 匯入 modelUrl，避免兩個檔案互相匯入 */
-const web = (url: string) => `${import.meta.env.BASE_URL}${url.replace(/\.glb$/, '.web.glb')}`
+const web = (url: string) => `${import.meta.env.BASE_URL}${url.replace(/^\//, '').replace(/\.glb$/, '.web.glb')}`
+
+/** 已校正握把與骨架縮放的掛點；同一把短刀可掛左右手。 */
+export interface ClipEquipment {
+  id: string
+  bodyFile: string
+  parts: { socket: string; url: string }[]
+}
 
 export interface WeaponModel {
   id: string
@@ -12,12 +20,13 @@ export interface WeaponModel {
   label: string
   classId: ClassId
   tier: 1 | 2 | 3
-  /** baked = 角色模型自帶武器（暗殺者的雙刀、藥師的藥瓶），沒有另外的武器模型 */
-  family: 'sword' | 'bow' | 'staff' | 'wand' | 'baked'
+  family: 'sword' | 'bow' | 'staff' | 'wand' | 'dual-blades' | 'alchemy'
   /** 空字串 = 沒有武器模型 */
   url: string
   /** 有動畫片段的武器（弓：拉弦放箭） */
   clip?: string
+  /** 自帶動作的人物改用無手持武器版本，再依掛點換裝。 */
+  equipment?: ClipEquipment
 }
 
 interface CatalogItem {
@@ -41,21 +50,23 @@ export const WEAPON_MODELS: WeaponModel[] = ITEMS.flatMap((i) => {
   return [{ id: i.id, label: i.label ?? i.id, classId, tier: i.tier as 1 | 2 | 3, family, url: web(i.url), clip: i.clips?.[0] }]
 })
 
-/** 模型自帶武器的職業：武器店照樣賣三階（只有數值與名稱，外觀不變） */
-const BAKED: Partial<Record<ClassId, [string, string, string]>> = {
-  assassin: ['影葉雙刀', '月刃雙刀', '星痕雙刃'],
-  apothecary: ['翠綠藥典', '星露藥瓶', '月光藥典'],
-}
+const COMPANION_WEAPONS: WeaponModel[] = EXPANSION.items.flatMap((item) => {
+  if (item.class !== 'assassin' && item.class !== 'apothecary') return []
+  if (item.tier < 1 || item.tier > 3) return []
+  return [{
+    id: item.id, label: item.label, classId: item.class,
+    tier: item.tier as 1 | 2 | 3,
+    family: item.class === 'assassin' ? 'dual-blades' : 'alchemy',
+    url: web(item.url),
+    equipment: { id: item.id, bodyFile: item.bodyFile, parts: item.parts.map((p) => ({ socket: p.socket, url: web(p.url) })) },
+  }]
+})
 
 /** 各職業的武器，依階級排序（索引 0 = 第 1 階） */
 export const CLASS_WEAPONS = {
   ...Object.fromEntries(CLASS_IDS.map((c) => [c, WEAPON_MODELS.filter((w) => w.classId === c).sort((a, b) => a.tier - b.tier)])),
-  ...Object.fromEntries(
-    Object.entries(BAKED).map(([c, names]) => [
-      c,
-      names!.map((label, i): WeaponModel => ({ id: `${c}-${i + 1}`, label, classId: c as ClassId, tier: (i + 1) as 1 | 2 | 3, family: 'baked', url: '' })),
-    ]),
-  ),
+  assassin: COMPANION_WEAPONS.filter((w) => w.classId === 'assassin'),
+  apothecary: COMPANION_WEAPONS.filter((w) => w.classId === 'apothecary'),
 } as Record<ClassId, WeaponModel[]>
 
 const url = (id: string) => web(ITEMS.find((i) => i.id === id)!.url)

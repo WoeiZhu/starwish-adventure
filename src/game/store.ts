@@ -97,6 +97,8 @@ interface GameState {
   paused: boolean
   /** 開啟中的選單分頁；開啟時遊戲暫停 */
   menu: MenuTab | null
+  /** 賣東西畫面（商店、背包的「賣東西」開啟；開啟時遊戲暫停） */
+  sell: boolean
   showHelp: boolean
   hero: Profile
   dialog: DialogState | null
@@ -134,6 +136,8 @@ interface GameState {
   togglePause: () => void
   openMenu: (tab: MenuTab) => void
   closeMenu: () => void
+  openSell: () => void
+  closeSell: () => void
   bumpGear: () => void
   partyChanged: () => void
   setChapterDone: (chapter: number) => void
@@ -167,6 +171,7 @@ export const useGame = create<GameState>()((set, get) => ({
   phase: 'title',
   paused: false,
   menu: null,
+  sell: false,
   showHelp: false,
   hero: initialProfile,
   dialog: null,
@@ -235,6 +240,7 @@ export const useGame = create<GameState>()((set, get) => ({
       phase: 'playing',
       paused: false,
       menu: null,
+      sell: false,
       dialog: null,
       hint: null,
       hero,
@@ -264,6 +270,7 @@ export const useGame = create<GameState>()((set, get) => ({
       phase: 'playing',
       paused: false,
       menu: null,
+      sell: false,
       dialog: null,
       hint: null,
       hero: d.profile,
@@ -291,6 +298,7 @@ export const useGame = create<GameState>()((set, get) => ({
       phase: 'title',
       paused: false,
       menu: null,
+      sell: false,
       dialog: null,
       hint: null,
       showHelp: false,
@@ -301,11 +309,11 @@ export const useGame = create<GameState>()((set, get) => ({
   togglePause: () => {
     if (get().phase !== 'playing') return
     runtime.path = null
-    set((s) => ({ paused: !s.paused, menu: null }))
+    set((s) => ({ paused: !s.paused, menu: null, sell: false }))
   },
   openMenu: (tab) => {
     const s = get()
-    if (s.phase !== 'playing' || s.dialog) return
+    if (s.phase !== 'playing' || s.dialog || s.sell) return
     if (tab === 'map' && s.mapId !== 'overworld') return s.showToast('星光鎮裡不需要地圖，路標都在眼前')
     // 再按一次同一個分頁的快捷鍵就關閉
     if (s.menu === tab) return s.closeMenu()
@@ -315,6 +323,17 @@ export const useGame = create<GameState>()((set, get) => ({
   closeMenu: () => {
     if (!get().menu) return
     set({ menu: null, paused: false })
+    get().saveGame()
+  },
+  openSell: () => {
+    const s = get()
+    if (s.phase !== 'playing') return
+    runtime.path = null
+    set({ sell: true, menu: null, dialog: null, paused: true, showHelp: false })
+  },
+  closeSell: () => {
+    if (!get().sell) return
+    set({ sell: false, paused: false })
     get().saveGame()
   },
   bumpGear: () => set((s) => ({ gearVersion: s.gearVersion + 1 })),

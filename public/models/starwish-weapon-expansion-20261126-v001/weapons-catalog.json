@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "batch": "starwish-weapon-expansion-20261126-v001",
+  "items": [
+    {
+      "id": "assassin-1",
+      "label": "影葉雙刀",
+      "class": "assassin",
+      "tier": 1,
+      "family": "dual-blades",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-1.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-1.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-1.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A02-modular.web.glb",
+      "cost": 0,
+      "method": "reuse existing dagger, two instances"
+    },
+    {
+      "id": "assassin-2",
+      "label": "月刃雙刀",
+      "class": "assassin",
+      "tier": 2,
+      "family": "dual-blades",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-2.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-2.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-2.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A02-modular.web.glb",
+      "cost": 15,
+      "method": "one new blade, two instances"
+    },
+    {
+      "id": "assassin-3",
+      "label": "星痕雙刃",
+      "class": "assassin",
+      "tier": 3,
+      "family": "dual-blades",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-3.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-3.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/assassin-3.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A02-modular.web.glb",
+      "cost": 15,
+      "method": "one new blade, two instances"
+    },
+    {
+      "id": "apothecary-1",
+      "label": "翠綠藥典",
+      "class": "apothecary",
+      "tier": 1,
+      "family": "alchemy",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-1.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/potion-shared.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-1.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A04-modular.web.glb",
+      "cost": 0,
+      "method": "reuse local book, green leather and botanical detail"
+    },
+    {
+      "id": "apothecary-2",
+      "label": "星露藥瓶",
+      "class": "apothecary",
+      "tier": 2,
+      "family": "alchemy",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-2.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-2.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-1.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A04-modular.web.glb",
+      "cost": 0,
+      "method": "reuse local bottle, local star accent"
+    },
+    {
+      "id": "apothecary-3",
+      "label": "月光藥典",
+      "class": "apothecary",
+      "tier": 3,
+      "family": "alchemy",
+      "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-3.glb",
+      "parts": [
+        {
+          "socket": "WeaponRightSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-2.glb"
+        },
+        {
+          "socket": "WeaponLeftSocket",
+          "url": "/models/starwish-weapon-expansion-20261126-v001/apothecary-3.glb"
+        }
+      ],
+      "bodyFile": "starwish-weapon-expansion-20261126-v001/A04-modular.web.glb",
+      "cost": 15,
+      "method": "new closed alchemy book"
+    }
+  ],
+  "units": "meters",
+  "socketContract": "Attach GLTF scene at identity position/quaternion/scale beneath matching exported socket. Sockets already include grip alignment, orientation and compensation for skeleton scale.",
+  "potionRelease": "WeaponRightSocket parent HeldProp inherits baked release/recover scaling. Game renders projectile; old AttackProjectile mesh removed.",
+  "newCreditsSpent": 45,
+  "endingBalanceConfirmed": 82
+}

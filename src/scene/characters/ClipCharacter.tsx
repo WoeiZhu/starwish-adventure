@@ -7,6 +7,7 @@ import { RUN_SPEED, WALK_SPEED } from '../../game/runtime'
 import { useGame } from '../../game/store'
 import { crossFade, useClipModel } from './clipModel'
 import type { CharacterModelProps } from './types'
+import { ClipEquipment } from './ClipEquipment'
 
 /** 與 GlbCharacter 相同的人物高度，NPC 站在一起比例才一致 */
 const TARGET_HEIGHT = 1.4
@@ -84,5 +85,8 @@ export function ClipCharacter({ appearance, motion }: CharacterModelProps) {
     model.mixer.update(dt)
   })
 
-  return <primitive object={model.scene} scale={model.scale} position={[0, model.offsetY, 0]} />
+  return <>
+    <primitive object={model.scene} scale={model.scale} position={[0, model.offsetY, 0]} />
+    {appearance.clipEquipment && <ClipEquipment scene={model.scene} equipment={appearance.clipEquipment} />}
+  </>
 }

@@ -20,7 +20,7 @@ function usePortrait() {
 
 export function RotateHint() {
   const portrait = usePortrait()
-  const menu = useGame((s) => s.menu)
+  const menu = useGame((s) => s.menu || s.sell)
   const autoPaused = useRef(false)
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function RotateHint() {
     } else if (autoPaused.current) {
       autoPaused.current = false
       // 期間玩家沒有自己打開選單才自動繼續
-      if (!s.menu) useGame.setState({ paused: false })
+      if (!s.menu && !s.sell) useGame.setState({ paused: false })
     }
   }, [portrait, menu])
 

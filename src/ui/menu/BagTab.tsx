@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { CLASSES, CLASS_ORDER, type ClassId } from '../../data/classes'
 import { QUALITIES, SLOTS, SLOT_NAME, itemScore, type Item, type ItemStats, type Slot } from '../../data/items'
 import { usePotion } from '../../game/combat/rewards'
+import { useGame } from '../../game/store'
 import {
   BAG_LIMIT,
   POTION_HEAL,
@@ -176,6 +177,9 @@ function HeroColumn({
           }}
         >
           全隊最佳
+        </button>
+        <button className="m-btn sell-open" onClick={() => useGame.getState().openSell()}>
+          賣東西 <small>標記低等級・一鍵賣出</small>
         </button>
       </div>
       <p className="bag-note" aria-live="polite">

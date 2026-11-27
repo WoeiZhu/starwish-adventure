@@ -32,7 +32,8 @@ export function installInput() {
     const acting = !s.paused && !s.dialog
     switch (e.code) {
       case 'Escape':
-        if (s.menu) s.closeMenu()
+        if (s.sell) s.closeSell()
+        else if (s.menu) s.closeMenu()
         else if (s.dialog) s.closeDialog()
         else if (s.showHelp) s.toggleHelp()
         else s.togglePause()

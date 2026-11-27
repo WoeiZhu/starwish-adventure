@@ -11,7 +11,7 @@ import { inTown } from '../world/maps'
 import { burst, flash, pillar, ring, shake } from './combat/fx'
 import { addFeed, addFloater, combat, companionClasses, hero, partySize, recruitAlly, refreshParty, spawnEnemy, stashedUnits } from './combat/state'
 import type { Unit } from './combat/types'
-import { C2_HUNT_GOAL, HUNT_GOAL, addItem, equip, equippedItem, progress, storyReached, unlock, type StoryStep } from './progress'
+import { C2_HUNT_GOAL, HUNT_GOAL, addItem, equip, equippedBy, equippedItem, progress, storyReached, unlock, type StoryStep } from './progress'
 import { runtime } from './runtime'
 import { useGame, type Choice } from './store'
 
@@ -87,6 +87,17 @@ function shopWeapon(classId: ClassId, w: WeaponModel) {
   return { item, price: Math.round(itemScore(item) * SHOP_PRICE_RATE) }
 }
 
+/** 商店共用的「賣東西」選項：開賣出畫面（標出低等級、沒用的裝備，可一鍵賣出） */
+function sellChoice(): Choice {
+  const n = progress.inventory.filter((it) => !equippedBy(it.uid)).length
+  return {
+    label: '賣掉不要的裝備',
+    desc: n > 0 ? `背包有 ${n} 件可以賣，低等級與沒用的會標出來` : '背包裡沒有可以賣的裝備',
+    disabled: n === 0 ? '沒有可以賣的裝備' : undefined,
+    run: () => useGame.getState().openSell(),
+  }
+}
+
 /** 武器店：先選要幫誰買，再選武器（武器包每個職業 3 階） */
 function weaponShop(speaker: string) {
   const party = [heroClass(), ...progress.recruited]
@@ -101,6 +112,7 @@ function weaponShop(speaker: string) {
           run: () => weaponShopFor(speaker, c),
         }),
       ),
+      sellChoice(),
       { label: '離開', run: () => {} },
     ],
   )
@@ -511,8 +523,8 @@ function talkMerchant(speaker = MERCHANT.name) {
   })
   say(
     speaker,
-    [`要補給嗎？你現在有 ${progress.gold} 金幣、${progress.potions} 瓶藥水。不需要的裝備可以在背包裡賣掉換錢。`],
-    [buy(1, POTION_PRICE), buy(3, POTION_PRICE * 3 - 5), { label: '離開', run: () => {} }],
+    [`要補給嗎？你現在有 ${progress.gold} 金幣、${progress.potions} 瓶藥水。不需要的裝備也可以賣給我換錢。`],
+    [buy(1, POTION_PRICE), buy(3, POTION_PRICE * 3 - 5), sellChoice(), { label: '離開', run: () => {} }],
   )
 }
 
