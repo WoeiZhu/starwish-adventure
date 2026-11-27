@@ -2,7 +2,8 @@
 import { slimeStats } from '../../data/enemies'
 import { QUALITIES, makeItem, rollItem, type Item, type Quality, type Slot } from '../../data/items'
 import { sfx } from '../../systems/sfx'
-import { POTION_HEAL, addExp, addItem, pointsLeft, progress } from '../progress'
+import { useGame } from '../store'
+import { POTION_HEAL, addExp, addItem, pointsLeft, progress, sellAdvice } from '../progress'
 import { storyOnKill } from '../story'
 import { burst, emit, flash, pillar, ring } from './fx'
 import { addFeed, addFloater, applyStats, combat, dist, hero } from './state'
@@ -96,6 +97,11 @@ function collect(i: number) {
     }
     addFloater(h, d.item.name, d.color, d.item.quality >= 2, 2.2)
     addFeed(`獲得 ${d.item.name}`, d.color)
+    // 比身上的更好：提醒一下，背包按「全隊最佳」就能換上
+    if (sellAdvice(d.item, [h.classId!, ...progress.recruited]).keep) {
+      addFeed('▲ 這件比身上的更好！背包按「全隊最佳」換上', '#2f9e52')
+      useGame.getState().showToast(`撿到更好的裝備：${d.item.name}`)
+    }
   }
   burst(d.x, 0.4, d.z, d.color, 10, 2.5, { up: 4, gravity: 6 })
   flash(d.x, 0.5, d.z, d.color, 0.7)

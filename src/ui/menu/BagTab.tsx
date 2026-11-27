@@ -1,7 +1,7 @@
 // 背包：正方形圖示格子、稀有度邊框、分類／職業篩選／排序、裝備詳情與前後比較、一鍵最佳裝備。
 // 電腦：角色｜背包｜詳情 三欄；平板與手機：角色＋背包，點裝備後用彈出面板（直拿是下方抽屜、橫拿是右側面板）。
 import { useEffect, useState, type ReactNode } from 'react'
-import { CLASSES, CLASS_ORDER, type ClassId } from '../../data/classes'
+import { CLASSES, type ClassId } from '../../data/classes'
 import { QUALITIES, SLOTS, SLOT_NAME, itemScore, type Item, type ItemStats, type Slot } from '../../data/items'
 import { usePotion } from '../../game/combat/rewards'
 import { useGame } from '../../game/store'
@@ -438,7 +438,8 @@ export function BagTab({ classId, party, onChange }: { classId: ClassId; party: 
           <div className="selects">
             <select aria-label="職業篩選" value={cls} onChange={(e) => setCls(e.target.value as ClassId | 'any')}>
               <option value="any">全部職業</option>
-              {CLASS_ORDER.map((c) => (
+              {/* 只列出已經加入的職業（還沒招募的不顯示，避免劇透） */}
+              {[useGame.getState().hero.classId, ...progress.recruited].map((c) => (
                 <option key={c} value={c}>
                   {CLASSES[c].name}可用
                 </option>

@@ -444,7 +444,10 @@ export function addFloater(u: { x: number; z: number }, text: string, color: str
   const f = combat.floaters[combat.floaterSeq % FLOATER_POOL]
   f.seq = ++combat.floaterSeq
   f.x = u.x + (Math.random() - 0.5) * 0.5
-  f.y = y
+  // 同一個位置剛冒出的飄字：往上錯開，不要疊在一起
+  let stack = 0
+  for (const o of combat.floaters) if (o !== f && o.life > 0.45 && Math.abs(o.x - f.x) < 1.6 && Math.abs(o.z - u.z) < 1.6 && Math.abs(o.y - y) < 0.9) stack++
+  f.y = y + Math.min(stack, 4) * 0.36
   f.z = u.z
   f.text = text
   f.color = color

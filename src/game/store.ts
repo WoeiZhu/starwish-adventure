@@ -57,6 +57,15 @@ function loadQuality(): Quality {
   return isTouch ? 'saver' : 'high'
 }
 
+const CAMFOLLOW_KEY = 'starwish.camfollow'
+function loadCamFollow(): boolean {
+  try {
+    return localStorage.getItem(CAMFOLLOW_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
 const MINIMAP_KEY = 'starwish.minimap'
 function loadMinimap(): boolean {
   try {
@@ -105,6 +114,8 @@ interface GameState {
   zoom: ZoomLabel
   /** 鏡頭模式（會記住） */
   camMode: 'explore' | 'immersive'
+  /** 走路時鏡頭自動轉到前進方向背後（自己轉動視角會暫停；會記住） */
+  camFollow: boolean
   hint: string | null
   toast: { id: number; text: string } | null
   cameraResetTick: number
@@ -148,6 +159,7 @@ interface GameState {
   resetCamera: () => void
   setZoom: (z: ZoomLabel) => void
   setCamMode: (m: 'explore' | 'immersive') => void
+  setCamFollow: (on: boolean) => void
   setHint: (h: string | null) => void
   showToast: (text: string) => void
   advanceDialog: () => void
@@ -183,6 +195,7 @@ export const useGame = create<GameState>()((set, get) => ({
       return 'immersive'
     }
   })(),
+  camFollow: loadCamFollow(),
   hint: null,
   toast: null,
   cameraResetTick: 0,
@@ -357,6 +370,14 @@ export const useGame = create<GameState>()((set, get) => ({
     set({ camMode })
     try {
       localStorage.setItem('starwish.cam', camMode)
+    } catch {
+      /* 無痕模式 */
+    }
+  },
+  setCamFollow: (camFollow) => {
+    set({ camFollow })
+    try {
+      localStorage.setItem(CAMFOLLOW_KEY, camFollow ? 'on' : 'off')
     } catch {
       /* 無痕模式 */
     }

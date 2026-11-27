@@ -102,6 +102,8 @@ export interface Unit {
   poisonTime: number
   poisonDmg: number
   poisonTick: number
+  /** 上一次被怪物毒霧傷到的時間（combat.time）：多團毒霧重疊時，同一個人每 0.7 秒最多吃一次 */
+  cloudHit?: number
   poisonBy: Unit | null
 
   /** 畫面用：移動速度、攻擊動作（1→0）、受擊閃白（秒） */

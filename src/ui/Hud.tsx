@@ -9,7 +9,7 @@ import { skillCooldown } from '../game/combat/actions'
 import { usePotion } from '../game/combat/rewards'
 import { combat, dist, unitById } from '../game/combat/state'
 import { cycleTarget, heroCast } from '../game/combat/sim'
-import { expToNext, pointsLeft, progress } from '../game/progress'
+import { expToNext, pointsLeft, progress, upgradeCount } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { useGame } from '../game/store'
 import { interactNearest, questInfo, questTarget } from '../game/story'
@@ -99,6 +99,8 @@ export function Hud() {
   const setMinimap = useGame((s) => s.setMinimap)
   const camMode = useGame((s) => s.camMode)
   const setCamMode = useGame((s) => s.setCamMode)
+  const camFollow = useGame((s) => s.camFollow)
+  const setCamFollow = useGame((s) => s.setCamFollow)
   const [music, setMusic] = useState(musicEnabled)
   // 城鎮是安全區：隱藏戰鬥按鈕（技能、閃避、藥水、換目標），保留移動、互動與選單
   const safe = mapId !== 'overworld'
@@ -117,6 +119,7 @@ export function Hud() {
   const me = progress.members[heroProfile.classId]
   const need = expToNext(me.level)
   const points = party.reduce((n, u) => n + pointsLeft(u.classId!), 0)
+  const ups = upgradeCount([heroProfile.classId, ...progress.recruited])
   const feed = combat.feed.filter((f) => combat.time - f.time < FEED_SECONDS).slice(-3)
   const potionReady = progress.potions > 0 && combat.potionCd <= 0
   const quest = questInfo()
@@ -236,13 +239,14 @@ export function Hud() {
             {camMode === 'explore' ? '探' : '沉'}
           </button>
           <button className={'menu-btn' + (menuOpen ? ' on' : '')} onClick={() => setMenuOpen((v) => !v)} aria-label="選單">
-            ☰{points > 0 && <i className="badge">{points}</i>}
+            ☰{points + ups > 0 && <i className="badge">{points + ups}</i>}
           </button>
         </div>
         {menuOpen && (
           <div className="menu-pop">
             <button onClick={pick(() => openMenu('bag'))}>
               背包 <kbd>I</kbd>
+              {ups > 0 && <i className="badge">{ups}</i>}
             </button>
             <button onClick={pick(() => openMenu('tree'))}>
               技能樹 <kbd>K</kbd>
@@ -261,6 +265,9 @@ export function Hud() {
             </button>
             <button onClick={pick(toggleHelp)}>
               操作說明 <kbd>H</kbd>
+            </button>
+            <button onClick={() => setCamFollow(!camFollow)}>
+              鏡頭跟隨 <span className="menu-val">{camFollow ? '開' : '關'}</span>
             </button>
             <button onClick={() => setQuality(quality === 'high' ? 'mid' : quality === 'mid' ? 'saver' : 'high')}>
               畫質 <span className="menu-val">{quality === 'high' ? '高' : quality === 'mid' ? '中' : '低（省電）'}</span>

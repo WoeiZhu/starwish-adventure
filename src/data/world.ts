@@ -7,6 +7,7 @@ import { REGIONS, REGION_NAME, regionAt, type RegionId } from './regions'
 import { TOWN_PORTAL, TOWN_SHELL_COLLIDERS } from './town'
 import {
   BRIDGES,
+  CAMPFIRES,
   DRAW_LEVER,
   DRAW_NOTICE,
   ELDER_TREE,
@@ -189,9 +190,9 @@ export const CAMPS: CampDef[] = [
   { id: 'm4', x: 8, z: 32, species: 'slime', kinds: SLIME_KINDS, level: 3, count: 4 },
   { id: 'm5', x: 28, z: 9, species: 'slime', kinds: SLIME_KINDS, level: 3, count: 4 },
   { id: 'm6', x: 27, z: 26, species: 'slime', kinds: SLIME_KINDS, level: 4, count: 4 },
-  { id: 'f1', x: -24, z: -18, species: 'goblin', kinds: FOREST_GOBLIN, level: 4, count: 3 },
+  { id: 'f1', x: -24, z: -18, species: 'goblin', kinds: FOREST_GOBLIN, level: 3, count: 3 },
   { id: 'f2', x: -31, z: -28, species: 'goblin', kinds: FOREST_GOBLIN, level: 5, count: 3 },
-  { id: 'f3', x: -23, z: 21, species: 'goblin', kinds: FOREST_GOBLIN, level: 5, count: 4 },
+  { id: 'f3', x: -23, z: 21, species: 'goblin', kinds: FOREST_GOBLIN, level: 4, count: 4 },
   { id: 'f4', x: -31, z: 29, species: 'goblin', kinds: FOREST_GOBLIN, level: 6, count: 3 },
   { id: 'r1', x: 34, z: -6, species: 'goblin', kinds: RUINS_GOBLIN, level: 6, count: 3 },
   { id: 'r2', x: 23, z: -33, species: 'goblin', kinds: RUINS_GOBLIN, level: 7, count: 3 },
@@ -203,7 +204,7 @@ export const CAMPS: CampDef[] = [
   { id: 'v5', x: 13, z: -64, species: 'wolf', kinds: WOLF, level: 8, count: 3 },
   { id: 'v6', x: -27, z: -66, species: 'mushroom', kinds: SHROOM, level: 8, count: 4 },
   // 新怪物：野豬在迷霧森林深處、蜥兵守石環外圍、蝙蝠與甲蟹在山谷兩側
-  { id: 'n1', x: -29, z: -8, species: 'boar', kinds: BOAR, level: 5, count: 2 },
+  { id: 'n1', x: -29, z: -8, species: 'boar', kinds: BOAR, level: 4, count: 2 },
   { id: 'n2', x: 31, z: -13, species: 'lizard', kinds: LIZARD, level: 7, count: 3 },
   { id: 'n3', x: -3, z: -56, species: 'bat', kinds: BAT, level: 7, count: 3 },
   { id: 'n4', x: 24, z: -47, species: 'crab', kinds: CRAB, level: 8, count: 2 },
@@ -488,6 +489,7 @@ const FEATURE_CLEAR: { x: number; z: number; r: number }[] = [
   { ...ELDER_TREE, r: 4.5 },
   ...RUIN_PIECES.map((p) => ({ x: p.x, z: p.z, r: p.len / 2 + 1.2 })),
   ...LAMPS.map((p) => ({ ...p, r: 1 })),
+  ...CAMPFIRES.map((p) => ({ x: p.x, z: p.z, r: 3 })),
   { x: PASS_ARCH.x, z: PASS_ARCH.z, r: PASS_ARCH.span / 2 + 2 },
   ...BRIDGES.map((b) => ({ x: b.x, z: b.z, r: b.len / 2 + 2 })),
   { ...DRAW_LEVER, r: 2 },

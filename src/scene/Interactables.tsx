@@ -5,7 +5,7 @@ import { useFrame, useLoader, type ThreeEvent } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MERCHANT_APPEARANCE, NPC_ELDER_APPEARANCE, buildAppearance } from '../data/appearance'
 import { LOOT_URLS } from '../data/lootModels'
-import { CHESTS, regionAt, type ChestDef } from '../data/world'
+import { CHESTS, inSafeZone, regionAt, type ChestDef } from '../data/world'
 import { hero } from '../game/combat/state'
 import { progress } from '../game/progress'
 import { runtime } from '../game/runtime'
@@ -382,7 +382,7 @@ export function Interactables() {
     }
     if (g.phase !== 'playing' || g.paused) return
     const { x, z } = runtime.player
-    if (!inTown()) g.setRegion(regionAt(x, z))
+    if (!inTown()) g.setRegion(inSafeZone(x, z) ? 'village' : regionAt(x, z))
 
     let best: Interactable | null = null
     let bestD = TALK_RANGE

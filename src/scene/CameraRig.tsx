@@ -80,6 +80,8 @@ export function CameraRig() {
   })
   /** 交談與城門過渡的混合權重（0 = 一般跟隨） */
   const blend = useRef({ talk: 0, gate: 0, arrive: 0, talkX: 0, talkZ: 0, talkYaw: 0 })
+  /** 走路自動轉向：自己轉過視角就暫停，直到停下來再出發 */
+  const auto = useRef({ manual: false, still: 0 })
 
   // 開發模式：自動化測試可直接設定鏡頭方向與距離
   useEffect(() => {
@@ -167,6 +169,7 @@ export function CameraRig() {
       }
       const c = st.current
       c.yawT -= (e.clientX - lastX) * 0.006
+      auto.current.manual = true
       c.tiltT = THREE.MathUtils.clamp(c.tiltT + (e.clientY - lastY) * 0.005, -CAM.maxTilt, CAM.maxTilt)
       lastX = e.clientX
       lastY = e.clientY
@@ -213,6 +216,7 @@ export function CameraRig() {
       if (!touchDrag && Math.hypot(e.clientX - t.sx, e.clientY - t.sy) > 10) touchDrag = true
       if (touchDrag) {
         c.yawT -= dx * 0.008
+        auto.current.manual = true
         c.tiltT = THREE.MathUtils.clamp(c.tiltT + dy * 0.006, -CAM.maxTilt, CAM.maxTilt)
         runtime.gestureAt = performance.now()
       }
@@ -268,7 +272,22 @@ export function CameraRig() {
     c.distT = THREE.MathUtils.clamp(c.distT, CAM_MODES[g.camMode].minDist - 0.6, CAM_MODES[g.camMode].maxDist + 0.6)
     const M = CAM_MODES[g.camMode]
 
-    c.yawT += rotateAxis() * 1.9 * dt
+    const turn = rotateAxis()
+    c.yawT += turn * 1.9 * dt
+    if (turn !== 0) auto.current.manual = true
+    // 走路時鏡頭轉到前進方向的背後；自己轉動視角（右鍵拖曳、觸控拖曳、Q／E）就暫停，停下來再出發才恢復
+    const a = auto.current
+    const moving = runtime.player.speed > 0.8
+    if (moving) a.still = 0
+    else if ((a.still += dt) > 0.35) a.manual = false
+    if (g.camFollow && moving && !a.manual && !g.dialog && cutscene.state !== 'active' && blend.current.talk < 0.05) {
+      const err = wrap(runtime.player.facing + Math.PI - c.yawT)
+      const ang = Math.abs(err)
+      // 往鏡頭方向倒退走（接近 180°）不轉，避免畫面翻面；其餘依角度差轉動，速度有上限
+      const w = ang < deg(100) ? 1 : Math.max(0, 1 - (ang - deg(100)) / deg(50))
+      const rate = THREE.MathUtils.clamp(err * 2.2, -1.1, 1.1) * w
+      c.yawT = wrap(c.yawT + rate * dt)
+    }
     c.yaw += wrap(c.yawT - c.yaw) * (1 - Math.exp(-dt * 10))
     c.dist += (c.distT - c.dist) * (1 - Math.exp(-dt * 7))
     const follow = 1 - Math.exp(-dt * 12)

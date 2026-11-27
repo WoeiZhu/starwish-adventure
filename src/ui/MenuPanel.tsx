@@ -18,6 +18,7 @@ import {
   nodeBlock,
   pointsLeft,
   progress,
+  upgradeCount,
   resetTree,
 } from '../game/progress'
 import { useGame, type MenuTab } from '../game/store'
@@ -232,7 +233,9 @@ export function MenuPanel() {
   }
   const points = roster.reduce((n, c) => n + pointsLeft(c), 0)
   const fresh = progress.inventory.filter((i) => freshItems.has(i.uid)).length
-  const badge = (id: MenuTab) => (id === 'tree' ? points : id === 'bag' ? fresh : 0)
+  // 背包紅點：有更好的裝備就顯示件數，否則顯示新撿到的件數
+  const ups = upgradeCount(roster)
+  const badge = (id: MenuTab) => (id === 'tree' ? points : id === 'bag' ? ups || fresh : 0)
 
   return (
     <div

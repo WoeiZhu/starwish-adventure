@@ -1,10 +1,12 @@
 // 戰鬥模擬：每幀更新計時器、怪物 AI、隊友 AI、主角自動普攻、投射物與範圍效果。
 import { CLASSES } from '../../data/classes'
 import { ENEMY, SPECIES, aggroRange, scaledEnemyLevel } from '../../data/enemies'
+import { CAMPFIRES } from '../../data/terrain'
 import { AREA_BOSSES, SPAWN, inSafeZone } from '../../data/world'
 import { resolveCollisions } from '../../systems/collision'
 import { findPath } from '../../systems/pathfinding'
 import { inTown } from '../../world/maps'
+import { storyReached } from '../progress'
 import { RUN_SPEED, WALK_SPEED, runtime } from '../runtime'
 import { useGame } from '../store'
 import { moveAxis } from '../../systems/input'
@@ -73,6 +75,12 @@ function navTo(u: Unit, tx: number, tz: number, speed: number, dt: number) {
   const wp = ai.path ? ai.path[0] : { x: tx, z: tz }
   moveToward(u, wp.x, wp.z, speed, dt)
   ai.blocked = u.moved < speed * 0.3 ? ai.blocked + dt : 0
+}
+
+/** 自動選目標：Boss 戰時優先打 Boss（16 m 內），其餘才打最近的怪，不會被旁邊的野怪帶走 */
+function autoPick(list: Unit[], from: Unit, maxDist = Infinity) {
+  const boss = nearest(list.filter((e) => e.tier === 'boss'), from, 16)
+  return boss ?? nearest(list, from, maxDist)
 }
 
 function nearest(list: Unit[], from: Unit, maxDist = Infinity) {
@@ -329,11 +337,13 @@ function wolfPounce(e: Unit, t: Unit, clip = 'Pounce', label = '撲擊！') {
 }
 
 /** 孢子蘑菇：目標靠近時在自己周圍噴出毒霧（綠圈，會留在地上一陣子） */
+/** 毒霧顏色：紫色，和草地的綠色分得開 */
+const SPORE_COLOR = '#b45fe8'
 function mushroomSpore(e: Unit, t: Unit) {
   if (e.special > 0 || dist(e, t) - t.radius > 3) return
   e.special = 7 + Math.random() * 2
   const delay = 0.9
-  combat.hazards.push({ owner: e, x: e.x, z: e.z, radius: e.tier === 'normal' ? 2.4 : 3.4, delay, total: delay, power: 0.35, linger: 3.5, tick: 0.7, tickTimer: 0, color: '#8fdc5a' })
+  combat.hazards.push({ owner: e, x: e.x, z: e.z, radius: e.tier === 'normal' ? 2.4 : 3.4, delay, total: delay, power: 0.35, linger: 3.5, tick: 0.7, tickTimer: 0, color: SPORE_COLOR })
   e.castT = delay
   e.castKind = 'hold'
   action(e, 'Spore')
@@ -478,7 +488,12 @@ function updateHazards(dt: number) {
         z.tickTimer += z.tick ?? 0.7
         for (const u of combat.units) {
           if (u.team !== 'party' || !u.alive) continue
-          if (Math.hypot(u.x - z.x, u.z - z.z) <= z.radius + u.radius) damage(z.owner, u, z.power * (u.kind === 'ally' ? 0.5 : 1))
+          // 毒霧重疊時，同一個人每 0.7 秒最多吃一次
+          if (combat.time - (u.cloudHit ?? -9) < 0.65) continue
+          if (Math.hypot(u.x - z.x, u.z - z.z) <= z.radius + u.radius) {
+            u.cloudHit = combat.time
+            damage(z.owner, u, z.power * (u.kind === 'ally' ? 0.5 : 1))
+          }
         }
       }
       if (z.linger <= 0) list.splice(i, 1)
@@ -594,9 +609,20 @@ function allyAI(u: Unit, slot: number, h: Unit, engaged: Unit[], party: Unit[], 
   }
   if (u.stun > 0) return
 
+  // 站在毒霧裡：先走出圈外（毒霧生效前的預警圈也一樣）
+  const gas = combat.hazards.find((z) => z.linger !== undefined && z.owner.alive && Math.hypot(u.x - z.x, u.z - z.z) < z.radius + 0.4)
+  if (gas) {
+    // 正好站在圈心時沒有方向可退：朝自己的位置編號決定的方向走
+    const rawD = Math.hypot(u.x - gas.x, u.z - gas.z)
+    const ux = rawD > 0.05 ? (u.x - gas.x) / rawD : Math.cos(slot * 2.1)
+    const uz = rawD > 0.05 ? (u.z - gas.z) / rawD : Math.sin(slot * 2.1)
+    moveToward(u, gas.x + ux * (gas.radius + 1.8), gas.z + uz * (gas.radius + 1.8), RUN_SPEED, dt)
+    return
+  }
+
   // 目標：優先打主角鎖定的怪，否則打離自己最近、正在攻擊隊伍的怪；不追離主角太遠的怪
   let t = unitById(h.targetId)
-  if (!t || !t.alive || !h.alive) t = nearest(engaged, u)
+  if (!t || !t.alive || !h.alive) t = autoPick(engaged, u)
   if (t && dist(t, h) > 20) t = undefined
   u.targetId = t ? t.id : null
   if (!t) return follow(u, h, slot, dt)
@@ -604,10 +630,10 @@ function allyAI(u: Unit, slot: number, h: Unit, engaged: Unit[], party: Unit[], 
   const d = dist(u, t) - t.radius
   if (u.ranged) {
     // 遠程：保持射程；被怪物貼身時後退，交給戰士拉怪
-    const threat = engaged.find((e) => e.targetId === u.id && dist(e, u) < 2.6)
+    const threat = engaged.find((e) => e.targetId === u.id && dist(e, u) < 3.4)
     if (threat) {
       const k = dist(u, threat) || 1
-      moveToward(u, u.x + ((u.x - threat.x) / k) * 3, u.z + ((u.z - threat.z) / k) * 3, RUN_SPEED * 0.8, dt)
+      moveToward(u, u.x + ((u.x - threat.x) / k) * 4.5, u.z + ((u.z - threat.z) / k) * 4.5, RUN_SPEED * 0.9, dt)
     } else if (d > u.range * 0.85) navTo(u, t.x, t.z, RUN_SPEED * 0.95, dt)
     else u.facing = dampAngle(u.facing, Math.atan2(t.x - u.x, t.z - u.z), 10, dt)
   } else if (d > u.range * 0.75) navTo(u, t.x, t.z, RUN_SPEED, dt)
@@ -620,8 +646,19 @@ function allyAI(u: Unit, slot: number, h: Unit, engaged: Unit[], party: Unit[], 
 
 // ── 主角：選目標與技能時機由玩家決定，普通攻擊自動執行 ──
 function respawnHero(h: Unit) {
-  runtime.player.x = SPAWN.x
-  runtime.player.z = SPAWN.z
+  // 在最近、已解鎖的營火醒來；沒有營火比村子近就回星光村
+  let spot = { x: SPAWN.x, z: SPAWN.z, name: '星光村' }
+  let best = Math.hypot(h.x - SPAWN.x, h.z - SPAWN.z)
+  for (const c of CAMPFIRES) {
+    if (!storyReached(c.from)) continue
+    const d = Math.hypot(h.x - c.x, h.z - c.z)
+    if (d < best) {
+      best = d
+      spot = { x: c.x, z: c.z + 1.6, name: c.name }
+    }
+  }
+  runtime.player.x = spot.x
+  runtime.player.z = spot.z
   runtime.path = null
   runtime.approach = false
   h.alive = true
@@ -637,24 +674,24 @@ function respawnHero(h: Unit) {
     } else if (u.kind === 'ally') {
       u.alive = true
       u.hp = u.maxHp
-      u.x = SPAWN.x + FORMATION[(i - 1) % 3].x
-      u.z = SPAWN.z - FORMATION[(i - 1) % 3].z
+      u.x = spot.x + FORMATION[(i - 1) % 3].x
+      u.z = spot.z - FORMATION[(i - 1) % 3].z
       u.ai.path = null
     }
   })
-  useGame.getState().showToast('回到星光村，隊伍已恢復')
+  useGame.getState().showToast(`在${spot.name}醒來，隊伍已恢復`)
 }
 
 function heroUpdate(h: Unit, engaged: Unit[], dt: number) {
   if (!h.alive) {
-    if (combat.heroDown === 0) useGame.getState().showToast('你倒下了… 3 秒後回到星光村')
+    if (combat.heroDown === 0) useGame.getState().showToast('你倒下了… 3 秒後在最近的營火（或星光村）醒來')
     combat.heroDown += dt
     return
   }
   let t = unitById(h.targetId)
   if (t && (!t.alive || dist(h, t) > 24)) t = undefined
   // 沒有目標但被攻擊時，自動鎖定最近的怪
-  if (!t) t = nearest(engaged, h, 12)
+  if (!t) t = autoPick(engaged, h, 12)
   h.targetId = t ? t.id : null
   if (!t) runtime.queuedSkill = null
   if (!t || h.stun > 0 || runtime.dodge.time > 0) return

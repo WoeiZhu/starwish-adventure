@@ -109,6 +109,7 @@ function HpBar({ id, slot, height, width }: { id?: string; slot?: number; height
       !!u &&
       u.alive &&
       g.phase === 'playing' &&
+      !g.dialog && // 對話特寫時不顯示頭頂血條（鏡頭拉近會變成巨大的長條）
       (u.team === 'enemy' ? ratio < 0.999 || hero().targetId === u.id : ratio < 0.999 || combat.inCombat)
     group.current.visible = show
     if (!show || !u) return
@@ -159,7 +160,8 @@ function Hazards() {
       const fade = lingering ? Math.min(1, (z.linger ?? 0) * 2) : 1
       ;(fill.material as THREE.MeshBasicMaterial).opacity =
         (lingering ? 0.22 + Math.sin(state.clock.elapsedTime * 4) * 0.05 : 0.35 + Math.sin(state.clock.elapsedTime * 18) * 0.1) * fade
-      ;(((g.children[2] as THREE.Mesh).material) as THREE.MeshBasicMaterial).opacity = 0.95 * fade
+      // 毒霧：外圈閃爍，一眼看得出是持續傷害的範圍
+      ;(((g.children[2] as THREE.Mesh).material) as THREE.MeshBasicMaterial).opacity = (lingering ? 0.7 + Math.sin(state.clock.elapsedTime * 9) * 0.3 : 0.95) * fade
     }
   })
   return (
@@ -458,10 +460,11 @@ function Floaters() {
   )
   useFrame(() => {
     const k = uiScale()
+    const talking = !!useGame.getState().dialog // 對話特寫時隱藏飄字
     slots.forEach((s, i) => {
       const f = combat.floaters[i]
-      s.sprite.visible = f.life > 0
-      if (f.life <= 0) return
+      s.sprite.visible = f.life > 0 && !talking
+      if (f.life <= 0 || talking) return
       if (s.seq !== f.seq) {
         s.seq = f.seq
         const ctx = s.canvas.getContext('2d')!

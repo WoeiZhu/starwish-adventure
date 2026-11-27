@@ -7,6 +7,7 @@ import { TOWN_BOUNDS, TOWN_ID, TOWN_PORTAL, TOWN_SPAWN, type MapId } from '../da
 import { BOUNDS, refreshGates, regionAt, type RegionId } from '../data/world'
 import { isTownBlocked, nearestWalkableOverworld } from '../systems/pathfinding'
 import { STORY_STEPS, progress, type MemberProgress, type StoryState } from './progress'
+import { combat } from './combat/state'
 import type { MapSpot } from './travel'
 
 // 存檔鍵沿用 v1 的名稱，舊存檔才找得到；格式版本記在資料裡的 version
@@ -51,8 +52,19 @@ export interface SaveData {
   recruited: ClassId[]
   /** 休息中的隊友（舊存檔沒有：全員出戰） */
   bench: ClassId[]
+  /** 事件 Boss 的血量比例（選填欄位，舊存檔沒有） */
+  bossHp: Record<string, number>
   story: StoryState
   unlocks: string[]
+}
+
+/** 事件 Boss（石環史萊姆王、月泉靈鹿）受傷的血量比例：場上還活著就記下目前的，已經不在場就沿用先前的 */
+function snapshotBossHp() {
+  for (const tag of ['boss', 'boss2']) {
+    const u = combat.units.find((x) => x.tag === tag && x.alive)
+    if (u && u.hp < u.maxHp) progress.bossHp[tag] = Math.max(0.02, u.hp / u.maxHp)
+  }
+  return { ...progress.bossHp }
 }
 
 export function writeSave(profile: SaveProfile, pos: { x: number; z: number }, mapId: MapId, returnPortal: MapSpot | null) {
@@ -73,6 +85,7 @@ export function writeSave(profile: SaveProfile, pos: { x: number; z: number }, m
     kills: progress.kills,
     recruited: progress.recruited,
     bench: progress.bench,
+    bossHp: snapshotBossHp(),
     story: progress.story,
     unlocks: progress.unlocks,
   }
@@ -159,6 +172,9 @@ export function readSave(): SaveData | null {
       kills: Math.round(num(d.kills, 0, 1e9, 0)),
       recruited,
       bench,
+      bossHp: Object.fromEntries(
+        Object.entries(d.bossHp && typeof d.bossHp === 'object' ? d.bossHp : {}).filter(([k, v]) => (k === 'boss' || k === 'boss2') && typeof v === 'number' && v > 0 && v < 1),
+      ),
       // 階段 C 的舊存檔沒有劇情欄位：直接挑戰 Boss
       story:
         d.story && STEPS.includes(d.story.step)
@@ -188,6 +204,7 @@ export function applySave(d: SaveData) {
   progress.kills = d.kills
   progress.recruited = d.recruited
   progress.bench = [...d.bench]
+  progress.bossHp = { ...d.bossHp }
   progress.story = d.story
   progress.unlocks = [...d.unlocks]
   refreshGates(progress.unlocks)

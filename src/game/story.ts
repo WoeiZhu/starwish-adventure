@@ -479,7 +479,7 @@ function useSpring() {
           label: '放入月之碎片',
           desc: '挑戰 Boss「苔蘚靈鹿」',
           run: () => {
-            spawnEnemy({ name: '被侵蝕的苔蘚靈鹿', color: '#7cc98a', species: 'stag', tier: 'boss', x: SPRING.x, z: SPRING.z, level: hero().level + 2, tag: 'boss2' })
+            restoreBossHp(spawnEnemy({ name: '被侵蝕的苔蘚靈鹿', color: '#7cc98a', species: 'stag', tier: 'boss', x: SPRING.x, z: SPRING.z, level: hero().level + 2, tag: 'boss2' }))
             ring(SPRING.x, SPRING.z, '#7cc98a', 0.5, SPRING.r + 1, 0.8)
             pillar(SPRING.x, SPRING.z, '#7cc98a', 1.6, 8, 1)
             shake(0.5)
@@ -529,11 +529,34 @@ function talkMerchant(speaker = MERCHANT.name) {
 }
 
 /** 第二章的夥伴：先一起打倒怪物，打完才加入 */
+/** 重新載入後再挑戰事件 Boss：血量接續上次的進度（存檔記的比例） */
+function restoreBossHp(u: Unit) {
+  const r = u.tag ? progress.bossHp[u.tag] : undefined
+  if (r && r > 0 && r < 1) {
+    u.hp = Math.max(1, Math.round(u.maxHp * r))
+    addFeed(`${u.name}還留著上次的傷（剩 ${Math.round(r * 100)}%）`, '#a96bf0')
+  }
+  return u
+}
+
+/** 事件開始前，清掉附近原本的野怪（不會消失，過一陣子照常重生） */
+function clearWild(at: { x: number; z: number }, r: number) {
+  for (const u of combat.units) {
+    if (u.team !== 'enemy' || !u.alive || !u.respawns) continue
+    if (Math.hypot(u.x - at.x, u.z - at.z) < r) {
+      u.alive = false
+      u.deadTime = 0
+      u.targetId = null
+    }
+  }
+}
+
 function talkValleyMate(c: ClassId) {
   const v = VALLEY_MATES.find((m) => m.classId === c)!
   const n = CLASSES[c].companion
   const at = VALLEY_SPOTS[v.spot]
   const lv = hero().level
+  const h0 = hero()
   if (tagAlive(v.tag)) return say(n, ['小心！先把牠們打倒再說！'])
   const leave: Choice = { label: '暫時離開', desc: '事件保留，之後還能回來', run: () => {} }
   if (c === 'apothecary') {
@@ -545,11 +568,14 @@ function talkValleyMate(c: ClassId) {
           label: '幫她擊退蘑菇',
           desc: '打倒周圍失控的孢子蘑菇',
           run: () => {
+            // 先清掉附近原本的野怪，事件怪從 9 m 外朝我們走過來（有時間先拉開、準備）
+            clearWild(at, 8)
             for (let i = 0; i < 3; i++) {
-              const a = (i / 3) * Math.PI * 2 + 0.4
-              spawnEnemy({ name: '失控的孢子蘑菇', color: '#c98ad8', species: 'mushroom', x: at.x + Math.cos(a) * 3.4, z: at.z + Math.sin(a) * 3.4, level: lv, tag: v.tag })
+              const a = Math.atan2(h0.z - at.z, h0.x - at.x) + (i - 1) * 0.5
+              spawnEnemy({ name: '失控的孢子蘑菇', color: '#c98ad8', species: 'mushroom', x: at.x + Math.cos(a) * 9, z: at.z + Math.sin(a) * 9, level: lv, tag: v.tag })
             }
-            addFeed('孢子蘑菇圍了過來！', '#a96bf0')
+            addFeed('孢子蘑菇要衝過來了！小心毒霧，別站在紫色圈裡', '#a96bf0')
+            useGame.getState().showToast('孢子蘑菇要衝過來了！')
             pending[v.tag] = () => {
               say(n, ['呼……謝謝你們！這些毒我可以調成武器，也能調成藥。', '讓我跟你們一起走吧，受傷了交給我，敵人也交給我的毒！'], undefined, () => joined(c))
             }
@@ -567,6 +593,7 @@ function talkValleyMate(c: ClassId) {
         label: '一起獵狼',
         desc: '挑戰精英怪「侵蝕的狼群首領」',
         run: () => {
+          clearWild(at, 8)
           spawnEnemy({ name: '侵蝕的狼群首領', color: '#6f86c8', species: 'wolf', tier: 'elite', x: at.x - 3.5, z: at.z - 1.5, level: lv + 1, tag: v.tag })
           for (const side of [-1, 1]) {
             spawnEnemy({ name: '月影幼狼', color: '#8fa6d8', species: 'wolf', x: at.x - 2.5, z: at.z + side * 2.5, level: lv, tag: v.tag })
@@ -675,6 +702,8 @@ function openChest(id: string) {
   useGame.getState().saveGame()
 }
 
+const BOSS_SUGGEST_LV = 8
+const BOSS_SUGGEST_POTIONS = 3
 function useAltar() {
   const s = story()
   if (bossAlive()) return
@@ -692,13 +721,20 @@ function useAltar() {
   }
   say(
     '石環祭壇',
-    ['四個徽記同時亮了起來，地面開始震動……', '啟動祭壇就會喚醒史萊姆王。牠的重擊範圍很大，看到紅圈請立刻離開。'],
+    [
+      '四個徽記同時亮了起來，地面開始震動……',
+      '啟動祭壇就會喚醒史萊姆王。牠的重擊範圍很大，看到紅圈請立刻離開。',
+      `建議全隊 LV.${BOSS_SUGGEST_LV} 以上、藥水 ${BOSS_SUGGEST_POTIONS} 瓶以上。你們現在是 LV.${hero().level}，藥水 ${progress.potions} 瓶。${
+        hero().level < BOSS_SUGGEST_LV || progress.potions < BOSS_SUGGEST_POTIONS ? '準備不太夠，先去村裡買藥水、再練幾級會比較穩。' : ''
+      }`,
+    ],
     [
       {
         label: '啟動祭壇',
         desc: '挑戰 Boss「史萊姆王」',
         run: () => {
-          spawnEnemy({ name: '史萊姆王', color: '#b06bff', x: RUINS.x, z: RUINS.z - 2.5, level: hero().level + 1, tier: 'boss', tag: 'boss' })
+          clearWild(RUINS, 14) // 附近原本的野怪先清掉，不會打亂 Boss 戰
+          restoreBossHp(spawnEnemy({ name: '史萊姆王', color: '#b06bff', x: RUINS.x, z: RUINS.z - 2.5, level: hero().level + 1, tier: 'boss', tag: 'boss' }))
           ring(RUINS.x, RUINS.z, '#b06bff', 0.5, RUINS.r, 0.8)
           pillar(RUINS.x, RUINS.z, '#b06bff', 1.6, 8, 1)
           shake(0.5)
@@ -767,13 +803,28 @@ export function storyOnKill(e: Unit) {
   if (e.tag && pending[e.tag] && !combat.units.some((u) => u.tag === e.tag && u.alive)) {
     const done = pending[e.tag]
     delete pending[e.tag]
-    done()
+    delete progress.bossHp[e.tag]
+    afterCombat(done)
   }
 }
 
+/** 事件結束後的對話與獎勵：還在打架就先排隊，脫戰（約 2 秒沒有戰鬥）再播放，不會打到一半被對話打斷 */
+const queued: (() => void)[] = []
+function afterCombat(fn: () => void) {
+  if (!combat.inCombat && combat.calm > 2) return fn()
+  queued.push(fn)
+}
+useGame.subscribe((s, prev) => {
+  if (s.tick === prev.tick || !queued.length || s.dialog || s.phase !== 'playing') return
+  if (!combat.inCombat && combat.calm > 2) queued.shift()!()
+})
+
 // 回到標題（之後開新局或讀檔）時清掉進行中的事件，避免舊事件的後續被觸發
 useGame.subscribe((s, prev) => {
-  if (s.phase === 'title' && prev.phase !== 'title') for (const k of Object.keys(pending)) delete pending[k]
+  if (s.phase === 'title' && prev.phase !== 'title') {
+    for (const k of Object.keys(pending)) delete pending[k]
+    queued.length = 0
+  }
 })
 
 export interface QuestInfo {
@@ -802,6 +853,9 @@ export function questTarget(): { x: number; z: number } | null {
     case 'hunt':
       return nearestOf((u) => u.species === 'slime' && u.tier === 'normal') ?? { x: -9, z: 21 }
     case 'recruit': {
+      // 夥伴已經答應、但事件怪還沒打完：箭頭先指向那個地點，不要跳去下一位
+      const open = ['ev_meadow', 'ev_forest'].findIndex((t) => pending[t])
+      if (open >= 0 && SPOTS[open]) return SPOTS[open]
       const todo = companions().map((c, i) => (progress.recruited.includes(c) ? null : SPOTS[i])).filter((x) => !!x)
       let best = todo[0] ?? null
       for (const p of todo) if (best && Math.hypot(p!.x - h.x, p!.z - h.z) < Math.hypot(best.x - h.x, best.z - h.z)) best = p

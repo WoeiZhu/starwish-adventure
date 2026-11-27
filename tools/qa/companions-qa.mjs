@@ -125,7 +125,7 @@ await ev(() => {
   const sw = window.__sw
   for (const u of sw.combat.units.filter((u) => u.tag === 'ev_herb' && u.alive)) sw.actions.kill(u)
 })
-await wait(200)
+await wait(2800) // 事件結束的對話會等脫戰約 2 秒才播放
 d = await finishDialog()
 await ev(() => window.__sw.useGame.getState().dialog && window.__sw.useGame.getState().advanceDialog())
 await wait(200)
@@ -367,7 +367,7 @@ await ev(() => {
   const sw = window.__sw
   for (const u of sw.combat.units.filter((u) => u.tag === 'ev_shadow' && u.alive)) sw.actions.kill(u)
 })
-await wait(200)
+await wait(2800)
 await finishDialog()
 await ev(() => window.__sw.useGame.getState().dialog && window.__sw.useGame.getState().advanceDialog())
 await wait(200)

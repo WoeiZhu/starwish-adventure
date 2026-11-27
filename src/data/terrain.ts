@@ -200,6 +200,21 @@ export const RUIN_PIECES: RuinPiece[] = [
 /** 村子的路燈（晚點可以做夜晚） */
 export const LAMPS: P2[] = pts([-3.8, -2.6], [3.8, -2.4], [-6.6, -13.8], [6.8, -14.2], [4.2, -24.8], [8.2, -24.6])
 
+/** 營火（復活點）：在野外倒下時，隊伍會在最近、已經解鎖的營火醒來；星光村的復活點是出生點 */
+export interface CampfireDef {
+  id: string
+  name: string
+  x: number
+  z: number
+  /** 劇情進度到這一步才解鎖（也才會出現） */
+  from: 'talk' | 'c2_scout'
+}
+export const CAMPFIRES: CampfireDef[] = [
+  { id: 'ruins', name: '石環營火', x: 18.5, z: -7.5, from: 'talk' },
+  { id: 'forest', name: '迷霧森林營火', x: -19, z: 9, from: 'talk' },
+  { id: 'valley', name: '月光山谷營火', x: -1.5, z: -46.5, from: 'c2_scout' },
+]
+
 // ── 邊界：山壁與區域入口（之後新區域從這些入口接上） ──
 export interface GateDef {
   id: string

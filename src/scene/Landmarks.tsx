@@ -12,6 +12,7 @@ import { prepareStatic, useGateFade, withMeshopt } from './gltf'
 import { PortalRing } from './Town'
 import {
   BRIDGES,
+  CAMPFIRES,
   ELDER_TREE,
   ENTRANCES,
   LAMPS,
@@ -22,7 +23,7 @@ import {
   type GateDef,
   type RuinPiece as RuinPieceDef,
 } from '../data/terrain'
-import { progress } from '../game/progress'
+import { progress, storyReached } from '../game/progress'
 import { runtime } from '../game/runtime'
 import { InChunk } from './Chunks'
 
@@ -253,6 +254,39 @@ function Lamp({ x, z }: { x: number; z: number }) {
   )
 }
 
+/** 營火（復活點）：圍一圈石頭、交叉的木柴、會晃動的火焰 */
+function Campfire({ x, z, unlockedAt }: { x: number; z: number; unlockedAt: 'talk' | 'c2_scout' }) {
+  const flames = useRef<THREE.Mesh[]>([])
+  const root = useRef<THREE.Group>(null!)
+  useFrame((s) => {
+    // 劇情還沒到：先不出現（避免提早看到第二章的營火）
+    root.current.visible = storyReached(unlockedAt)
+    const t = s.clock.elapsedTime
+    flames.current.forEach((m, i) => {
+      if (!m) return
+      const k = 1 + Math.sin(t * 9 + i * 2.1) * 0.18 + Math.sin(t * 17 + i) * 0.08
+      m.scale.set(0.34 * (1.1 - i * 0.2), 0.8 * k * (1 - i * 0.22), 0.34 * (1.1 - i * 0.2))
+      m.position.y = 0.3 + 0.4 * k * (1 - i * 0.22) * 0.5
+    })
+  })
+  return (
+    <group ref={root} position={[x, 0, z]}>
+      {Array.from({ length: 8 }, (_, i) => {
+        const a = (i / 8) * Math.PI * 2
+        return <mesh key={i} geometry={SPHERE} material={M.stoneDark} position={[Math.cos(a) * 0.85, 0.12, Math.sin(a) * 0.85]} scale={[0.22, 0.16, 0.22]} />
+      })}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} geometry={CYL8} material={M.woodDark} position={[0, 0.16, 0]} rotation={[Math.PI / 2 - 0.25, 0, (i * Math.PI * 2) / 3]} scale={[0.08, 1.1, 0.08]} />
+      ))}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} ref={(m) => void (flames.current[i] = m!)} geometry={CONE} position={[0, 0.5, 0]}>
+          <meshBasicMaterial color={['#ff6a2a', '#ffb02e', '#fff0a0'][i]} transparent opacity={0.92} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 /** 封閉的區域入口：石柱、木頭路障與告示牌（之後接上新區域時拆掉） */
 function Entrance({ g }: { g: GateDef }) {
   return (
@@ -332,6 +366,11 @@ export function Landmarks() {
       {LAMPS.map((l, i) => (
         <InChunk key={i} x={l.x} z={l.z}>
           <Lamp x={l.x} z={l.z} />
+        </InChunk>
+      ))}
+      {CAMPFIRES.map((c) => (
+        <InChunk key={c.id} x={c.x} z={c.z}>
+          <Campfire x={c.x} z={c.z} unlockedAt={c.from} />
         </InChunk>
       ))}
       {ENTRANCES.map((g) => (

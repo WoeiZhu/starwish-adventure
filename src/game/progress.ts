@@ -74,6 +74,8 @@ export const progress = {
   kills: 0,
   /** 已招募的隊友職業（依加入順序）；主角不在其中 */
   recruited: [] as ClassId[],
+  /** 事件 Boss 受傷後的血量比例（tag → 0～1）：重新載入後再挑戰，血量接續；擊敗後清除 */
+  bossHp: {} as Record<string, number>,
   /** 名單上休息中（不出戰、不拿經驗）的隊友；其餘的 recruited 出戰 */
   bench: [] as ClassId[],
   story: newStory(),
@@ -96,6 +98,7 @@ export function resetProgress() {
   progress.potions = 3
   progress.kills = 0
   progress.recruited = []
+  progress.bossHp = {}
   progress.bench = []
   progress.story = newStory()
   progress.unlocks = []
@@ -191,6 +194,11 @@ export function sellMany(uids: string[]) {
     }
   }
   return { count, gold }
+}
+
+/** 背包裡「換上會變強」的裝備件數（名單上任何一位用得到；選單的紅點） */
+export function upgradeCount(roster: ClassId[]) {
+  return progress.inventory.filter((it) => !equippedBy(it.uid) && sellAdvice(it, roster).keep).length
 }
 
 /** 低等級：比名單上最高等級的隊員低 4 級以上 */
